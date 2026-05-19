@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>All Movies - 2026 Summer Box Office Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260518-1055">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to Summer Box Office Challenge">
+        <span class="brand-mark">BOC</span>
+        <span class="contest-name">2026 Summer Box Office Challenge</span>
+      </a>
+      <nav class="nav-links" aria-label="All movies navigation">
+        <a href="index.html">Main page</a>
+        <a href="index.html#movies">Tracked totals</a>
+        <a href="admin.html">Projectionist Control Room</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="admin-hero hall-hero" aria-labelledby="all-movies-title">
+        <p class="eyebrow">Movie board</p>
+        <h1 id="all-movies-title">All movies in contest</h1>
+        <p>Every unique movie submitted across all competing studio lists, sorted by release date.</p>
+      </section>
+
+      <section class="section hall-section" aria-label="All contest movies">
+        <div class="all-movies-list" id="allContestMovies"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><span class="contest-name">2026 Summer Box Office Challenge</span> movies</span>
+      <span>Movie list reads from this browser&apos;s saved contest data.</span>
+    </footer>
+
+    <script src="script.js?v=20260518-1055"></script>
+  </body>
+</html>

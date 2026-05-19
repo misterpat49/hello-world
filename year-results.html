@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Final Results - 2026 Summer Box Office Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260518-1055">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to Summer Box Office Challenge">
+        <span class="brand-mark">BOC</span>
+        <span class="contest-name">2026 Summer Box Office Challenge</span>
+      </a>
+      <nav class="nav-links" aria-label="Final results navigation">
+        <a href="index.html">Main page</a>
+        <a href="hall-of-fame.html">Hall of Fame</a>
+        <a href="admin.html">Projectionist Control Room</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="admin-hero hall-hero" aria-labelledby="year-results-title">
+        <p class="eyebrow"><span class="contest-year">2026</span> archive</p>
+        <h1 id="year-results-title">Final results and lists</h1>
+        <p>Complete standings, tracked movie grosses, and every studio list for this contest year.</p>
+      </section>
+
+      <section class="section standings-section" aria-label="Final winners">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Final winners</p>
+            <h2>Winners</h2>
+          </div>
+        </div>
+        <div class="standings-grid" id="finalStandingsGrid"></div>
+      </section>
+
+      <section class="section leaderboard-section" aria-label="Final leaderboard">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Final standings</p>
+            <h2>Leaderboard</h2>
+          </div>
+        </div>
+        <div class="leaderboard" role="table" aria-label="Final leaderboard">
+          <div class="leaderboard-row leaderboard-head" role="row">
+            <span role="columnheader">Rank</span>
+            <span role="columnheader">Player</span>
+            <span role="columnheader">Score</span>
+            <span role="columnheader">Movies locked</span>
+          </div>
+          <div id="finalLeaderboardRows"></div>
+        </div>
+      </section>
+
+      <section class="section movies-section" aria-label="Final tracked totals">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Movie board</p>
+            <h2>Tracked totals</h2>
+          </div>
+        </div>
+        <div class="movie-table" role="table" aria-label="Final tracked movie totals">
+          <div class="movie-row movie-head" role="row">
+            <span role="columnheader">Movie</span>
+            <span role="columnheader">Lists</span>
+            <span role="columnheader">W1</span>
+            <span role="columnheader">W2</span>
+            <span role="columnheader">W3</span>
+            <span role="columnheader">W4</span>
+            <span role="columnheader">Total</span>
+          </div>
+          <div id="finalMovieRows"></div>
+        </div>
+      </section>
+
+      <section class="section contestants-section" aria-label="Final studio lists">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Studio archive</p>
+            <h2>All final lists</h2>
+          </div>
+        </div>
+        <div class="final-lists-grid" id="finalStudioLists"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><span class="contest-name">2026 Summer Box Office Challenge</span> archive</span>
+      <span><a class="footer-admin-link" href="./hall-of-fame.html">Hall of Fame</a></span>
+    </footer>
+
+    <script src="script.js?v=20260518-1055"></script>
+  </body>
+</html>

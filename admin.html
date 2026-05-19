@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin - 2026 Summer Box Office Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260518-1055">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to public scoreboard">
+        <span class="brand-mark">BOC</span>
+        <span class="contest-name">2026 Summer Box Office Challenge</span>
+      </a>
+      <nav class="nav-links" aria-label="Admin navigation">
+        <a href="index.html">Main page</a>
+        <a href="#admin">Projectionist Control Room</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="admin-hero" aria-labelledby="admin-title">
+        <p class="eyebrow">Private admin tab</p>
+        <h1 id="admin-title">Paste lists and update grosses</h1>
+        <p>
+          Save player lists and box office results here. The public scoreboard reads this browser&apos;s saved data without showing these entry windows.
+        </p>
+      </section>
+
+      <section class="section admin-section" id="admin" aria-label="Admin entry forms">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Admin desk</p>
+            <h2>Contest data</h2>
+          </div>
+          <button class="button button-quiet" id="loadDemo" type="button">Load demo data</button>
+        </div>
+
+        <article class="admin-card backup-card">
+          <div class="card-heading">
+            <h3>Backup data</h3>
+            <span>Export / import</span>
+          </div>
+          <p class="admin-note">Export a JSON backup of all saved contest data before major edits. Importing a backup replaces the current saved data in this browser.</p>
+          <div class="form-actions">
+            <button class="button button-primary" id="exportBackup" type="button">Export backup</button>
+            <label class="button button-secondary-dark backup-import-button" for="importBackupInput">Import backup</label>
+            <input id="importBackupInput" type="file" accept="application/json,.json">
+            <button class="button button-secondary-dark" id="clearBrowserStorage" type="button">Clear browser storage</button>
+          </div>
+          <p class="admin-note" id="backupStatus">No backup imported this session.</p>
+        </article>
+
+        <article class="admin-card contest-year-card">
+          <div class="card-heading">
+            <h3>What year?</h3>
+            <span>Contest identity</span>
+          </div>
+          <label for="contestYear">Set the contest year shown across the site</label>
+          <select id="contestYear"></select>
+          <p class="admin-note">This updates the public title, page headers, rules copy, and contest calendar week calculations.</p>
+        </article>
+
+        <article class="admin-card contest-week-card">
+          <div class="card-heading">
+            <h3>Current contest week</h3>
+            <span>Manual override</span>
+          </div>
+          <label for="currentContestWeek">Set the week shown in box office results</label>
+          <select id="currentContestWeek">
+            <option value="">Auto from release dates</option>
+            <option value="Upcoming">Upcoming</option>
+            <option value="Week 1">Week 1</option>
+            <option value="Week 2">Week 2</option>
+            <option value="Week 3">Week 3</option>
+            <option value="Week 4">Week 4</option>
+            <option value="Week 5">Week 5</option>
+            <option value="Week 6">Week 6</option>
+            <option value="Week 7">Week 7</option>
+            <option value="Week 8">Week 8</option>
+            <option value="Week 9">Week 9</option>
+            <option value="Week 10">Week 10</option>
+            <option value="Week 11">Week 11</option>
+            <option value="Week 12">Week 12</option>
+            <option value="Week 13">Week 13</option>
+            <option value="Week 14">Week 14</option>
+            <option value="Week 15">Week 15</option>
+            <option value="Week 16">Week 16</option>
+            <option value="Week 17">Week 17</option>
+            <option value="Week 18">Week 18</option>
+            <option value="After cap">After cap</option>
+          </select>
+          <p class="admin-note">Use this when you want to dictate the active contest week yourself. Leave it on auto to calculate each movie from its release date.</p>
+        </article>
+
+        <article class="admin-card leaderboard-image-card">
+          <div class="card-heading">
+            <h3>Leaderboard image</h3>
+            <span>Public page</span>
+          </div>
+          <label for="leaderboardImageInput">Image URL shown above the leaderboard</label>
+          <input id="leaderboardImageInput" type="url" placeholder="https://example.com/your-image.jpg" autocomplete="off">
+          <label for="leaderboardImageUpload">Or upload an image from your computer</label>
+          <input id="leaderboardImageUpload" type="file" accept="image/*">
+          <div class="form-actions">
+            <button class="button button-primary" id="saveLeaderboardImage" type="button">Save image</button>
+            <button class="button button-secondary-dark" id="clearLeaderboardImage" type="button">Clear image</button>
+          </div>
+          <p class="admin-note" id="leaderboardImageStatus">No leaderboard image saved.</p>
+        </article>
+
+        <article class="admin-card movie-quote-admin-card">
+          <div class="card-heading">
+            <h3>Movie quote of the week</h3>
+            <span>Main page</span>
+          </div>
+          <label for="movieQuoteInput">Enter the quote shown above the leaderboard</label>
+          <textarea id="movieQuoteInput" spellcheck="false" autocomplete="off" placeholder="You're gonna need a bigger boat."></textarea>
+          <div class="movie-quote-admin-fields">
+            <label for="movieQuoteCharacter">Character</label>
+            <input id="movieQuoteCharacter" type="text" placeholder="Martin Brody" autocomplete="off">
+            <label for="movieQuoteActor">Actor</label>
+            <input id="movieQuoteActor" type="text" placeholder="Roy Scheider" autocomplete="off">
+            <label for="movieQuoteMovie">Movie</label>
+            <input id="movieQuoteMovie" type="text" placeholder="Jaws" autocomplete="off">
+          </div>
+          <div class="form-actions">
+            <button class="button button-primary" id="saveMovieQuote" type="button">Save quote</button>
+            <button class="button button-secondary-dark" id="clearMovieQuote" type="button">Clear quote</button>
+          </div>
+          <p class="admin-note" id="movieQuoteStatus">No movie quote saved.</p>
+        </article>
+
+        <article class="admin-card paid-status-card">
+          <div class="card-heading">
+            <h3>Entry fee payments</h3>
+            <span>Public page</span>
+          </div>
+          <p class="admin-note">Check each player who has paid the $50 entry fee.</p>
+          <div class="paid-player-list" id="paidPlayerList"></div>
+          <div class="form-actions">
+            <button class="button button-primary" id="savePaidStatus" type="button">Save payment status</button>
+          </div>
+          <p class="admin-note" id="paidStatusNote">No player lists saved.</p>
+        </article>
+
+        <div class="admin-grid">
+          <article class="admin-card">
+            <div class="card-heading">
+              <h3>Player lists</h3>
+              <span id="entryStatus">No lists saved</span>
+            </div>
+            <label for="entriesInput">Paste one player per block</label>
+            <textarea id="entriesInput" spellcheck="false" autocomplete="off" placeholder="Maya Chen:
+1. Summer Tentpole A
+2. Animated Sequel B
+3. Superhero Launch C
+...
+15. Final pick
+
+Jordan Lee:
+1. Animated Sequel B
+2. Summer Tentpole A
+..."></textarea>
+            <div class="form-actions">
+              <button class="button button-primary" id="saveEntries" type="button">Save player lists</button>
+              <button class="button button-secondary-dark" id="clearEntries" type="button">Clear lists</button>
+            </div>
+          </article>
+
+          <article class="admin-card">
+            <div class="card-heading">
+              <h3>Box office results</h3>
+              <span id="resultStatus">No grosses saved</span>
+            </div>
+            <p class="admin-note">Enter release dates and domestic box office in millions. The contest week follows your manual setting above, or release dates when set to auto.</p>
+            <div class="results-grid" id="resultsGrid" aria-label="Box office result inputs"></div>
+            <div class="form-actions">
+              <button class="button button-primary" id="saveResults" type="button">Save grosses</button>
+              <button class="button button-secondary-dark" id="clearResults" type="button">Clear grosses</button>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><span class="contest-name">2026 Summer Box Office Challenge</span> admin</span>
+      <span>Changes save in this browser with local storage.</span>
+    </footer>
+
+    <script src="script.js?v=20260518-1055"></script>
+  </body>
+</html>
