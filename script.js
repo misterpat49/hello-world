@@ -1,4 +1,43 @@
 const STORAGE_KEY = "summer-2026-box-office-contest";
+
+// ---------------------------------------------------------------------------
+// Supabase sync — replace the placeholder values with Patrick's real credentials
+// (Supabase project: Settings → API)
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
+const _supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function saveStateToSupabase() {
+  if (!_supabase) return;
+  try {
+    await _supabase.from("contest_state").upsert({
+      id: "singleton",
+      state: state,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn("Supabase save failed", e);
+  }
+}
+
+async function syncFromSupabase() {
+  if (!_supabase) return;
+  try {
+    const { data, error } = await _supabase
+      .from("contest_state")
+      .select("state")
+      .eq("id", "singleton")
+      .single();
+    if (error || !data?.state) return;
+    state = { ...defaultState, ...data.state, compareContestantA: "", compareContestantB: "" };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    render();
+  } catch (e) {
+    console.warn("Supabase sync failed", e);
+  }
+}
+// ---------------------------------------------------------------------------
 const MAX_PICKS = 15;
 const MAX_WEEKENDS = 4;
 const MAX_STORED_IMAGE_LENGTH = 900000;
@@ -184,6 +223,7 @@ function saveState() {
   lastSaveWarning = "";
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveStateToSupabase();
     return true;
   } catch (error) {
     if (state.leaderboardImageUrl?.startsWith("data:image/")) {
@@ -1950,3 +1990,4 @@ document.querySelector(".movie-table")?.addEventListener("click", (event) => {
 });
 
 render();
+syncFromSupabase();
