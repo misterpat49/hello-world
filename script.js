@@ -1,9 +1,46 @@
 const STORAGE_KEY = "summer-2026-box-office-contest";
+
+// ---------------------------------------------------------------------------
+// Supabase sync — replace the placeholder values with Patrick's real credentials
+// (Supabase project: Settings → API)
+// ---------------------------------------------------------------------------
+const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
+const _supabase = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function saveStateToSupabase() {
+  if (!_supabase) return;
+  try {
+    await _supabase.from("contest_state").upsert({
+      id: "singleton",
+      state: state,
+      updated_at: new Date().toISOString(),
+    });
+  } catch (e) {
+    console.warn("Supabase save failed", e);
+  }
+}
+
+async function syncFromSupabase() {
+  if (!_supabase) return;
+  try {
+    const { data, error } = await _supabase
+      .from("contest_state")
+      .select("state")
+      .eq("id", "singleton")
+      .single();
+    if (error || !data?.state) return;
+    state = { ...defaultState, ...data.state, compareContestantA: "", compareContestantB: "" };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    render();
+  } catch (e) {
+    console.warn("Supabase sync failed", e);
+  }
+}
+// ---------------------------------------------------------------------------
 const MAX_PICKS = 15;
 const MAX_WEEKENDS = 4;
 const MAX_STORED_IMAGE_LENGTH = 900000;
-const ADMIN_PASSWORD = "boc26";
-const ADMIN_SESSION_KEY = "summer-box-office-admin-unlocked";
 
 const demoEntries = `Maya Chen:
 1. Summer Tentpole A
@@ -81,11 +118,6 @@ const demoReleaseDates = {
 };
 
 const els = {
-  adminLogin: document.querySelector("#adminLogin"),
-  adminSection: document.querySelector("#admin"),
-  adminPassword: document.querySelector("#adminPassword"),
-  unlockAdmin: document.querySelector("#unlockAdmin"),
-  adminPasswordStatus: document.querySelector("#adminPasswordStatus"),
   entriesInput: document.querySelector("#entriesInput"),
   resultsInput: document.querySelector("#resultsInput"),
   resultsGrid: document.querySelector("#resultsGrid"),
@@ -191,6 +223,7 @@ function saveState() {
   lastSaveWarning = "";
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    saveStateToSupabase();
     return true;
   } catch (error) {
     if (state.leaderboardImageUrl?.startsWith("data:image/")) {
@@ -216,44 +249,6 @@ function showSaveWarning(fallbackElement = els.backupStatus) {
   const target = fallbackElement || els.backupStatus || els.leaderboardImageStatus || els.entryStatus;
   if (target) {
     target.textContent = lastSaveWarning;
-  }
-}
-
-function isAdminPage() {
-  return Boolean(els.adminSection || els.adminLogin);
-}
-
-function isAdminUnlocked() {
-  return !isAdminPage() || sessionStorage.getItem(ADMIN_SESSION_KEY) === "true";
-}
-
-function setAdminLockState() {
-  if (!isAdminPage()) return;
-
-  const unlocked = isAdminUnlocked();
-  if (els.adminLogin) {
-    els.adminLogin.hidden = unlocked;
-  }
-  if (els.adminSection) {
-    els.adminSection.hidden = !unlocked;
-  }
-  if (els.adminPasswordStatus && !unlocked) {
-    els.adminPasswordStatus.textContent = "Admin tools are locked.";
-  }
-}
-
-function unlockAdmin() {
-  if (!els.adminPassword) return;
-
-  if (els.adminPassword.value === ADMIN_PASSWORD) {
-    sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-    els.adminPassword.value = "";
-    setAdminLockState();
-    return;
-  }
-
-  if (els.adminPasswordStatus) {
-    els.adminPasswordStatus.textContent = "Incorrect password.";
   }
 }
 
@@ -1738,7 +1733,6 @@ function render() {
   if (els.resultsInput) els.resultsInput.value = state.resultsText;
 
   renderContestYear();
-  setAdminLockState();
   renderLeaderboard(scored);
   renderLeaderboardImage();
   renderMovieQuote();
@@ -1790,14 +1784,6 @@ els.loadDemo?.addEventListener("click", () => {
   state.releaseDates = demoReleaseDates;
   saveState();
   render();
-});
-
-els.unlockAdmin?.addEventListener("click", unlockAdmin);
-
-els.adminPassword?.addEventListener("keydown", (event) => {
-  if (event.key === "Enter") {
-    unlockAdmin();
-  }
 });
 
 els.exportBackup?.addEventListener("click", exportBackup);
@@ -2004,3 +1990,4 @@ document.querySelector(".movie-table")?.addEventListener("click", (event) => {
 });
 
 render();
+syncFromSupabase();
