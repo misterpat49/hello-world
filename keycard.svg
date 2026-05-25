@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Key card icon">
+  <rect width="96" height="96" rx="18" fill="#293241"/>
+  <rect x="15" y="15" width="66" height="66" rx="8" fill="#f8f2e8"/>
+  <g transform="translate(21 21)">
+    <rect width="14" height="14" rx="3" fill="#c83f43"/>
+    <rect x="20" width="14" height="14" rx="3" fill="#2677b8"/>
+    <rect x="40" width="14" height="14" rx="3" fill="#c3ad83"/>
+    <rect y="20" width="14" height="14" rx="3" fill="#2677b8"/>
+    <rect x="20" y="20" width="14" height="14" rx="3" fill="#20242c"/>
+    <rect x="40" y="20" width="14" height="14" rx="3" fill="#c83f43"/>
+    <rect y="40" width="14" height="14" rx="3" fill="#c3ad83"/>
+    <rect x="20" y="40" width="14" height="14" rx="3" fill="#c83f43"/>
+    <rect x="40" y="40" width="14" height="14" rx="3" fill="#2677b8"/>
+  </g>
+</svg>

@@ -3,241 +3,144 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>2026 Summer Box Office Challenge</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260520-1620">
+    <title>Pendy Codenames</title>
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="Summer Box Office Challenge home">
-        <span class="brand-mark">BOC</span>
-        <span class="contest-name">2026 Summer Box Office Challenge</span>
-      </a>
-      <nav class="nav-links" aria-label="Primary navigation">
-        <a href="#leaderboard">Leaderboard</a>
-        <a href="#contestants">Contestant Central</a>
-        <a href="#rules">Rules</a>
-        <a href="./hall-of-fame.html">Hall of Fame</a>
-      </nav>
-    </header>
-
-    <main id="top">
-      <section class="hero" aria-labelledby="page-title">
-        <div class="hero-media" aria-hidden="true">
-          <div class="screen-glow"></div>
-          <div class="poster-stack">
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-        </div>
-        <div class="hero-content">
-          <h1 id="page-title" class="contest-name">2026 Summer Box Office Challenge</h1>
-          <p class="hero-kicker">Year <span class="contest-edition">27</span> of America&apos;s most elite, least known, buzzed about Box Office Contest!</p>
-          <div class="hero-actions">
-            <a class="button button-primary" href="#leaderboard">See standings</a>
-            <a class="button button-secondary" href="https://www.boxofficemojo.com/weekend/?ref_=bo_nb_hm_secondarytab">Box Office Mojo&apos;s weekend results</a>
-            <a class="button button-secondary" id="enterListButton" href="./enter-list.html">Enter your list</a>
-          </div>
-        </div>
-      </section>
-
-      <section class="quick-stats" aria-label="Contest snapshot">
-        <article>
-          <span class="stat-label">Contest week</span>
-          <strong id="statWeek">Auto</strong>
-        </article>
-        <article>
-          <span class="stat-label">Players</span>
-          <strong id="statPlayers">0</strong>
-        </article>
-        <article>
-          <span class="stat-label">Movies released</span>
-          <strong id="statMovies">0/0</strong>
-        </article>
-        <article>
-          <span class="stat-label">Current leader</span>
-          <strong id="statLeader">None</strong>
-        </article>
-      </section>
-
-      <section class="section movie-quote-section" aria-label="Movie quote of the week" id="movieQuoteSection" hidden>
-        <article class="movie-quote-card">
-          <span class="standing-label">Movie quote of the week</span>
-          <p id="movieQuoteText"></p>
-          <div class="movie-quote-meta" id="movieQuoteMeta"></div>
-        </article>
-      </section>
-
-      <section class="section leaderboard-section" id="leaderboard" aria-labelledby="leaderboard-title">
-        <div class="section-heading">
+    <main class="app-shell">
+      <section class="topbar" aria-label="Game controls">
+        <div class="brand">
+          <img src="assets/keycard.svg" alt="" class="brand-mark">
           <div>
-            <p class="eyebrow">Live standings</p>
-            <h2 id="leaderboard-title">Leaderboard</h2>
+            <h1 id="appTitle">Pendy Codenames</h1>
+            <p id="gameStatus">Good luck word nerds</p>
           </div>
         </div>
-        <div class="leaderboard-image" id="leaderboardImage" hidden></div>
-        <div class="leaderboard" role="table" aria-label="Contest leaderboard">
-          <div class="leaderboard-row leaderboard-head" role="row">
-            <span role="columnheader">Rank</span>
-            <span role="columnheader">Player <small>(click to see list)</small></span>
-            <span role="columnheader">Score</span>
-            <span role="columnheader">Movies locked</span>
-          </div>
-          <div id="leaderboardRows"></div>
+
+        <div class="controls">
+          <button id="swapWordsBtn" type="button" aria-pressed="false" hidden>Swap words</button>
+          <button id="boardModeBtn" type="button" disabled>Show spymaster mode</button>
+          <button id="christmasModeBtn" type="button" aria-pressed="false">Christmas mode off</button>
+          <button id="newGameBtn" type="button">New game</button>
+          <button id="newSessionBtn" type="button">New session</button>
         </div>
       </section>
 
-      <section class="section standings-section" aria-labelledby="standings-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Overall winners</p>
-            <h2 id="standings-title">Standings</h2>
-          </div>
+      <section id="sessionWarning" class="session-warning" aria-live="polite" hidden>
+        <p>are you sure, creating a new session will reset overall wins for this party</p>
+        <div class="session-warning-actions">
+          <button id="confirmNewSessionBtn" type="button">Reset wins</button>
+          <button id="cancelNewSessionBtn" type="button">Cancel</button>
         </div>
-        <div class="standings-grid" id="standingsGrid"></div>
       </section>
 
-      <section class="section coming-soon-section" aria-label="Coming soon">
-        <article class="coming-soon-card">
-          <span class="standing-label">COMING ATTRACTIONS</span>
-          <strong><span id="comingSoonWeek">Auto</span> Releases</strong>
-          <div class="coming-soon-movies" id="comingSoonMovies"></div>
-        </article>
+      <section id="newGameWarning" class="session-warning" aria-live="polite" hidden>
+        <p>are you sure, starting a new game will reset the current board</p>
+        <div class="session-warning-actions">
+          <button id="confirmNewGameBtn" type="button">Start new game</button>
+          <button id="cancelNewGameBtn" type="button">Cancel</button>
+        </div>
       </section>
 
-      <section class="section contestants-section" id="contestants" aria-labelledby="contestants-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Contestant Central</p>
-            <h2 id="contestants-title">Full Lists of Competing Studios</h2>
-            <div class="status-key" aria-label="Movie list color key">
-              <span><i class="key-red"></i>Now Showing</span>
-              <span><i class="key-blue"></i>Completed for Contest</span>
+      <div id="assassinReveal" class="assassin-reveal" hidden>
+        <strong id="assassinRevealWord"></strong>
+      </div>
+
+      <section class="game-layout">
+        <aside class="panel" aria-label="Game state">
+          <div class="score-strip">
+            <button id="redScoreCard" class="score-card red" type="button">
+              <span id="redScoreLabel">Red</span>
+              <strong id="redRemaining">0</strong>
+              <em id="redGuessBadge" class="guess-badge" hidden>0 guesses</em>
+              <small id="redOverallWins" class="overall-wins">Overall wins: 0</small>
+            </button>
+            <button id="blueScoreCard" class="score-card blue" type="button">
+              <span id="blueScoreLabel">Blue</span>
+              <strong id="blueRemaining">0</strong>
+              <em id="blueGuessBadge" class="guess-badge" hidden>0 guesses</em>
+              <small id="blueOverallWins" class="overall-wins">Overall wins: 0</small>
+            </button>
+          </div>
+          <div id="gameOverBanner" class="game-over-banner" hidden>
+            <strong id="gameOverTitle">Blue wins</strong>
+            <p id="gameOverDetail">The assassin was revealed.</p>
+          </div>
+          <p id="submittedClue" class="submitted-clue" hidden></p>
+
+          <div class="setup-card">
+            <span class="eyebrow">Setup</span>
+            <div class="setup-strip" aria-label="Game setup">
+              <label class="select-control">
+                Grid
+                <select id="boardSizeSelect" aria-label="Grid size">
+                  <option value="4">4x4</option>
+                  <option value="5" selected>5x5</option>
+                  <option value="6">6x6</option>
+                  <option value="7">7x7</option>
+                  <option value="8">8x8</option>
+                  <option value="9">9x9</option>
+                  <option value="10">10x10</option>
+                </select>
+              </label>
+              <label class="select-control">
+                <span id="assassinCountLabel">Black words</span>
+                <select id="assassinCountSelect" aria-label="Black word count">
+                  <option value="0">0</option>
+                  <option value="1" selected>1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                </select>
+              </label>
+            </div>
+            <p class="setup-warning">Changing these will reset your words. Not available once new game begins.</p>
+          </div>
+
+          <div class="clue-card">
+            <span class="eyebrow">Clue</span>
+            <form id="clueTextForm" class="clue-text-form">
+              <input id="clueTextInput" type="text" placeholder="optional" autocomplete="off" aria-label="Optional clue text">
+              <button type="submit">Submit</button>
+            </form>
+            <div id="guessButtons" class="guess-buttons" aria-label="Select clue count">
+              <button type="button" data-count="1">1</button>
+              <button type="button" data-count="2">2</button>
+              <button type="button" data-count="3">3</button>
+              <button type="button" data-count="4">4</button>
+              <button type="button" data-count="5">5</button>
+              <button type="button" data-count="6">6</button>
+              <button type="button" data-count="7">7</button>
+              <button type="button" data-count="8">8</button>
+              <button type="button" data-count="9">9</button>
+            </div>
+            <div id="bonusChoice" class="bonus-choice" hidden>
+              <p id="bonusText">Team adding an extra guess?</p>
+              <div class="bonus-actions">
+              <button id="noBonusBtn" type="button">No extra</button>
+                <button id="yesBonusBtn" type="button">Add extra</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="contestant-browser">
-          <label for="contestantSelect">Choose a studio</label>
-          <select id="contestantSelect"></select>
-          <div id="contestantLists"></div>
-        </div>
-
-        <div class="compare-panel" aria-labelledby="compare-title">
-          <div class="card-heading">
-            <h3 id="compare-title">Compare two studios</h3>
-          </div>
-          <div class="compare-controls">
-            <div class="compare-field">
-              <label for="compareContestantA">Studio one</label>
-              <select id="compareContestantA"></select>
-            </div>
-            <div class="compare-field">
-              <label for="compareContestantB">Studio two</label>
-              <select id="compareContestantB"></select>
-            </div>
-            <div class="compare-action">
-              <button class="button button-quiet" id="resetCompare" type="button">Reset comparison</button>
+          <div class="words-card">
+            <span class="eyebrow">Words</span>
+            <div class="words-actions">
+              <button id="newWordsBtn" class="new-words-button" type="button">Pick new words</button>
+              <label class="file-control">
+                <input id="wordUpload" type="file" accept=".txt,.csv,.json">
+                Upload words
+              </label>
             </div>
           </div>
-          <div id="compareStats"></div>
-          <div id="compareLists"></div>
-        </div>
 
-        <div class="fun-stats-panel" aria-label="Contest fun stats">
-          <h3>CONTEST WATER COOLER STATS</h3>
-          <div id="contestFunStats"></div>
-        </div>
-      </section>
+        </aside>
 
-      <section class="section completed-section" id="completed" aria-labelledby="completed-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">That&apos;s a wrap!</p>
-            <h2 id="completed-title">Movies completed</h2>
-          </div>
-        </div>
-        <div class="completion-panel">
-          <article class="completion-score">
-            <span class="stat-label">Completed movies</span>
-            <strong id="completedCount">0/0</strong>
-            <p id="completedNote">Enter box office results to track four-week completion.</p>
-          </article>
-          <div class="completion-lists">
-            <article>
-              <h3>Completed</h3>
-              <ul id="completedMovies"></ul>
-            </article>
-            <article>
-              <h3>Currently tracking</h3>
-              <ul id="trackingMovies"></ul>
-            </article>
-          </div>
-        </div>
-        <div class="section-link-row">
-          <a class="button button-quiet" href="./all-movies.html">View all movies in contest</a>
-        </div>
-      </section>
-
-      <section class="section movies-section" id="movies" aria-labelledby="movies-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Movie board</p>
-            <h2 id="movies-title">Tracked totals</h2>
-          </div>
-        </div>
-        <div class="movie-table" role="table" aria-label="Tracked movie totals">
-          <div class="movie-row movie-head" role="row">
-            <span role="columnheader"><button class="table-sort-button" id="movieReleaseSort" type="button" data-movie-sort="release">Movie release</button></span>
-            <span role="columnheader">Lists</span>
-            <span role="columnheader">W1 <small>(Wed or Fri - Sun)</small></span>
-            <span role="columnheader">W2 <small>(1st Mon - 2nd Sun)</small></span>
-            <span role="columnheader">W3 <small>(2nd Mon - 3rd Sun)</small></span>
-            <span role="columnheader">W4 <small>(3rd Mon - 4th Sun)</small></span>
-            <span role="columnheader"><button class="table-sort-button" id="movieTotalSort" type="button" data-movie-sort="total">Total</button></span>
-          </div>
-          <div id="movieRows"></div>
-        </div>
-      </section>
-
-      <section class="section rules-section" id="rules" aria-labelledby="rules-title">
-        <div class="section-heading">
-          <div>
-            <p class="eyebrow">Contest rules</p>
-            <h2 id="rules-title">How it works</h2>
-          </div>
-        </div>
-        <div class="info-grid">
-          <article>
-            <h3>Eligibility</h3>
-            <p>Only movies released from May 1 through August 31, <span class="contest-year">2026</span> are eligible.</p>
-          </article>
-          <article>
-            <h3>Gross window</h3>
-            <p>Each eligible movie counts domestic box office from opening day through the fourth Sunday.</p>
-          </article>
-          <article>
-            <h3>Weighted lists</h3>
-            <p>Your number one movie is multiplied by 15, number two by 14, and so on down to the 15th pick.</p>
-          </article>
-          <article>
-            <h3>Entry fee</h3>
-            <p>Send $50 via Venmo to @patrick-pendergast. <a class="paid-link" href="./paid-status.html">See if you paid.</a></p>
-          </article>
-        </div>
+        <section class="board-wrap" aria-label="Word board">
+          <div id="board" class="board" aria-live="polite"></div>
+        </section>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <span class="contest-name">2026 Summer Box Office Challenge</span>
-      <span><a class="footer-admin-link" href="./admin.html">Projectionist Control Room</a></span>
-    </footer>
-
-    <script src="script.js?v=20260520-1620"></script>
+    <script src="app.js"></script>
   </body>
 </html>
