@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260518-1055">
+    <link rel="stylesheet" href="styles.css?v=20260520-1620">
   </head>
   <body>
     <header class="site-header">
@@ -30,7 +30,22 @@
         </p>
       </section>
 
-      <section class="section admin-section" id="admin" aria-label="Admin entry forms">
+      <section class="section admin-login-section" id="adminLogin" aria-label="Projectionist Control Room login">
+        <article class="admin-card admin-login-card">
+          <div class="card-heading">
+            <h3>Projectionist Control Room</h3>
+            <span>Password required</span>
+          </div>
+          <label for="adminPassword">Enter password</label>
+          <input id="adminPassword" type="password" autocomplete="current-password">
+          <div class="form-actions">
+            <button class="button button-primary" id="unlockAdmin" type="button">Enter control room</button>
+          </div>
+          <p class="admin-note" id="adminPasswordStatus">Admin tools are locked.</p>
+        </article>
+      </section>
+
+      <section class="section admin-section" id="admin" aria-label="Admin entry forms" hidden>
         <div class="section-heading">
           <div>
             <p class="eyebrow">Admin desk</p>
@@ -192,7 +207,6 @@ Jordan Lee:
       <span>Changes save in this browser with local storage.</span>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260518-1055"></script>
+    <script src="script.js?v=20260520-1620"></script>
   </body>
 </html>

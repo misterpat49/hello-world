@@ -1240,6 +1240,14 @@ textarea {
   line-height: 1.55;
 }
 
+.admin-login-section {
+  padding-top: 0;
+}
+
+.admin-login-card {
+  max-width: 520px;
+}
+
 #adminPassword {
   width: min(360px, 100%);
   min-height: 46px;
