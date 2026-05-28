@@ -1240,6 +1240,14 @@ textarea {
   line-height: 1.55;
 }
 
+.admin-login-section {
+  padding-top: 0;
+}
+
+.admin-login-card {
+  max-width: 520px;
+}
+
 #adminPassword {
   width: min(360px, 100%);
   min-height: 46px;
@@ -1668,6 +1676,27 @@ textarea:focus {
 .footer-admin-link {
   color: var(--ink);
   font-weight: 900;
+}
+
+.hidden-codenames-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hidden-codenames-link img {
+  display: block;
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(32, 24, 18, 0.14);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.hidden-codenames-link:hover img,
+.hidden-codenames-link:focus-visible img {
+  box-shadow: 0 12px 26px rgba(32, 24, 18, 0.22);
+  transform: translateY(-1px);
 }
 
 @media (max-width: 920px) {
