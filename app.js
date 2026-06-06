@@ -57,6 +57,7 @@ let gameRoomId = "";
 let saveTimer = null;
 let isApplyingRemoteState = false;
 let roomChannel = null;
+let lastKnownRemoteUpdatedAt = "";
 
 const els = {
   board: document.querySelector("#board"),
@@ -176,10 +177,15 @@ function serializableGameState() {
 function applyGameState(savedState) {
   if (!savedState || typeof savedState !== "object") return;
 
-  const localSpymasterMode = state.spymasterMode;
+  const localViewState = {
+    spymasterMode: state.spymasterMode,
+    swapMode: state.swapMode,
+    sessionWarningVisible: state.sessionWarningVisible,
+    newGameWarningVisible: state.newGameWarningVisible
+  };
   resetStateToDefaults();
   Object.assign(state, { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...savedState });
-  state.spymasterMode = localSpymasterMode;
+  Object.assign(state, localViewState);
   if (!Array.isArray(state.words) || !state.words.length) state.words = [...SAMPLE_WORDS];
   if (!state.sessionWins) state.sessionWins = { red: 0, blue: 0 };
   if (!state.clueTurns) state.clueTurns = { red: 0, blue: 0 };
@@ -208,10 +214,12 @@ async function saveRemoteGameState() {
   if (!supabaseClient || !gameRoomId) return;
 
   try {
+    const updatedAt = new Date().toISOString();
+    lastKnownRemoteUpdatedAt = updatedAt;
     const { error } = await supabaseClient.from("contest_state").upsert({
       id: gameRoomSupabaseId(),
       state: serializableGameState(),
-      updated_at: new Date().toISOString(),
+      updated_at: updatedAt,
     });
     if (error) throw error;
   } catch (error) {
@@ -235,10 +243,11 @@ async function loadRemoteGameState() {
   try {
     const { data, error } = await supabaseClient
       .from("contest_state")
-      .select("state")
+      .select("state, updated_at")
       .eq("id", gameRoomSupabaseId())
       .maybeSingle();
     if (error || !data?.state) return false;
+    if (data.updated_at) lastKnownRemoteUpdatedAt = data.updated_at;
 
     isApplyingRemoteState = true;
     applyGameState(data.state);
@@ -268,6 +277,9 @@ function subscribeToGameRoom() {
       { event: "*", schema: "public", table: "contest_state", filter: "id=eq." + gameRoomSupabaseId() },
       (payload) => {
         if (!payload.new?.state) return;
+        const incomingUpdatedAt = payload.new.updated_at || "";
+        if (incomingUpdatedAt && lastKnownRemoteUpdatedAt && incomingUpdatedAt <= lastKnownRemoteUpdatedAt) return;
+        if (incomingUpdatedAt) lastKnownRemoteUpdatedAt = incomingUpdatedAt;
         isApplyingRemoteState = true;
         applyGameState(payload.new.state);
         saveLocalGameState();
