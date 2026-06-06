@@ -119,12 +119,28 @@
           <label for="leaderboardImageInput">Image URL shown above the leaderboard</label>
           <input id="leaderboardImageInput" type="url" placeholder="https://example.com/your-image.jpg" autocomplete="off">
           <label for="leaderboardImageUpload">Or upload an image from your computer</label>
-          <input id="leaderboardImageUpload" type="file" accept="image/*">
+          <input id="leaderboardImageUpload" type="file" accept="image/*,.gif,.gig">
           <div class="form-actions">
             <button class="button button-primary" id="saveLeaderboardImage" type="button">Save image</button>
             <button class="button button-secondary-dark" id="clearLeaderboardImage" type="button">Clear image</button>
           </div>
           <p class="admin-note" id="leaderboardImageStatus">No leaderboard image saved.</p>
+        </article>
+
+        <article class="admin-card standings-gif-card">
+          <div class="card-heading">
+            <h3>Standings GIF</h3>
+            <span>Main page</span>
+          </div>
+          <label for="standingsGifInput">Small animated GIF URL shown under Standings</label>
+          <input id="standingsGifInput" type="url" placeholder="https://example.com/your-gif.gif" autocomplete="off">
+          <label for="standingsGifUpload">Or upload a small GIF from your computer</label>
+          <input id="standingsGifUpload" type="file" accept="image/gif,.gif,.gig">
+          <div class="form-actions">
+            <button class="button button-primary" id="saveStandingsGif" type="button">Save GIF</button>
+            <button class="button button-secondary-dark" id="clearStandingsGif" type="button">Clear GIF</button>
+          </div>
+          <p class="admin-note" id="standingsGifStatus">No standings GIF saved.</p>
         </article>
 
         <article class="admin-card movie-quote-admin-card">
@@ -208,6 +224,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260525-1305"></script>
+    <script src="script.js?v=20260606-0210"></script>
   </body>
 </html>

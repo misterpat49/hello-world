@@ -102,6 +102,11 @@ const els = {
   saveLeaderboardImage: document.querySelector("#saveLeaderboardImage"),
   clearLeaderboardImage: document.querySelector("#clearLeaderboardImage"),
   leaderboardImageStatus: document.querySelector("#leaderboardImageStatus"),
+  standingsGifInput: document.querySelector("#standingsGifInput"),
+  standingsGifUpload: document.querySelector("#standingsGifUpload"),
+  saveStandingsGif: document.querySelector("#saveStandingsGif"),
+  clearStandingsGif: document.querySelector("#clearStandingsGif"),
+  standingsGifStatus: document.querySelector("#standingsGifStatus"),
   comingSoonInput: document.querySelector("#comingSoonInput"),
   saveComingSoon: document.querySelector("#saveComingSoon"),
   clearComingSoon: document.querySelector("#clearComingSoon"),
@@ -130,6 +135,7 @@ const els = {
   backupStatus: document.querySelector("#backupStatus"),
   leaderboardRows: document.querySelector("#leaderboardRows"),
   leaderboardImage: document.querySelector("#leaderboardImage"),
+  standingsGif: document.querySelector("#standingsGif"),
   enterListButton: document.querySelector("#enterListButton"),
   movieQuoteSection: document.querySelector("#movieQuoteSection"),
   movieQuoteText: document.querySelector("#movieQuoteText"),
@@ -146,6 +152,8 @@ const els = {
   resetCompare: document.querySelector("#resetCompare"),
   compareLists: document.querySelector("#compareLists"),
   compareStats: document.querySelector("#compareStats"),
+  pathToWinSelect: document.querySelector("#pathToWinSelect"),
+  pathToWinCard: document.querySelector("#pathToWinCard"),
   contestFunStats: document.querySelector("#contestFunStats"),
   movieRows: document.querySelector("#movieRows"),
   movieReleaseSort: document.querySelector("#movieReleaseSort"),
@@ -171,7 +179,7 @@ const els = {
   statLeader: document.querySelector("#statLeader"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", paidPlayers: {}, adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "" };
 let lastSaveWarning = "";
 let state = loadState();
 
@@ -181,10 +189,16 @@ function loadState() {
     if (savedState.leaderboardImageUrl?.startsWith("data:image/") && savedState.leaderboardImageUrl.length > MAX_STORED_IMAGE_LENGTH) {
       savedState.leaderboardImageUrl = "";
       lastSaveWarning = "The oversized uploaded leaderboard image was cleared from browser storage. Your other contest data is still here.";
+    }
+    if (savedState.standingsGifUrl?.startsWith("data:image/") && savedState.standingsGifUrl.length > MAX_STORED_IMAGE_LENGTH) {
+      savedState.standingsGifUrl = "";
+      lastSaveWarning = "The oversized uploaded standings GIF was cleared from browser storage. Your other contest data is still here.";
+    }
+    if (lastSaveWarning) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState));
       } catch {
-        lastSaveWarning = "The oversized uploaded leaderboard image was cleared for this page load, but browser storage could not be rewritten yet.";
+        lastSaveWarning = "An oversized uploaded image was cleared for this page load, but browser storage could not be rewritten yet.";
       }
     }
     return { ...savedState, compareContestantA: "", compareContestantB: "" };
@@ -253,9 +267,10 @@ function saveState() {
     if (shouldSyncSupabase()) saveStateToSupabase();
     return true;
   } catch (error) {
-    if (state.leaderboardImageUrl?.startsWith("data:image/")) {
+    if (state.leaderboardImageUrl?.startsWith("data:image/") || state.standingsGifUrl?.startsWith("data:image/")) {
       state.leaderboardImageUrl = "";
-      lastSaveWarning = "The uploaded leaderboard image was too large for browser storage, so it was removed. Your other data was saved.";
+      state.standingsGifUrl = "";
+      lastSaveWarning = "The uploaded image or GIF was too large for browser storage, so it was removed. Your other data was saved.";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         if (shouldSyncSupabase()) saveStateToSupabase();
@@ -278,7 +293,7 @@ function shouldSyncSupabase() {
 function showSaveWarning(fallbackElement = els.backupStatus) {
   if (!lastSaveWarning) return;
 
-  const target = fallbackElement || els.backupStatus || els.leaderboardImageStatus || els.entryStatus;
+  const target = fallbackElement || els.backupStatus || els.leaderboardImageStatus || els.standingsGifStatus || els.entryStatus;
   if (target) {
     target.textContent = lastSaveWarning;
   }
@@ -1006,6 +1021,108 @@ function aggregateListForEntries(entries) {
     .slice(0, MAX_PICKS);
 }
 
+
+function pathToWinLeverage(entry, entries, results) {
+  const movieStats = new Map();
+
+  entries.forEach((contestant) => {
+    contestant.picks.forEach((pick, index) => {
+      const key = normalizeMovie(pick);
+      const stat = movieStats.get(key) || { title: pick, multipliers: [] };
+      stat.multipliers.push(MAX_PICKS - index);
+      movieStats.set(key, stat);
+    });
+  });
+
+  return entry.picks.map((pick, index) => {
+    const key = normalizeMovie(pick);
+    const entryMultiplier = MAX_PICKS - index;
+    const stat = movieStats.get(key) || { title: pick, multipliers: [] };
+    const otherTotal = stat.multipliers.reduce((sum, value) => sum + value, 0) - entryMultiplier;
+    const otherAverage = entries.length > 1 ? otherTotal / (entries.length - 1) : 0;
+    const movie = results.get(key);
+
+    return {
+      title: pick,
+      rank: index + 1,
+      multiplier: entryMultiplier,
+      pickCount: stat.multipliers.length,
+      currentGross: movieTotal(movie),
+      edge: entryMultiplier - otherAverage,
+    };
+  });
+}
+
+function renderPathToWin(entries, results, scored) {
+  if (!els.pathToWinSelect || !els.pathToWinCard) return;
+
+  if (!entries.length) {
+    els.pathToWinSelect.innerHTML = '<option value="">No contestants saved</option>';
+    els.pathToWinSelect.disabled = true;
+    els.pathToWinCard.innerHTML = '<div class="empty-state">Save player lists to generate a Path to Win.</div>';
+    return;
+  }
+
+  const selectedEntry = entries.find((entry) => entry.name === state.pathToWinContestant);
+  renderContestantOptions(els.pathToWinSelect, entries, selectedEntry?.name || "", "Pick a studio");
+
+  if (!selectedEntry) {
+    els.pathToWinCard.innerHTML = '<div class="empty-state">Pick a studio to see what needs to break their way.</div>';
+    return;
+  }
+
+  const scoredEntry = scored.find((entry) => entry.name === selectedEntry.name);
+  const rank = scored.findIndex((entry) => entry.name === selectedEntry.name) + 1;
+  const score = scoredEntry?.score || 0;
+  const topScore = scored[0]?.score || 0;
+  const gapToFirst = Math.max(0, topScore - score);
+  const nextTarget = scored[rank - 2];
+  const gapToNext = nextTarget ? Math.max(0, nextTarget.score - score) : 0;
+  const tailingStudio = scored[rank];
+  const tailingGap = tailingStudio ? Math.max(0, score - tailingStudio.score) : 0;
+  const leverage = pathToWinLeverage(selectedEntry, entries, results);
+  const rootingFor = leverage
+    .filter((movie) => movie.edge > 0)
+    .sort((a, b) => b.edge - a.edge || b.multiplier - a.multiplier || a.title.localeCompare(b.title))
+    .slice(0, 5);
+  const rootingAgainst = leverage
+    .filter((movie) => movie.edge < 0)
+    .sort((a, b) => a.edge - b.edge || b.currentGross - a.currentGross || a.title.localeCompare(b.title))
+    .slice(0, 4);
+  const missingUpside = leverage
+    .filter((movie) => movie.currentGross <= 0 && movie.edge > 0)
+    .sort((a, b) => b.edge - a.edge || a.title.localeCompare(b.title))
+    .slice(0, 3);
+
+  const nextTargetText = nextTarget
+    ? '<p>Next target: <strong>' + escapeHtml(nextTarget.name) + '</strong>, ' + formatScore(gapToNext) + ' points ahead.</p>'
+    : '<p>' + escapeHtml(selectedEntry.name) + ' is already sitting at the top of the mountain.</p>';
+  const hotOnTailText = tailingStudio
+    ? '<p>Hot on their tail: <strong>' + escapeHtml(tailingStudio.name) + '</strong>, ' + formatScore(tailingGap) + ' points back.</p>'
+    : '<p>Hot on their tail: nobody, they are holding up the back of the line.</p>';
+
+  els.pathToWinCard.innerHTML =
+    '<article class="path-to-win-card">' +
+      '<div class="path-to-win-summary">' +
+        '<p><span>Current rank</span><strong>#' + (rank || 'N/A') + '</strong></p>' +
+        '<p><span>Score</span><strong>' + formatScore(score) + '</strong></p>' +
+        '<p><span>Gap to first</span><strong>' + formatScore(gapToFirst) + '</strong></p>' +
+      '</div>' +
+      '<div class="path-to-win-note">' + nextTargetText + hotOnTailText + '</div>' +
+      '<div class="path-to-win-grid">' +
+        '<section><h4>Rooting for</h4><ul class="fun-mini-list">' +
+          formatRankList(rootingFor.map((movie) => escapeHtml(movie.title) + ' <em>#' + movie.rank + ', ' + movie.multiplier + 'x, leverage +' + movie.edge.toFixed(1) + ' per $1M</em>'), 'No clear positive leverage movies.') +
+        '</ul></section>' +
+        '<section><h4>Rooting against</h4><ul class="fun-mini-list">' +
+          formatRankList(rootingAgainst.map((movie) => escapeHtml(movie.title) + ' <em>#' + movie.rank + ', leverage ' + movie.edge.toFixed(1) + ' per $1M</em>'), 'No obvious danger movies.') +
+        '</ul></section>' +
+        '<section><h4>Best unreleased swings</h4><ul class="fun-mini-list">' +
+          formatRankList(missingUpside.map((movie) => escapeHtml(movie.title) + ' <em>' + movie.multiplier + 'x, on ' + movie.pickCount + '/' + entries.length + ' lists</em>'), 'Most of this studio&apos;s leverage is already in motion.') +
+        '</ul></section>' +
+      '</div>' +
+    '</article>';
+}
+
 function renderContestFunStats(entries, results, scored) {
   if (!els.contestFunStats) return;
 
@@ -1067,6 +1184,19 @@ function renderContestFunStats(entries, results, scored) {
   const sameziesGroups = Array.from(sameziesMap.values())
     .filter((group) => group.players.length > 1)
     .sort((a, b) => b.players.length - a.players.length || a.players.join(", ").localeCompare(b.players.join(", ")));
+  const scaryMastersComparison = entries.reduce((total, entry) => {
+    const scaryRank = entry.picks.findIndex((pick) => normalizeMovie(pick) === "scary movie 6");
+    const mastersRank = entry.picks.findIndex((pick) => normalizeMovie(pick) === "masters of the universe");
+
+    if (scaryRank < 0 || mastersRank < 0) return total;
+
+    total.both += 1;
+    if (scaryRank < mastersRank) {
+      total.scaryHigher += 1;
+      total.names.push(entry.name);
+    }
+    return total;
+  }, { both: 0, scaryHigher: 0, names: [] });
   const soulmatePairs = [];
   entries.forEach((entryA, indexA) => {
     const aRanks = new Map(entryA.picks.map((pick, index) => [normalizeMovie(pick), index + 1]));
@@ -1128,6 +1258,14 @@ function renderContestFunStats(entries, results, scored) {
         </ul>
       </article>
       <article>
+        <span>Scary Movie 6 vs Masters of the Universe</span>
+        <strong>${scaryMastersComparison.scaryHigher} of ${scaryMastersComparison.both}</strong>
+        <em>had Scary Movie 6 ranked higher among studios that picked both</em>
+        <ul class="fun-mini-list">
+          ${formatRankList(scaryMastersComparison.names.sort((a, b) => a.localeCompare(b)).map(escapeHtml), "No studios had Scary Movie 6 higher.")}
+        </ul>
+      </article>
+      <article>
         <span>Studio soulmates <em>(most similar lists based on selection and ranking)</em></span>
         <ul class="fun-mini-list">
           ${formatRankList(studioSoulmates.map((pair) => `${escapeHtml(pair.names)} <em>${pair.sharedCount} shared movies, avg rank gap ${pair.averageGap.toFixed(1)}</em>`), "Need at least two studios.")}
@@ -1166,6 +1304,7 @@ function renderContestantLists(entries, results, scored) {
     if (els.compareStats) {
       els.compareStats.innerHTML = "";
     }
+    renderPathToWin(entries, results, scored);
     renderContestFunStats(entries, results, scored);
     return;
   }
@@ -1178,6 +1317,7 @@ function renderContestantLists(entries, results, scored) {
   renderContestantOptions(els.contestantSelect, entries, selectedEntry.name);
   renderContestantOptions(els.compareContestantA, entries, compareEntryA?.name || "", "Pick a studio");
   renderContestantOptions(els.compareContestantB, entries, compareEntryB?.name || "", "Pick a studio");
+  renderPathToWin(entries, results, scored);
 
   els.contestantLists.innerHTML = renderPickList(selectedEntry, results, scored);
   renderContestFunStats(entries, results, scored);
@@ -1243,17 +1383,59 @@ function renderLeaderboardImage() {
     : "";
 }
 
+function renderStandingsGif() {
+  const gifUrl = state.standingsGifUrl.trim();
+  const isUploadedGif = gifUrl.startsWith("data:image/");
+
+  if (els.standingsGifInput) {
+    els.standingsGifInput.value = isUploadedGif ? "" : gifUrl;
+  }
+  if (els.standingsGifUpload) {
+    els.standingsGifUpload.value = "";
+  }
+  if (els.standingsGifStatus) {
+    els.standingsGifStatus.textContent = gifUrl
+      ? (isUploadedGif ? "Uploaded standings GIF saved." : "Standings GIF URL saved.")
+      : "No standings GIF saved.";
+  }
+  if (!els.standingsGif) return;
+
+  els.standingsGif.hidden = !gifUrl;
+  els.standingsGif.innerHTML = gifUrl
+    ? `<img src="${escapeHtml(gifUrl)}" alt="Animated standings feature GIF">`
+    : "";
+}
+
 function imageFileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.addEventListener("load", () => resolve(String(reader.result || "")));
+    reader.addEventListener("load", () => {
+      let dataUrl = String(reader.result || "");
+      if (isGifLikeFile(file) && !dataUrl.startsWith("data:image/")) {
+        dataUrl = dataUrl.replace(/^data:[^;]*;/, "data:image/gif;");
+      }
+      resolve(dataUrl);
+    });
     reader.addEventListener("error", () => reject(new Error("Image could not be read.")));
     reader.readAsDataURL(file);
   });
 }
 
+function isGifLikeFile(file) {
+  return file.type === "image/gif" || /\.(gif|gig)$/i.test(file.name);
+}
+
+function isSupportedImageFile(file) {
+  return file.type.startsWith("image/") || isGifLikeFile(file);
+}
+
 function resizeImageDataUrl(dataUrl, maxWidth = 1400, quality = 0.84) {
   return new Promise((resolve) => {
+    if (dataUrl.startsWith("data:image/gif")) {
+      resolve(dataUrl);
+      return;
+    }
+
     const image = new Image();
     image.addEventListener("load", () => {
       if (image.width <= maxWidth && dataUrl.length < MAX_STORED_IMAGE_LENGTH) {
@@ -1763,11 +1945,14 @@ function renderComingSoon(entries) {
       })
       .filter(Boolean);
 
+    const leftOffCount = Math.max(0, entries.length - matches.length);
+
     if (!matches.length) {
       return `
         <article>
           <strong>${escapeHtml(movieTitle)}</strong>
           <p>No contestant has this movie on their list.</p>
+          <p><span>Left off lists</span>${leftOffCount}</p>
         </article>
       `;
     }
@@ -1780,6 +1965,7 @@ function renderComingSoon(entries) {
         <strong>${escapeHtml(movieTitle)}</strong>
         <p><span>Highest ranked</span>${formatRankGroup(matches, highestRank)}</p>
         <p><span>Lowest ranked</span>${formatRankGroup(matches, lowestRank)}</p>
+        <p><span>Left off lists</span>${leftOffCount}</p>
       </article>
     `;
   }).join("");
@@ -1806,6 +1992,7 @@ function render() {
   setAdminLockState();
   renderLeaderboard(scored);
   renderLeaderboardImage();
+  renderStandingsGif();
   renderMovieQuote();
   renderNewEntryForm(entries);
   renderContestantLists(entries, results, scored);
@@ -1927,6 +2114,12 @@ els.resetCompare?.addEventListener("click", () => {
   render();
 });
 
+els.pathToWinSelect?.addEventListener("change", () => {
+  state.pathToWinContestant = els.pathToWinSelect.value;
+  saveState();
+  render();
+});
+
 els.currentContestWeek?.addEventListener("change", () => {
   state.currentContestWeek = els.currentContestWeek.value;
   saveState();
@@ -1951,9 +2144,9 @@ els.saveLeaderboardImage?.addEventListener("click", () => {
   const uploadedImage = els.leaderboardImageUpload?.files?.[0];
 
   if (uploadedImage) {
-    if (!uploadedImage.type.startsWith("image/")) {
+    if (!isSupportedImageFile(uploadedImage)) {
       if (els.leaderboardImageStatus) {
-        els.leaderboardImageStatus.textContent = "Choose an image file to upload.";
+        els.leaderboardImageStatus.textContent = "Choose an image, GIF, or .gig file to upload.";
       }
       return;
     }
@@ -1988,6 +2181,48 @@ els.clearLeaderboardImage?.addEventListener("click", () => {
   saveState();
   render();
   showSaveWarning(els.leaderboardImageStatus);
+});
+
+els.saveStandingsGif?.addEventListener("click", () => {
+  const uploadedGif = els.standingsGifUpload?.files?.[0];
+
+  if (uploadedGif) {
+    if (!isGifLikeFile(uploadedGif)) {
+      if (els.standingsGifStatus) {
+        els.standingsGifStatus.textContent = "Choose a GIF or .gig file to upload.";
+      }
+      return;
+    }
+
+    imageFileToDataUrl(uploadedGif)
+      .then((dataUrl) => {
+        state.standingsGifUrl = dataUrl;
+        saveState();
+        render();
+        showSaveWarning(els.standingsGifStatus);
+      })
+      .catch(() => {
+        if (els.standingsGifStatus) {
+          els.standingsGifStatus.textContent = "That GIF could not be uploaded.";
+        }
+      });
+    return;
+  }
+
+  state.standingsGifUrl = els.standingsGifInput.value.trim();
+  saveState();
+  render();
+  showSaveWarning(els.standingsGifStatus);
+});
+
+els.clearStandingsGif?.addEventListener("click", () => {
+  state.standingsGifUrl = "";
+  if (els.standingsGifUpload) {
+    els.standingsGifUpload.value = "";
+  }
+  saveState();
+  render();
+  showSaveWarning(els.standingsGifStatus);
 });
 
 els.saveMovieQuote?.addEventListener("click", () => {

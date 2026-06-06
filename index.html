@@ -100,6 +100,7 @@
           </div>
         </div>
         <div class="standings-grid" id="standingsGrid"></div>
+        <div class="standings-gif" id="standingsGif" hidden></div>
       </section>
 
       <section class="section coming-soon-section" aria-label="Coming soon">
@@ -147,6 +148,17 @@
           </div>
           <div id="compareStats"></div>
           <div id="compareLists"></div>
+        </div>
+
+        <div class="path-to-win-panel" aria-labelledby="path-to-win-title">
+          <div class="card-heading">
+            <h3 id="path-to-win-title">Path to Win</h3>
+          </div>
+          <div class="path-to-win-controls">
+            <label for="pathToWinSelect">Choose a studio</label>
+            <select id="pathToWinSelect"></select>
+          </div>
+          <div id="pathToWinCard"></div>
         </div>
 
         <div class="fun-stats-panel" aria-label="Contest fun stats">
@@ -239,6 +251,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260525-1305"></script>
+    <script src="script.js?v=20260606-0210"></script>
   </body>
 </html>
