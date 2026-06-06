@@ -156,6 +156,81 @@ h1 {
   padding: 0.5rem 0.7rem;
 }
 
+.room-panel {
+  display: grid;
+  grid-template-columns: auto minmax(18rem, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin: 0 0 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(255, 253, 248, 0.82);
+  box-shadow: 0 10px 28px rgba(31, 38, 51, 0.08);
+}
+
+.room-id-card {
+  min-height: 2.6rem;
+  border: 1px solid #293241;
+  border-radius: 8px;
+  padding: 0.52rem 0.75rem;
+  background: #293241;
+  color: #fff;
+}
+
+.room-id-card span,
+.room-form label {
+  display: block;
+  margin-bottom: 0.18rem;
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.74;
+}
+
+.room-id-card strong {
+  display: block;
+  font-size: 1.02rem;
+  letter-spacing: 0.08em;
+}
+
+.room-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: end;
+}
+
+.room-form label {
+  grid-column: 1 / -1;
+  color: var(--muted);
+}
+
+.room-form input {
+  min-height: 2.6rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.65rem 0.8rem;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.room-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.room-actions button,
+.room-form button {
+  white-space: nowrap;
+}
+
 .assassin-reveal {
   --assassin-reveal-color: #020305;
   position: fixed;
@@ -860,6 +935,7 @@ h1 {
 
 @media (max-width: 920px) {
   .topbar,
+  .room-panel,
   .game-layout {
     grid-template-columns: 1fr;
   }
@@ -868,13 +944,19 @@ h1 {
     display: grid;
   }
 
-  .controls {
+  .controls,
+  .room-actions {
     justify-content: stretch;
   }
 
-  .controls > * {
+  .controls > *,
+  .room-actions > * {
     flex: 1 1 9rem;
     justify-content: center;
+  }
+
+  .room-form {
+    grid-template-columns: 1fr;
   }
 }
 

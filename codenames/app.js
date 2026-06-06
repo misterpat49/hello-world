@@ -7,6 +7,10 @@ const TEAM_LABELS = {
   blue: "Blue"
 };
 
+const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
+const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const state = {
   words: [...SAMPLE_WORDS],
   boardSize: 5,
@@ -46,6 +50,12 @@ const state = {
   swapMode: false,
   wordsSwapped: false
 };
+
+const DEFAULT_STATE = JSON.parse(JSON.stringify(state));
+let gameRoomId = "";
+let saveTimer = null;
+let isApplyingRemoteState = false;
+let roomChannel = null;
 
 const els = {
   board: document.querySelector("#board"),
@@ -94,8 +104,208 @@ const els = {
   bonusChoice: document.querySelector("#bonusChoice"),
   bonusText: document.querySelector("#bonusText"),
   noBonusBtn: document.querySelector("#noBonusBtn"),
-  yesBonusBtn: document.querySelector("#yesBonusBtn")
+  yesBonusBtn: document.querySelector("#yesBonusBtn"),
+  gameRoomLabel: document.querySelector("#gameRoomLabel"),
+  gameRoomInput: document.querySelector("#gameRoomInput"),
+  joinRoomForm: document.querySelector("#joinRoomForm"),
+  copyRoomLinkBtn: document.querySelector("#copyRoomLinkBtn"),
+  newRoomBtn: document.querySelector("#newRoomBtn")
 };
+
+function generateGameRoomId() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join("");
+}
+
+function cleanGameRoomId(value) {
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+function gameRoomStorageKey(roomId = gameRoomId) {
+  return "pendy-codenames:" + roomId;
+}
+
+function gameRoomSupabaseId(roomId = gameRoomId) {
+  return "codenames-" + roomId.toLowerCase();
+}
+
+function gameRoomLink(roomId = gameRoomId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("game", roomId);
+  return url.toString();
+}
+
+function setGameRoomUrl(roomId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("game", roomId);
+  window.history.replaceState(null, "", url);
+}
+
+function getInitialGameRoomId() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = cleanGameRoomId(params.get("game"));
+  if (fromUrl) return fromUrl;
+
+  const created = generateGameRoomId();
+  setGameRoomUrl(created);
+  return created;
+}
+
+function resetStateToDefaults() {
+  Object.keys(state).forEach((key) => delete state[key]);
+  Object.assign(state, JSON.parse(JSON.stringify(DEFAULT_STATE)));
+  els.clueTextInput.value = "";
+  els.clueTextInput.classList.remove("is-submitted");
+  document.body.classList.remove("christmas-mode");
+}
+
+function serializableGameState() {
+  return JSON.parse(JSON.stringify(state));
+}
+
+function applyGameState(savedState) {
+  if (!savedState || typeof savedState !== "object") return;
+
+  resetStateToDefaults();
+  Object.assign(state, { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...savedState });
+  if (!Array.isArray(state.words) || !state.words.length) state.words = [...SAMPLE_WORDS];
+  if (!state.sessionWins) state.sessionWins = { red: 0, blue: 0 };
+  if (!state.clueTurns) state.clueTurns = { red: 0, blue: 0 };
+  els.clueTextInput.value = state.currentClueText || "";
+  els.clueTextInput.classList.toggle("is-submitted", Boolean(state.currentClueText));
+}
+
+function loadLocalGameState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(gameRoomStorageKey()));
+    if (saved) applyGameState(saved);
+  } catch (error) {
+    console.warn("Could not load local Codenames game", error);
+  }
+}
+
+function saveLocalGameState() {
+  try {
+    localStorage.setItem(gameRoomStorageKey(), JSON.stringify(serializableGameState()));
+  } catch (error) {
+    console.warn("Could not save local Codenames game", error);
+  }
+}
+
+async function saveRemoteGameState() {
+  if (!supabaseClient || !gameRoomId) return;
+
+  try {
+    const { error } = await supabaseClient.from("contest_state").upsert({
+      id: gameRoomSupabaseId(),
+      state: serializableGameState(),
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.warn("Could not sync Codenames game", error);
+  }
+}
+
+function scheduleGameSave() {
+  if (isApplyingRemoteState || !gameRoomId) return;
+
+  window.clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(() => {
+    saveLocalGameState();
+    saveRemoteGameState();
+  }, 250);
+}
+
+async function loadRemoteGameState() {
+  if (!supabaseClient || !gameRoomId) return false;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("contest_state")
+      .select("state")
+      .eq("id", gameRoomSupabaseId())
+      .maybeSingle();
+    if (error || !data?.state) return false;
+
+    isApplyingRemoteState = true;
+    applyGameState(data.state);
+    saveLocalGameState();
+    render();
+    isApplyingRemoteState = false;
+    return true;
+  } catch (error) {
+    isApplyingRemoteState = false;
+    console.warn("Could not load remote Codenames game", error);
+    return false;
+  }
+}
+
+function subscribeToGameRoom() {
+  if (!supabaseClient || !gameRoomId) return;
+
+  if (roomChannel) {
+    supabaseClient.removeChannel(roomChannel);
+    roomChannel = null;
+  }
+
+  roomChannel = supabaseClient
+    .channel("codenames-room-" + gameRoomId)
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "contest_state", filter: "id=eq." + gameRoomSupabaseId() },
+      (payload) => {
+        if (!payload.new?.state) return;
+        isApplyingRemoteState = true;
+        applyGameState(payload.new.state);
+        saveLocalGameState();
+        render();
+        isApplyingRemoteState = false;
+      }
+    )
+    .subscribe();
+}
+
+function renderGameRoom() {
+  if (els.gameRoomLabel) els.gameRoomLabel.textContent = gameRoomId || "------";
+  if (els.gameRoomInput && document.activeElement !== els.gameRoomInput) els.gameRoomInput.value = gameRoomId || "";
+}
+
+async function switchGameRoom(roomId) {
+  const nextRoomId = cleanGameRoomId(roomId) || generateGameRoomId();
+  window.clearTimeout(saveTimer);
+  if (roomChannel && supabaseClient) {
+    supabaseClient.removeChannel(roomChannel);
+    roomChannel = null;
+  }
+
+  gameRoomId = nextRoomId;
+  setGameRoomUrl(gameRoomId);
+
+  isApplyingRemoteState = true;
+  resetStateToDefaults();
+  loadLocalGameState();
+  render();
+  isApplyingRemoteState = false;
+
+  await loadRemoteGameState();
+  subscribeToGameRoom();
+  scheduleGameSave();
+}
+
+async function copyGameRoomLink() {
+  const link = gameRoomLink();
+  try {
+    await navigator.clipboard.writeText(link);
+    setStatus("Copied game link for " + gameRoomId + ".");
+  } catch {
+    setStatus("Game link: " + link);
+  }
+  render();
+}
 
 function parseWords(text, fileName = "") {
   let rawWords = [];
@@ -434,12 +644,14 @@ function wordScale(word) {
 }
 
 function render() {
+  renderGameRoom();
   renderMode();
   renderGridSize();
   renderBoard();
   renderPanel();
   renderGameOverBanner();
   renderAssassinReveal();
+  scheduleGameSave();
 }
 
 function renderGridSize() {
@@ -748,5 +960,11 @@ els.boardModeBtn.addEventListener("click", () => {
   state.spymasterMode = !state.spymasterMode;
   render();
 });
+els.joinRoomForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  switchGameRoom(els.gameRoomInput.value);
+});
+els.copyRoomLinkBtn.addEventListener("click", copyGameRoomLink);
+els.newRoomBtn.addEventListener("click", () => switchGameRoom(generateGameRoomId()));
 
-render();
+switchGameRoom(getInitialGameRoomId());

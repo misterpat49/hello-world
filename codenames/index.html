@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pendy Codenames</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260606-rooms">
   </head>
   <body>
 
@@ -24,6 +24,22 @@
           <button id="christmasModeBtn" type="button" aria-pressed="false">Christmas mode off</button>
           <button id="newGameBtn" type="button">New game</button>
           <button id="newSessionBtn" type="button">New session</button>
+        </div>
+      </section>
+
+      <section class="room-panel" aria-label="Game room">
+        <div class="room-id-card">
+          <span>Game ID</span>
+          <strong id="gameRoomLabel">------</strong>
+        </div>
+        <form id="joinRoomForm" class="room-form">
+          <label for="gameRoomInput">Join game</label>
+          <input id="gameRoomInput" type="text" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Enter ID">
+          <button type="submit">Join</button>
+        </form>
+        <div class="room-actions">
+          <button id="copyRoomLinkBtn" type="button">Copy game link</button>
+          <button id="newRoomBtn" type="button">New game ID</button>
         </div>
       </section>
 
@@ -144,6 +160,7 @@
 
 
 
-    <script src="app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js?v=20260606-rooms"></script>
   </body>
 </html>
