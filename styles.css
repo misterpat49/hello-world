@@ -70,14 +70,31 @@ textarea {
 }
 
 .brand-mark {
+  position: relative;
   display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  border-radius: 7px;
+  width: 48px;
+  height: 40px;
+  place-items: end center;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  padding-bottom: 7px;
   background: var(--ink);
-  color: var(--gold);
-  font: 700 14px/1 "Space Grotesk", sans-serif;
+  color: #fffdf9;
+  box-shadow: 0 3px 0 rgba(43, 32, 25, 0.18);
+  font: 800 13px/1 "Space Grotesk", sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.brand-mark::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 0;
+  height: 8px;
+  border-bottom: 2px solid var(--ink);
+  background: repeating-linear-gradient(135deg, #fffdf9 0 6px, var(--ink) 6px 12px);
 }
 
 .nav-links {
@@ -228,7 +245,7 @@ textarea {
 
 .admin-hero {
   width: min(1160px, calc(100% - 36px));
-  margin: 0 auto;
+  margin: -34px auto 0;
   padding: clamp(54px, 9vw, 96px) 0 18px;
 }
 
