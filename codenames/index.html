@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pendy Codenames</title>
-    <link rel="stylesheet" href="styles.css?v=20260606-rooms">
+    <link rel="stylesheet" href="styles.css?v=20260606-rooms5">
   </head>
   <body>
 
@@ -56,6 +56,14 @@
         <div class="session-warning-actions">
           <button id="confirmNewGameBtn" type="button">Start new game</button>
           <button id="cancelNewGameBtn" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <section id="boxOfficeReturnWarning" class="session-warning return-warning" aria-live="polite" hidden>
+        <p>leaving now will end the current game on this screen</p>
+        <div class="session-warning-actions">
+          <button id="confirmReturnHomeBtn" type="button">Return to box office</button>
+          <button id="cancelReturnHomeBtn" type="button">Stay in game</button>
         </div>
       </section>
 
@@ -156,11 +164,18 @@
           <div id="board" class="board" aria-live="polite"></div>
         </section>
       </section>
+
+      <footer class="codenames-footer">
+        <a id="boxOfficeReturnLink" class="boc-return-link" href="../index.html" aria-label="Return to the Box Office Challenge main page">
+          <span class="boc-return-badge" aria-hidden="true">BOC</span>
+          <span>Return to Box Office</span>
+        </a>
+      </footer>
     </main>
 
 
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260606-rooms4"></script>
+    <script src="app.js?v=20260606-rooms5"></script>
   </body>
 </html>

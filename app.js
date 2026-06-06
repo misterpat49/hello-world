@@ -11,6 +11,7 @@ const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const LOCAL_VIEW_STORAGE_KEY = "pendy-codenames-view-settings";
+const BOX_OFFICE_HOME_URL = "../index.html";
 
 const state = {
   words: [...SAMPLE_WORDS],
@@ -111,7 +112,11 @@ const els = {
   gameRoomInput: document.querySelector("#gameRoomInput"),
   joinRoomForm: document.querySelector("#joinRoomForm"),
   copyRoomLinkBtn: document.querySelector("#copyRoomLinkBtn"),
-  newRoomBtn: document.querySelector("#newRoomBtn")
+  newRoomBtn: document.querySelector("#newRoomBtn"),
+  boxOfficeReturnLink: document.querySelector("#boxOfficeReturnLink"),
+  boxOfficeReturnWarning: document.querySelector("#boxOfficeReturnWarning"),
+  confirmReturnHomeBtn: document.querySelector("#confirmReturnHomeBtn"),
+  cancelReturnHomeBtn: document.querySelector("#cancelReturnHomeBtn")
 };
 
 function generateGameRoomId() {
@@ -869,6 +874,30 @@ function recordSessionWin(winner) {
   state.gameWinRecorded = true;
 }
 
+function hasActiveGameForReturn() {
+  return state.cards.length > 0 && !state.gameOver;
+}
+
+function returnToBoxOffice() {
+  window.location.href = els.boxOfficeReturnLink?.href || BOX_OFFICE_HOME_URL;
+}
+
+function requestBoxOfficeReturn(event) {
+  event.preventDefault();
+  if (hasActiveGameForReturn()) {
+    state.sessionWarningVisible = false;
+    state.newGameWarningVisible = false;
+    if (els.boxOfficeReturnWarning) els.boxOfficeReturnWarning.hidden = false;
+    render();
+    return;
+  }
+  returnToBoxOffice();
+}
+
+function cancelBoxOfficeReturn() {
+  if (els.boxOfficeReturnWarning) els.boxOfficeReturnWarning.hidden = true;
+}
+
 function requestNewGame() {
   if (state.cards.length && (state.settingsLocked || state.wordsSwapped) && !state.gameOver) {
     state.newGameWarningVisible = true;
@@ -1005,6 +1034,9 @@ els.joinRoomForm.addEventListener("submit", (event) => {
 });
 els.copyRoomLinkBtn.addEventListener("click", copyGameRoomLink);
 els.newRoomBtn.addEventListener("click", () => switchGameRoom(generateGameRoomId()));
+els.boxOfficeReturnLink.addEventListener("click", requestBoxOfficeReturn);
+els.confirmReturnHomeBtn.addEventListener("click", returnToBoxOffice);
+els.cancelReturnHomeBtn.addEventListener("click", cancelBoxOfficeReturn);
 
 loadLocalViewSettings();
 switchGameRoom(getInitialGameRoomId());

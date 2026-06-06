@@ -231,6 +231,57 @@ h1 {
   white-space: nowrap;
 }
 
+.codenames-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1.4rem 0 0.4rem;
+}
+
+.boc-return-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--ink);
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.boc-return-link:hover {
+  color: var(--focus);
+}
+
+.boc-return-badge {
+  position: relative;
+  display: grid;
+  width: 48px;
+  height: 40px;
+  place-items: end center;
+  overflow: hidden;
+  border: 2px solid var(--ink);
+  border-radius: 5px;
+  padding-bottom: 7px;
+  background: var(--ink);
+  color: #fffdf9;
+  box-shadow: 0 3px 0 rgba(31, 38, 51, 0.18);
+  font: 900 13px/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.boc-return-badge::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  right: -4px;
+  top: 0;
+  height: 8px;
+  border-bottom: 2px solid var(--ink);
+  background: repeating-linear-gradient(135deg, #fffdf9 0 6px, var(--ink) 6px 12px);
+}
+
+.return-warning p {
+  font-weight: 850;
+}
+
 .assassin-reveal {
   --assassin-reveal-color: #020305;
   position: fixed;
