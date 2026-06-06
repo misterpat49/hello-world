@@ -10,6 +10,7 @@ const TEAM_LABELS = {
 const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const LOCAL_VIEW_STORAGE_KEY = "pendy-codenames-view-settings";
 
 const state = {
   words: [...SAMPLE_WORDS],
@@ -155,11 +156,12 @@ function getInitialGameRoomId() {
 }
 
 function resetStateToDefaults() {
+  const christmasEnabled = isChristmasMode();
   Object.keys(state).forEach((key) => delete state[key]);
   Object.assign(state, JSON.parse(JSON.stringify(DEFAULT_STATE)));
   els.clueTextInput.value = "";
   els.clueTextInput.classList.remove("is-submitted");
-  document.body.classList.remove("christmas-mode");
+  document.body.classList.toggle("christmas-mode", christmasEnabled);
 }
 
 function serializableGameState() {
@@ -376,6 +378,23 @@ function buildRoles(startingTeam, boardSize, assassinCount) {
 
 function isChristmasMode() {
   return document.body.classList.contains("christmas-mode");
+}
+
+function loadLocalViewSettings() {
+  try {
+    const settings = JSON.parse(localStorage.getItem(LOCAL_VIEW_STORAGE_KEY));
+    document.body.classList.toggle("christmas-mode", Boolean(settings?.christmasMode));
+  } catch (error) {
+    console.warn("Could not load Codenames view settings", error);
+  }
+}
+
+function saveLocalViewSettings() {
+  try {
+    localStorage.setItem(LOCAL_VIEW_STORAGE_KEY, JSON.stringify({ christmasMode: isChristmasMode() }));
+  } catch (error) {
+    console.warn("Could not save Codenames view settings", error);
+  }
 }
 
 function teamLabel(team) {
@@ -942,6 +961,7 @@ els.assassinCountSelect.addEventListener("change", (event) => {
 
 els.christmasModeBtn.addEventListener("click", () => {
   document.body.classList.toggle("christmas-mode");
+  saveLocalViewSettings();
   render();
 });
 els.newGameBtn.addEventListener("click", requestNewGame);
@@ -974,4 +994,5 @@ els.joinRoomForm.addEventListener("submit", (event) => {
 els.copyRoomLinkBtn.addEventListener("click", copyGameRoomLink);
 els.newRoomBtn.addEventListener("click", () => switchGameRoom(generateGameRoomId()));
 
+loadLocalViewSettings();
 switchGameRoom(getInitialGameRoomId());
