@@ -233,7 +233,8 @@ h1 {
 
 .codenames-footer {
   position: fixed;
-  left: 1rem;
+  left: 1rem !important;
+  right: auto !important;
   bottom: 1rem;
   z-index: 12;
 }
@@ -1015,7 +1016,8 @@ h1 {
   }
 
   .codenames-footer {
-    left: 0.65rem;
+    left: 0.65rem !important;
+    right: auto !important;
     bottom: 0.65rem;
   }
 

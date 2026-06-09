@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Pendy Codenames</title>
-    <link rel="stylesheet" href="styles.css?v=20260606-rooms7">
+    <link rel="stylesheet" href="styles.css?v=20260606-rooms8">
   </head>
   <body>
 
@@ -19,7 +19,6 @@
         </div>
 
         <div class="controls">
-          <button id="swapWordsBtn" type="button" aria-pressed="false" hidden>Swap words</button>
           <button id="boardModeBtn" type="button" disabled>Show spymaster mode</button>
           <button id="christmasModeBtn" type="button" aria-pressed="false">Christmas mode off</button>
           <button id="newGameBtn" type="button">New game</button>
@@ -151,6 +150,7 @@
             <span class="eyebrow">Words</span>
             <div class="words-actions">
               <button id="newWordsBtn" class="new-words-button" type="button">Pick new words</button>
+              <button id="swapWordsBtn" type="button" aria-pressed="false" hidden>Swap words</button>
               <label class="file-control">
                 <input id="wordUpload" type="file" accept=".txt,.csv,.json">
                 Upload words
@@ -176,6 +176,6 @@
 
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="app.js?v=20260606-rooms5"></script>
+    <script src="app.js?v=20260608-swap-words1"></script>
   </body>
 </html>

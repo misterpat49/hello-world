@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260606-0520">
+    <link rel="stylesheet" href="styles.css?v=20260609-secret-billy1">
   </head>
   <body>
     <header class="site-header">
@@ -172,10 +172,15 @@
           </div>
           <p class="admin-note">Check each player who has paid the $50 entry fee.</p>
           <div class="paid-player-list" id="paidPlayerList"></div>
+          <label for="patrickSecretImageUpload">Secret JPG for Patrick Pendergast</label>
+          <input id="patrickSecretImageUpload" type="file" accept="image/jpeg,.jpg,.jpeg">
           <div class="form-actions">
             <button class="button button-primary" id="savePaidStatus" type="button">Save payment status</button>
+            <button class="button button-secondary-dark" id="savePatrickSecretImage" type="button">Save secret JPG</button>
+            <button class="button button-secondary-dark" id="clearPatrickSecretImage" type="button">Clear secret JPG</button>
           </div>
           <p class="admin-note" id="paidStatusNote">No player lists saved.</p>
+          <p class="admin-note" id="patrickSecretImageStatus">No secret JPG saved.</p>
         </article>
 
         <div class="admin-grid">
@@ -224,6 +229,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260606-0520"></script>
+    <script src="script.js?v=20260609-secret-billy1"></script>
   </body>
 </html>

@@ -122,6 +122,10 @@ const els = {
   savePaidStatus: document.querySelector("#savePaidStatus"),
   paidStatusNote: document.querySelector("#paidStatusNote"),
   paidStatusList: document.querySelector("#paidStatusList"),
+  patrickSecretImageUpload: document.querySelector("#patrickSecretImageUpload"),
+  savePatrickSecretImage: document.querySelector("#savePatrickSecretImage"),
+  clearPatrickSecretImage: document.querySelector("#clearPatrickSecretImage"),
+  patrickSecretImageStatus: document.querySelector("#patrickSecretImageStatus"),
   saveEntries: document.querySelector("#saveEntries"),
   saveResults: document.querySelector("#saveResults"),
   clearEntries: document.querySelector("#clearEntries"),
@@ -159,6 +163,8 @@ const els = {
   movieReleaseSort: document.querySelector("#movieReleaseSort"),
   movieTotalSort: document.querySelector("#movieTotalSort"),
   allContestMovies: document.querySelector("#allContestMovies"),
+  patrickSecretImage: document.querySelector("#patrickSecretImage"),
+  patrickSecretRelease: document.querySelector("#patrickSecretRelease"),
   standingsGrid: document.querySelector("#standingsGrid"),
   hallCurrentWinners: document.querySelector("#hallCurrentWinners"),
   currentYearHall: document.querySelector("#currentYearHall"),
@@ -179,7 +185,7 @@ const els = {
   statLeader: document.querySelector("#statLeader"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "" };
 let lastSaveWarning = "";
 let state = loadState();
 
@@ -193,6 +199,10 @@ function loadState() {
     if (savedState.standingsGifUrl?.startsWith("data:image/") && savedState.standingsGifUrl.length > MAX_STORED_IMAGE_LENGTH) {
       savedState.standingsGifUrl = "";
       lastSaveWarning = "The oversized uploaded standings GIF was cleared from browser storage. Your other contest data is still here.";
+    }
+    if (savedState.patrickSecretImageUrl?.startsWith("data:image/") && savedState.patrickSecretImageUrl.length > MAX_STORED_IMAGE_LENGTH) {
+      savedState.patrickSecretImageUrl = "";
+      lastSaveWarning = "The oversized secret JPG was cleared from browser storage. Your other contest data is still here.";
     }
     if (lastSaveWarning) {
       try {
@@ -267,9 +277,10 @@ function saveState() {
     if (shouldSyncSupabase()) saveStateToSupabase();
     return true;
   } catch (error) {
-    if (state.leaderboardImageUrl?.startsWith("data:image/") || state.standingsGifUrl?.startsWith("data:image/")) {
+    if (state.leaderboardImageUrl?.startsWith("data:image/") || state.standingsGifUrl?.startsWith("data:image/") || state.patrickSecretImageUrl?.startsWith("data:image/")) {
       state.leaderboardImageUrl = "";
       state.standingsGifUrl = "";
+      state.patrickSecretImageUrl = "";
       lastSaveWarning = "The uploaded image or GIF was too large for browser storage, so it was removed. Your other data was saved.";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -1429,6 +1440,10 @@ function isSupportedImageFile(file) {
   return file.type.startsWith("image/") || isGifLikeFile(file);
 }
 
+function isJpegImageFile(file) {
+  return file.type === "image/jpeg" || /\.(jpe?g)$/i.test(file.name);
+}
+
 function resizeImageDataUrl(dataUrl, maxWidth = 1400, quality = 0.84) {
   return new Promise((resolve) => {
     if (dataUrl.startsWith("data:image/gif")) {
@@ -1541,7 +1556,7 @@ function renderMovies(results, entries) {
     .map((movie) => `
       <div class="movie-row ${isMovieCompleted(movie) ? "is-complete" : ""}" role="row">
         <span class="movie-title-cell" role="cell">
-          <strong>${escapeHtml(movie.title)}</strong>
+          ${escapeHtml(movie.title)}
           <small>${formatReleaseDate(releaseDates[normalizeMovie(movie.title)])}</small>
         </span>
         <span role="cell">${listCountForMovie(entries, movie.title)}</span>
@@ -1584,11 +1599,12 @@ function renderAllContestMovies(entries, results) {
           : "all-movies-status-awaiting";
       const rowClass = isShowing || isComplete ? "" : " all-movies-row-awaiting";
       const releaseDate = formatReleaseDate(releaseDates[movie.key]);
+      const movieTitleHtml = renderAllMoviesTitle(movie.title);
 
       return `
         <div class="all-movies-row${rowClass}">
           <span class="all-movies-date">${releaseDate}</span>
-          <strong>${escapeHtml(movie.title)}</strong>
+          ${movieTitleHtml}
           <span>${count} list${count === 1 ? "" : "s"}</span>
           <span class="all-movies-status ${statusClass}">${status}</span>
         </div>
@@ -1603,6 +1619,13 @@ function sortedPlayerNames(entries) {
 
 function renderPaidAdmin(entries) {
   if (!els.paidPlayerList) return;
+
+  if (els.patrickSecretImageUpload) els.patrickSecretImageUpload.value = "";
+  if (els.patrickSecretImageStatus) {
+    els.patrickSecretImageStatus.textContent = state.patrickSecretImageUrl
+      ? "Secret JPG saved for Patrick Pendergast."
+      : "No secret JPG saved.";
+  }
 
   const playerNames = sortedPlayerNames(entries);
   if (!playerNames.length) {
@@ -1622,6 +1645,34 @@ function renderPaidAdmin(entries) {
   if (els.paidStatusNote) els.paidStatusNote.textContent = `${paidCount}/${playerNames.length} player${playerNames.length === 1 ? "" : "s"} marked paid.`;
 }
 
+function isBillyKnightTitle(title) {
+  return String(title || "").trim().toLocaleLowerCase() === "billy knight";
+}
+
+function renderAllMoviesTitle(title) {
+  const safeTitle = escapeHtml(title);
+  const imageUrl = String(state.patrickSecretImageUrl || "").trim();
+  if (!imageUrl || !isBillyKnightTitle(title)) return `<strong>${safeTitle}</strong>`;
+
+  return `<strong><a class="secret-jpg-link" href="patrick-secret.html">${safeTitle}</a></strong>`;
+}
+
+function renderPaidStatusName(name) {
+  return `<strong>${escapeHtml(name)}</strong>`;
+}
+
+function renderPatrickSecretPage() {
+  if (!els.patrickSecretImage) return;
+
+  const imageUrl = String(state.patrickSecretImageUrl || "").trim();
+  els.patrickSecretImage.innerHTML = imageUrl
+    ? '<img src="' + escapeHtml(imageUrl) + '" alt="Secret Patrick Pendergast image">'
+    : '<div class="empty-state">No secret JPG has been uploaded yet.</div>';
+  if (els.patrickSecretRelease) {
+    els.patrickSecretRelease.hidden = !imageUrl;
+  }
+}
+
 function renderPaidStatusPage(entries) {
   if (!els.paidStatusList) return;
 
@@ -1635,7 +1686,7 @@ function renderPaidStatusPage(entries) {
     const paid = Boolean(state.paidPlayers?.[name]);
     return `
       <div class="paid-status-row ${paid ? "is-paid" : "is-unpaid"}">
-        <strong>${escapeHtml(name)}</strong>
+        ${renderPaidStatusName(name)}
         <span>${paid ? "Paid" : "Not paid yet"}</span>
       </div>
     `;
@@ -1999,6 +2050,7 @@ function render() {
   renderAdminResultsGrid(entries, results);
   renderPaidAdmin(entries);
   renderPaidStatusPage(entries);
+  renderPatrickSecretPage();
   renderMovies(results, entries);
   renderAllContestMovies(entries, results);
   renderOverallStandings(scored, rawScored);
@@ -2241,6 +2293,40 @@ els.clearMovieQuote?.addEventListener("click", () => {
   state.movieQuoteMovie = "";
   saveState();
   render();
+});
+
+els.savePatrickSecretImage?.addEventListener("click", () => {
+  const uploadedImage = els.patrickSecretImageUpload?.files?.[0];
+
+  if (!uploadedImage) {
+    if (els.patrickSecretImageStatus) els.patrickSecretImageStatus.textContent = "Choose a JPG to upload.";
+    return;
+  }
+
+  if (!isJpegImageFile(uploadedImage)) {
+    if (els.patrickSecretImageStatus) els.patrickSecretImageStatus.textContent = "Choose a JPG or JPEG file.";
+    return;
+  }
+
+  imageFileToDataUrl(uploadedImage)
+    .then((dataUrl) => resizeImageDataUrl(dataUrl, 1200, 0.86))
+    .then((dataUrl) => {
+      state.patrickSecretImageUrl = dataUrl;
+      saveState();
+      render();
+      showSaveWarning(els.patrickSecretImageStatus);
+    })
+    .catch(() => {
+      if (els.patrickSecretImageStatus) els.patrickSecretImageStatus.textContent = "That JPG could not be uploaded.";
+    });
+});
+
+els.clearPatrickSecretImage?.addEventListener("click", () => {
+  state.patrickSecretImageUrl = "";
+  if (els.patrickSecretImageUpload) els.patrickSecretImageUpload.value = "";
+  saveState();
+  render();
+  showSaveWarning(els.patrickSecretImageStatus);
 });
 
 els.savePaidStatus?.addEventListener("click", () => {

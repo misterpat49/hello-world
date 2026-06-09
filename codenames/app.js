@@ -242,6 +242,14 @@ function scheduleGameSave() {
   }, 250);
 }
 
+function saveGameStateNow() {
+  if (isApplyingRemoteState || !gameRoomId) return;
+
+  window.clearTimeout(saveTimer);
+  saveLocalGameState();
+  saveRemoteGameState();
+}
+
 async function loadRemoteGameState() {
   if (!supabaseClient || !gameRoomId) return false;
 
@@ -514,14 +522,36 @@ function remaining(team) {
 
 function submitClueText(event) {
   event.preventDefault();
-  if (state.pendingGuessCount !== null || state.clueLimit > 0) return;
+  if (state.gameOver || !state.cards.length || state.pendingGuessCount !== null || state.clueLimit > 0) return;
 
   const clue = els.clueTextInput.value.trim();
-  if (!clue) return;
+  if (clue) {
+    state.currentClueText = clue;
+    els.clueTextInput.value = clue;
+    els.clueTextInput.classList.add("is-submitted");
+  }
 
-  state.currentClueText = clue;
-  els.clueTextInput.value = clue;
-  els.clueTextInput.classList.add("is-submitted");
+  if (state.selectedGuessCount !== null) {
+    askForBonus(state.selectedGuessCount);
+    return;
+  }
+
+  if (!clue) {
+    setStatus("Select a clue count before submitting.");
+  }
+  render();
+}
+
+function selectGuessCount(count) {
+  if (state.gameOver || !state.cards.length || state.pendingGuessCount !== null || state.clueLimit > 0) return;
+
+  if (!Number.isInteger(count) || count < 1 || count > 9) {
+    setStatus("Select a number from 1 to 9.");
+    return;
+  }
+
+  state.selectedGuessCount = count;
+  setStatus("Submit clue for " + count + " guess" + (count === 1 ? "" : "es") + ".");
   render();
 }
 
@@ -802,7 +832,7 @@ function renderPanel() {
 
   els.boardModeBtn.disabled = !state.cards.length;
   els.boardModeBtn.textContent = getBoardModeButtonText();
-  els.swapWordsBtn.hidden = !state.cards.length || state.settingsLocked || state.gameOver;
+  els.swapWordsBtn.hidden = !state.spymasterMode || !state.cards.length || state.settingsLocked || state.gameOver;
   els.swapWordsBtn.classList.toggle("is-active", state.swapMode);
   els.swapWordsBtn.setAttribute("aria-pressed", String(state.swapMode));
   els.swapWordsBtn.textContent = state.swapMode ? "Swapping words" : "Swap words";
@@ -927,11 +957,11 @@ function newSession() {
 }
 
 function confirmNewSession() {
-  state.sessionWins.red = 0;
-  state.sessionWins.blue = 0;
+  state.sessionWins = { red: 0, blue: 0 };
   state.sessionWarningVisible = false;
   setStatus("New session started.");
   render();
+  saveGameStateNow();
 }
 
 function cancelNewSession() {
@@ -1020,7 +1050,7 @@ els.clueTextInput.addEventListener("input", () => {
 els.guessButtons.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-count]");
   if (!button) return;
-  askForBonus(Number(button.dataset.count));
+  selectGuessCount(Number(button.dataset.count));
 });
 els.noBonusBtn.addEventListener("click", () => setGuessCount(false));
 els.yesBonusBtn.addEventListener("click", () => setGuessCount(true));
