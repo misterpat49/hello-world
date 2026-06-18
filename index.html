@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260609-entry-fee-border1">
+    <link rel="stylesheet" href="styles.css?v=20260618-movie-grades1">
   </head>
   <body>
     <header class="site-header">
@@ -40,6 +40,7 @@
           <p class="hero-kicker">Year <span class="contest-edition">27</span> of America&apos;s most elite, least known, buzzed about Box Office Contest!</p>
           <div class="hero-actions">
             <a class="button button-primary" href="#leaderboard">See standings</a>
+            <a class="button button-blue" href="./grades.html">Grade movies</a>
             <a class="button button-secondary" href="https://www.boxofficemojo.com/weekend/?ref_=bo_nb_hm_secondarytab">Box Office Mojo&apos;s weekend results</a>
             <a class="button button-secondary" id="enterListButton" href="./enter-list.html">Enter your list</a>
           </div>
@@ -62,6 +63,13 @@
         <article>
           <span class="stat-label">Current leader</span>
           <strong id="statLeader">None</strong>
+        </article>
+      </section>
+
+      <section class="section movie-quote-section weekly-update-section" aria-label="Weekly update" id="weeklyUpdateSection" hidden>
+        <article class="movie-quote-card weekly-update-card">
+          <span class="standing-label">Weekly update</span>
+          <p id="weeklyUpdateText"></p>
         </article>
       </section>
 
@@ -275,6 +283,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260609-tracked-fix1"></script>
+    <script src="script.js?v=20260618-movie-grades1"></script>
   </body>
 </html>

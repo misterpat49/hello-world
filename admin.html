@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260609-secret-billy1">
+    <link rel="stylesheet" href="styles.css?v=20260618-movie-grades1">
   </head>
   <body>
     <header class="site-header">
@@ -143,6 +143,20 @@
           <p class="admin-note" id="standingsGifStatus">No standings GIF saved.</p>
         </article>
 
+        <article class="admin-card weekly-update-admin-card">
+          <div class="card-heading">
+            <h3>Weekly update</h3>
+            <span>Main page</span>
+          </div>
+          <label for="weeklyUpdateInput">Enter the weekly update shown above Movie quote of the week</label>
+          <textarea id="weeklyUpdateInput" spellcheck="false" autocomplete="off" placeholder="Write this week's commissioner note..."></textarea>
+          <div class="form-actions">
+            <button class="button button-primary" id="saveWeeklyUpdate" type="button">Save update</button>
+            <button class="button button-secondary-dark" id="clearWeeklyUpdate" type="button">Clear update</button>
+          </div>
+          <p class="admin-note" id="weeklyUpdateStatus">No weekly update saved.</p>
+        </article>
+
         <article class="admin-card movie-quote-admin-card">
           <div class="card-heading">
             <h3>Movie quote of the week</h3>
@@ -229,6 +243,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260609-secret-billy1"></script>
+    <script src="script.js?v=20260618-movie-grades1"></script>
   </body>
 </html>

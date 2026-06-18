@@ -111,6 +111,10 @@ const els = {
   saveComingSoon: document.querySelector("#saveComingSoon"),
   clearComingSoon: document.querySelector("#clearComingSoon"),
   comingSoonStatus: document.querySelector("#comingSoonStatus"),
+  weeklyUpdateInput: document.querySelector("#weeklyUpdateInput"),
+  saveWeeklyUpdate: document.querySelector("#saveWeeklyUpdate"),
+  clearWeeklyUpdate: document.querySelector("#clearWeeklyUpdate"),
+  weeklyUpdateStatus: document.querySelector("#weeklyUpdateStatus"),
   movieQuoteInput: document.querySelector("#movieQuoteInput"),
   movieQuoteCharacter: document.querySelector("#movieQuoteCharacter"),
   movieQuoteActor: document.querySelector("#movieQuoteActor"),
@@ -141,6 +145,8 @@ const els = {
   leaderboardImage: document.querySelector("#leaderboardImage"),
   standingsGif: document.querySelector("#standingsGif"),
   enterListButton: document.querySelector("#enterListButton"),
+  weeklyUpdateSection: document.querySelector("#weeklyUpdateSection"),
+  weeklyUpdateText: document.querySelector("#weeklyUpdateText"),
   movieQuoteSection: document.querySelector("#movieQuoteSection"),
   movieQuoteText: document.querySelector("#movieQuoteText"),
   movieQuoteMeta: document.querySelector("#movieQuoteMeta"),
@@ -149,6 +155,11 @@ const els = {
   newEntryPicks: document.querySelector("#newEntryPicks"),
   newEntryStatus: document.querySelector("#newEntryStatus"),
   resetNewEntry: document.querySelector("#resetNewEntry"),
+  gradeForm: document.querySelector("#gradeForm"),
+  gradePlayerSelect: document.querySelector("#gradePlayerSelect"),
+  gradeMovies: document.querySelector("#gradeMovies"),
+  gradeStatus: document.querySelector("#gradeStatus"),
+  resetGrades: document.querySelector("#resetGrades"),
   contestantSelect: document.querySelector("#contestantSelect"),
   contestantLists: document.querySelector("#contestantLists"),
   compareContestantA: document.querySelector("#compareContestantA"),
@@ -185,7 +196,7 @@ const els = {
   statLeader: document.querySelector("#statLeader"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, leaderboardRankMovement: {} };
 let lastSaveWarning = "";
 let state = loadState();
 
@@ -298,7 +309,7 @@ function saveState() {
 }
 
 function shouldSyncSupabase() {
-  return (isAdminPage() && isAdminUnlocked()) || Boolean(els.newEntryForm);
+  return (isAdminPage() && isAdminUnlocked()) || Boolean(els.newEntryForm) || Boolean(els.gradeForm);
 }
 
 function showSaveWarning(fallbackElement = els.backupStatus) {
@@ -608,6 +619,57 @@ function parseComingSoonMovies(text) {
     .filter(Boolean);
 }
 
+const gradePointValues = { "A+": 12, A: 11, "A-": 10, "B+": 9, B: 8, "B-": 7, "C+": 6, C: 5, "C-": 4, "D+": 3, D: 2, "D-": 1, F: 0 };
+const gradeOptions = Object.keys(gradePointValues);
+
+function gradeLabelFromAverage(value) {
+  const closest = gradeOptions
+    .map((grade) => ({ grade, gap: Math.abs(gradePointValues[grade] - value) }))
+    .sort((a, b) => a.gap - b.gap || gradePointValues[b.grade] - gradePointValues[a.grade])[0];
+
+  return closest?.grade || "N/A";
+}
+
+function releasedOrTrackedMovies(entries, results) {
+  const releaseDates = getReleaseDates();
+  const today = new Date();
+
+  return getContestMovies(entries)
+    .filter((movie) => {
+      const savedMovie = results.get(movie.key);
+      const releaseDate = parseLocalDate(releaseDates[movie.key]);
+      return hasAnyBoxOffice(savedMovie) || Boolean(releaseDate && releaseDate <= today);
+    })
+    .sort((a, b) => {
+      const aDate = releaseDates[a.key] || "";
+      const bDate = releaseDates[b.key] || "";
+      if (aDate && bDate) return aDate.localeCompare(bDate) || a.title.localeCompare(b.title);
+      if (aDate) return -1;
+      if (bDate) return 1;
+      return a.title.localeCompare(b.title);
+    });
+}
+
+function movieGradeStats(entries) {
+  const movieTitles = new Map(getContestMovies(entries).map((movie) => [movie.key, movie.title]));
+  const totals = new Map();
+
+  Object.entries(state.movieGrades || {}).forEach(([playerName, grades]) => {
+    Object.entries(grades || {}).forEach(([movieKey, grade]) => {
+      if (!(grade in gradePointValues)) return;
+      const stat = totals.get(movieKey) || { key: movieKey, title: movieTitles.get(movieKey) || movieKey, points: 0, votes: 0, players: [] };
+      stat.points += gradePointValues[grade];
+      stat.votes += 1;
+      stat.players.push({ name: playerName, grade });
+      totals.set(movieKey, stat);
+    });
+  });
+
+  return Array.from(totals.values())
+    .map((stat) => ({ ...stat, average: stat.points / stat.votes, averageGrade: gradeLabelFromAverage(stat.points / stat.votes) }))
+    .sort((a, b) => b.average - a.average || b.votes - a.votes || a.title.localeCompare(b.title));
+}
+
 function movieTotal(movie, weekLimit = MAX_WEEKENDS) {
   if (!movie) return 0;
 
@@ -680,6 +742,35 @@ function scoreRawGross(entries, results) {
       return { ...entry, rawGross };
     })
     .sort((a, b) => b.rawGross - a.rawGross || a.name.localeCompare(b.name));
+}
+function leaderboardRankMap(scored) {
+  return new Map(scored.map((entry, index) => [entry.name, index + 1]));
+}
+
+function calculateLeaderboardMovement(entries, oldResults, newResults) {
+  const oldRanks = leaderboardRankMap(scoreEntries(entries, oldResults, "all"));
+  const newRanks = leaderboardRankMap(scoreEntries(entries, newResults, "all"));
+  const movement = {};
+
+  newRanks.forEach((newRank, name) => {
+    const oldRank = oldRanks.get(name);
+    if (!oldRank) return;
+    const delta = oldRank - newRank;
+    if (delta !== 0) movement[name] = delta;
+  });
+
+  return movement;
+}
+
+function renderLeaderboardMovement(name) {
+  const delta = Number(state.leaderboardRankMovement?.[name] || 0);
+  if (!delta) return "";
+
+  const direction = delta > 0 ? "up" : "down";
+  const arrow = delta > 0 ? "↑" : "↓";
+  const spots = Math.abs(delta);
+  const label = escapeHtml(name) + " moved " + direction + " " + spots + " spot" + (spots === 1 ? "" : "s");
+  return '<span class="leaderboard-move leaderboard-move-' + direction + '" aria-label="' + label + '">' + arrow + spots + '</span>';
 }
 
 function formatRawGrossLeaders(rawScored) {
@@ -1195,19 +1286,6 @@ function renderContestFunStats(entries, results, scored) {
   const sameziesGroups = Array.from(sameziesMap.values())
     .filter((group) => group.players.length > 1)
     .sort((a, b) => b.players.length - a.players.length || a.players.join(", ").localeCompare(b.players.join(", ")));
-  const scaryMastersComparison = entries.reduce((total, entry) => {
-    const scaryRank = entry.picks.findIndex((pick) => normalizeMovie(pick) === "scary movie 6");
-    const mastersRank = entry.picks.findIndex((pick) => normalizeMovie(pick) === "masters of the universe");
-
-    if (scaryRank < 0 || mastersRank < 0) return total;
-
-    total.both += 1;
-    if (scaryRank < mastersRank) {
-      total.scaryHigher += 1;
-      total.names.push(entry.name);
-    }
-    return total;
-  }, { both: 0, scaryHigher: 0, names: [] });
   const soulmatePairs = [];
   entries.forEach((entryA, indexA) => {
     const aRanks = new Map(entryA.picks.map((pick, index) => [normalizeMovie(pick), index + 1]));
@@ -1230,6 +1308,20 @@ function renderContestFunStats(entries, results, scored) {
     .slice()
     .sort((a, b) => a.sharedCount - b.sharedCount || b.averageGap - a.averageGap || a.names.localeCompare(b.names))
     .slice(0, 1);
+  const gradeStats = movieGradeStats(entries);
+  const topGradeScore = gradeStats[0]?.average;
+  const topGradeVoteCount = topGradeScore == null
+    ? 0
+    : Math.max(...gradeStats.filter((movie) => movie.average === topGradeScore).map((movie) => movie.votes));
+  const summerGradeWinners = topGradeScore == null
+    ? []
+    : gradeStats.filter((movie) => movie.average === topGradeScore && movie.votes === topGradeVoteCount);
+  const summerGradeWinnerLabel = summerGradeWinners.length > 1 ? "Movies of the summer" : "Movie of the summer";
+  const summerGradeWinnerText = summerGradeWinners.length
+    ? summerGradeWinners.map((movie) => escapeHtml(movie.title)).join(", ") + " <em>" + summerGradeWinners[0].averageGrade + " average, " + topGradeVoteCount + " grade" + (topGradeVoteCount === 1 ? "" : "s") + "</em>"
+    : "No movie grades submitted yet.";
+  const summerGradeWinnerKeys = new Set(summerGradeWinners.map((movie) => movie.key));
+  const audienceReportList = gradeStats.filter((movie) => !summerGradeWinnerKeys.has(movie.key));
   els.contestFunStats.innerHTML = `
     <div class="fun-stat-grid">
       <article class="fun-wide">
@@ -1250,6 +1342,16 @@ function renderContestFunStats(entries, results, scored) {
           ${formatRankList(topChoices.map((movie) => `${escapeHtml(movie.title)} <em>${movie.firstPlaceVotes} first-place vote${movie.firstPlaceVotes === 1 ? "" : "s"}</em>`), "No first-place votes.")}
         </ul>
       </article>
+      <article>
+        <span>Audience report card</span>
+        <div class="report-card-winner">
+          <strong>${summerGradeWinnerLabel}</strong>
+          <p>${summerGradeWinnerText}</p>
+        </div>
+        <ul class="fun-mini-list">
+          ${formatRankList(audienceReportList.map((movie) => `${escapeHtml(movie.title)} <em>${movie.averageGrade} average, ${movie.votes} grade${movie.votes === 1 ? "" : "s"}</em>`), summerGradeWinners.length ? "No other movie grades submitted yet." : "No movie grades submitted yet.")}
+        </ul>
+      </article>
       <article class="fun-wide">
         <span>Aggregate list <em>(${aggregateRank} if this was a real user, the optimum list based off everyone&apos;s averages)</em></span>
         <ul class="fun-mini-list">
@@ -1266,14 +1368,6 @@ function renderContestFunStats(entries, results, scored) {
         <span>Samezies <em>(same 15 movies, ranking ignored)</em></span>
         <ul class="fun-mini-list">
           ${formatRankList(sameziesGroups.map((group) => `${group.players.map(escapeHtml).join(", ")} <em>${group.movies.map(escapeHtml).join(", ")}</em>`), "No studios picked the exact same 15 movies.")}
-        </ul>
-      </article>
-      <article>
-        <span>Scary Movie 6 vs Masters of the Universe</span>
-        <strong>${scaryMastersComparison.scaryHigher} of ${scaryMastersComparison.both}</strong>
-        <em>had Scary Movie 6 ranked higher among studios that picked both</em>
-        <ul class="fun-mini-list">
-          ${formatRankList(scaryMastersComparison.names.sort((a, b) => a.localeCompare(b)).map(escapeHtml), "No studios had Scary Movie 6 higher.")}
         </ul>
       </article>
       <article>
@@ -1363,7 +1457,7 @@ function renderLeaderboard(scored) {
     .map((entry, index) => `
       <div class="leaderboard-row ${index === 0 ? "is-first" : ""}" role="row">
         <span role="cell">${index + 1}</span>
-        <span role="cell">${renderPlayerJump(entry.name)}</span>
+        <span role="cell">${renderPlayerJump(entry.name)}${renderLeaderboardMovement(entry.name)}</span>
         <span role="cell">${formatScore(entry.score)}</span>
         <span role="cell">${entry.lockedMovies}/${MAX_PICKS}</span>
       </div>
@@ -1476,6 +1570,21 @@ function resizeImageDataUrl(dataUrl, maxWidth = 1400, quality = 0.84) {
   });
 }
 
+function renderWeeklyUpdate() {
+  const update = state.weeklyUpdateText.trim();
+
+  if (els.weeklyUpdateInput) {
+    els.weeklyUpdateInput.value = update;
+  }
+  if (els.weeklyUpdateStatus) {
+    els.weeklyUpdateStatus.textContent = update ? "Weekly update saved." : "No weekly update saved.";
+  }
+  if (!els.weeklyUpdateSection || !els.weeklyUpdateText) return;
+
+  els.weeklyUpdateSection.hidden = !update;
+  els.weeklyUpdateText.innerHTML = update ? escapeHtml(update).replace(/\n/g, "<br>") : "";
+}
+
 function renderMovieQuote() {
   const quote = state.movieQuoteText.trim();
   const character = state.movieQuoteCharacter.trim();
@@ -1511,6 +1620,31 @@ function renderMovieQuote() {
 function listCountForMovie(entries, movieTitle) {
   const key = normalizeMovie(movieTitle);
   return entries.reduce((count, entry) => count + (entry.picks.some((pick) => normalizeMovie(pick) === key) ? 1 : 0), 0);
+}
+function playersForMovie(entries, movieTitle) {
+  const key = normalizeMovie(movieTitle);
+  return entries
+    .map((entry) => {
+      const rankIndex = entry.picks.findIndex((pick) => normalizeMovie(pick) === key);
+      return rankIndex >= 0 ? { name: entry.name, rank: rankIndex + 1 } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.rank - b.rank || a.name.localeCompare(b.name));
+}
+
+function renderAllMoviesListDetails(entries, movieTitle) {
+  const players = playersForMovie(entries, movieTitle);
+  const label = players.length + " list" + (players.length === 1 ? "" : "s");
+  if (!players.length) return `<span>0 lists</span>`;
+
+  return [
+    `<details class="all-movies-player-details">`,
+    `<summary>${label}</summary>`,
+    `<ul>`,
+    players.map((player) => `<li><strong>${escapeHtml(player.name)}</strong> <span>#${player.rank}</span></li>`).join(""),
+    `</ul>`,
+    `</details>`
+  ].join("");
 }
 
 function renderMovies(results, entries) {
@@ -1589,6 +1723,7 @@ function renderAllContestMovies(entries, results) {
     .map((movie) => {
       const savedMovie = results.get(movie.key);
       const count = listCountForMovie(entries, movie.title);
+      const listDetailsHtml = renderAllMoviesListDetails(entries, movie.title);
       const isComplete = isMovieCompleted(savedMovie);
       const isShowing = hasAnyBoxOffice(savedMovie);
       const status = isComplete ? "Completed for Contest" : isShowing ? "Now Showing" : "Awaiting results";
@@ -1605,7 +1740,7 @@ function renderAllContestMovies(entries, results) {
         <div class="all-movies-row${rowClass}">
           <span class="all-movies-date">${releaseDate}</span>
           ${movieTitleHtml}
-          <span>${count} list${count === 1 ? "" : "s"}</span>
+          ${listDetailsHtml}
           <span class="all-movies-status ${statusClass}">${status}</span>
         </div>
       `;
@@ -1970,6 +2105,61 @@ function formatRankGroup(matches, rank) {
   return names ? `${names} (#${rank})` : "No studio";
 }
 
+function renderGradePage(entries, results) {
+  if (!els.gradeForm) return;
+
+  const players = entries.slice().sort((a, b) => a.name.localeCompare(b.name));
+  const movies = releasedOrTrackedMovies(entries, results);
+
+  if (!players.length) {
+    els.gradePlayerSelect.innerHTML = `<option value="">No studios saved</option>`;
+    els.gradePlayerSelect.disabled = true;
+    els.gradeMovies.innerHTML = `<div class="empty-state">No player lists have been saved yet.</div>`;
+    if (els.gradeStatus) els.gradeStatus.textContent = "No studios available yet.";
+    return;
+  }
+
+  const selectedPlayer = players.find((entry) => entry.name === state.selectedGradePlayer)?.name || players[0].name;
+  state.selectedGradePlayer = selectedPlayer;
+  const savedGrades = state.movieGrades?.[selectedPlayer] || {};
+
+  els.gradePlayerSelect.disabled = false;
+  els.gradePlayerSelect.innerHTML = players
+    .map((entry) => `<option value="${escapeHtml(entry.name)}" ${entry.name === selectedPlayer ? "selected" : ""}>${escapeHtml(entry.name)}</option>`)
+    .join("");
+
+  if (!movies.length) {
+    els.gradeMovies.innerHTML = `<div class="empty-state">No released movies are available to grade yet.</div>`;
+    if (els.gradeStatus) els.gradeStatus.textContent = "Released movies will appear here once dates or box office totals are entered.";
+    return;
+  }
+
+  const releaseDates = getReleaseDates();
+  els.gradeMovies.innerHTML = movies
+    .map((movie) => {
+      const alreadyGraded = Boolean(savedGrades[movie.key]);
+      return `
+        <div class="grade-row ${alreadyGraded ? "is-graded" : ""}">
+          <div>
+            <strong>${escapeHtml(movie.title)}</strong>
+            <small>${formatReleaseDate(releaseDates[movie.key])}</small>
+          </div>
+          <div class="grade-control">
+            ${alreadyGraded ? `<button class="grade-regrade-button" type="button" data-regrade-movie="${escapeHtml(movie.key)}">Re-grade</button><span>Already graded</span>` : ""}
+            <select data-movie-key="${escapeHtml(movie.key)}" aria-label="Grade ${escapeHtml(movie.title)}" ${alreadyGraded ? "hidden disabled" : ""}>
+              <option value="">No grade</option>
+              ${gradeOptions.map((grade) => `<option value="${grade}">${grade}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  const gradeCount = Object.values(savedGrades).filter(Boolean).length;
+  if (els.gradeStatus) els.gradeStatus.textContent = gradeCount ? `${gradeCount} movie${gradeCount === 1 ? "" : "s"} already graded. Use Re-grade to update one.` : "No grades submitted yet.";
+}
+
 function renderComingSoon(entries) {
   if (!els.comingSoonMovies) return;
 
@@ -2044,8 +2234,10 @@ function render() {
   renderLeaderboard(scored);
   renderLeaderboardImage();
   renderStandingsGif();
+  renderWeeklyUpdate();
   renderMovieQuote();
   renderNewEntryForm(entries);
+  renderGradePage(entries, results);
   renderContestantLists(entries, results, scored);
   renderAdminResultsGrid(entries, results);
   renderPaidAdmin(entries);
@@ -2069,7 +2261,13 @@ els.saveEntries?.addEventListener("click", () => {
 });
 
 els.saveResults?.addEventListener("click", () => {
-  state.resultsText = serializeAdminResultsGrid();
+  const entries = parseEntries(state.entriesText);
+  const oldResults = parseResults(state.resultsText);
+  const nextResultsText = serializeAdminResultsGrid();
+  const newResults = parseResults(nextResultsText);
+
+  state.leaderboardRankMovement = calculateLeaderboardMovement(entries, oldResults, newResults);
+  state.resultsText = nextResultsText;
   saveState();
   render();
   showSaveWarning(els.resultStatus);
@@ -2139,6 +2337,60 @@ els.resetNewEntry?.addEventListener("click", () => {
 els.newEntryPicks?.addEventListener("change", (event) => {
   if (!event.target.matches("select")) return;
   updateNewEntryOptions();
+});
+
+els.gradePlayerSelect?.addEventListener("change", () => {
+  state.selectedGradePlayer = els.gradePlayerSelect.value;
+  render();
+});
+els.gradeMovies?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-regrade-movie]");
+  if (!button) return;
+
+  const row = button.closest(".grade-row");
+  const select = row?.querySelector("select[data-movie-key]");
+  const label = row?.querySelector(".grade-control span");
+  if (!select) return;
+
+  button.hidden = true;
+  if (label) label.hidden = true;
+  select.disabled = false;
+  select.hidden = false;
+  select.removeAttribute("disabled");
+  select.removeAttribute("hidden");
+  select.value = "";
+  select.focus();
+});
+
+els.gradeForm?.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const playerName = els.gradePlayerSelect?.value || "";
+  if (!playerName) return;
+
+  const grades = { ...((state.movieGrades || {})[playerName] || {}) };
+  els.gradeMovies?.querySelectorAll("select[data-movie-key]").forEach((select) => {
+    if (select.disabled) return;
+
+    if (select.value) {
+      grades[select.dataset.movieKey] = select.value;
+    } else {
+      delete grades[select.dataset.movieKey];
+    }
+  });
+
+  state.selectedGradePlayer = playerName;
+  state.movieGrades = { ...(state.movieGrades || {}), [playerName]: grades };
+  saveState();
+  render();
+  if (els.gradeStatus) els.gradeStatus.textContent = "Grades submitted. Thanks.";
+});
+els.resetGrades?.addEventListener("click", () => {
+  const playerName = els.gradePlayerSelect?.value || "";
+  if (!playerName) return;
+
+  state.movieGrades = { ...(state.movieGrades || {}), [playerName]: {} };
+  saveState();
+  render();
 });
 
 els.contestantSelect?.addEventListener("change", () => {
@@ -2275,6 +2527,18 @@ els.clearStandingsGif?.addEventListener("click", () => {
   saveState();
   render();
   showSaveWarning(els.standingsGifStatus);
+});
+
+els.saveWeeklyUpdate?.addEventListener("click", () => {
+  state.weeklyUpdateText = els.weeklyUpdateInput.value.trim();
+  saveState();
+  render();
+});
+
+els.clearWeeklyUpdate?.addEventListener("click", () => {
+  state.weeklyUpdateText = "";
+  saveState();
+  render();
 });
 
 els.saveMovieQuote?.addEventListener("click", () => {

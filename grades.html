@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Grade Movies - 2026 Summer Box Office Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260618-movie-grades1">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to Summer Box Office Challenge">
+        <span class="brand-mark">BOC</span>
+        <span class="contest-name">2026 Summer Box Office Challenge</span>
+      </a>
+      <nav class="nav-links" aria-label="Grade movies navigation">
+        <a href="index.html">Main page</a>
+        <a href="index.html#contestants">Contestant Central</a>
+        <a href="index.html#leaderboard">Leaderboard</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="admin-hero hall-hero" aria-labelledby="grade-title">
+        <p class="eyebrow">Audience report card</p>
+        <h1 id="grade-title">Grade movies</h1>
+        <p>Pick your studio, then give released movies a letter grade based on how much you liked them. Your grades will remain anonymous.</p>
+      </section>
+
+      <section class="section grade-section" aria-label="Grade released movies">
+        <form class="new-entry-card grade-card" id="gradeForm">
+          <label for="gradePlayerSelect">Studio name</label>
+          <select id="gradePlayerSelect"></select>
+          <div class="grade-scale" aria-label="Grade scale">A+ A A- B+ B B- C+ C C- D+ D D- F</div>
+          <div class="grade-movies" id="gradeMovies"></div>
+          <div class="form-actions">
+            <button class="button button-primary" type="submit">Save grades</button>
+            <button class="button button-secondary-dark" id="resetGrades" type="button">Clear my grades</button>
+          </div>
+          <p class="admin-note" id="gradeStatus">Choose your studio to start grading.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><span class="contest-name">2026 Summer Box Office Challenge</span> grades</span>
+      <span><a class="footer-admin-link" href="./index.html#contestants">Back to Water Cooler</a></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js?v=20260618-movie-grades1"></script>
+  </body>
+</html>

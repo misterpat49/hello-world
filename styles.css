@@ -360,6 +360,12 @@ h1 {
   border: 1px solid rgba(255, 250, 240, 0.28);
 }
 
+.button-blue {
+  background: var(--blue);
+  color: white;
+  box-shadow: 0 12px 30px rgba(26, 91, 181, 0.26);
+}
+
 .button.is-disabled {
   cursor: not-allowed;
   opacity: 0.48;
@@ -516,6 +522,10 @@ h1 {
   margin-bottom: -32px;
 }
 
+.weekly-update-section {
+  margin-bottom: 18px;
+}
+
 .movie-quote-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -528,6 +538,10 @@ h1 {
   margin: 10px 0 0;
   color: var(--ink);
   font: italic 700 clamp(28px, 4vw, 48px)/1.12 "Space Grotesk", sans-serif;
+}
+
+.weekly-update-card p {
+  font-size: clamp(14px, 2vw, 24px);
 }
 
 .movie-quote-meta {
@@ -604,6 +618,30 @@ h1 {
 .player-jump:focus-visible {
   color: var(--red);
   text-decoration: underline;
+}
+
+.leaderboard-move {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.1rem;
+  margin-left: 0.55rem;
+  border-radius: 999px;
+  padding: 0.16rem 0.42rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.leaderboard-move-up {
+  background: rgba(31, 138, 76, 0.14);
+  color: var(--green);
+}
+
+.leaderboard-move-down {
+  background: rgba(200, 63, 67, 0.14);
+  color: var(--red);
 }
 
 .name-separator {
@@ -712,6 +750,102 @@ h1 {
   place-items: center;
   border-radius: 7px;
   background: #f4eadf;
+}
+
+.grade-card {
+  gap: 18px;
+}
+
+.grade-card > select {
+  width: min(420px, 100%);
+}
+
+.grade-scale {
+  width: fit-content;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fffdf9;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.grade-movies {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fffdf9;
+}
+
+.grade-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.grade-row:last-child {
+  border-bottom: 0;
+}
+
+.grade-row strong,
+.grade-row small {
+  display: block;
+}
+
+.grade-row strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.grade-row small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.grade-row select {
+  width: 100%;
+  min-height: 42px;
+}
+
+.grade-control {
+  display: grid;
+  gap: 7px;
+  justify-items: end;
+}
+
+.grade-control span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.grade-regrade-button {
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: #fffdf9;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.grade-regrade-button:hover,
+.grade-regrade-button:focus-visible {
+  border-color: var(--teal);
+  outline: 3px solid rgba(15, 119, 114, 0.14);
 }
 
 .status-key {
@@ -1118,6 +1252,43 @@ h1 {
   font-weight: 700;
 }
 
+.report-card-winner {
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f4eadf;
+}
+
+.report-card-winner strong,
+.report-card-winner p {
+  display: block;
+}
+
+.report-card-winner strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.report-card-winner p {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.report-card-winner em {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 800;
+}
+
 .contestant-card {
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1252,6 +1423,7 @@ h1 {
 }
 
 .coming-soon-admin-card,
+.weekly-update-admin-card,
 .movie-quote-admin-card,
 .contest-year-card,
 .backup-card {
@@ -1272,6 +1444,7 @@ h1 {
 }
 
 .coming-soon-admin-card textarea,
+.weekly-update-admin-card textarea,
 .movie-quote-admin-card textarea {
   min-height: 150px;
 }
@@ -1747,6 +1920,58 @@ textarea:focus {
   font-weight: 800;
 }
 
+.all-movies-player-details {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.all-movies-player-details summary {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  text-transform: lowercase;
+}
+
+.all-movies-player-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.all-movies-player-details summary::after {
+  content: " +";
+  color: var(--gold);
+}
+
+.all-movies-player-details[open] summary::after {
+  content: " -";
+}
+
+.all-movies-player-details ul {
+  display: grid;
+  gap: 5px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.all-movies-player-details li {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.all-movies-player-details li strong {
+  font: 800 13px/1.25 Inter, sans-serif;
+}
+
+.all-movies-player-details li span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .all-movies-date,
 .all-movies-status {
   text-transform: uppercase;
@@ -2048,6 +2273,18 @@ a.promo-logo-link:focus-visible {
 
   .quick-stats article:last-child {
     border-bottom: 0;
+  }
+
+  .grade-row {
+    grid-template-columns: 1fr;
+  }
+
+  .grade-row select {
+    width: min(180px, 100%);
+  }
+
+  .grade-control {
+    justify-items: start;
   }
 
   textarea {
