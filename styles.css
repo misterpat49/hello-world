@@ -4463,3 +4463,27 @@ a.promo-logo-link:focus-visible {
     flex-direction: row;
   }
 }
+
+/* Keep the Weekend Wager row-of-ten compact on narrow iOS screens. */
+@media (max-width: 680px) {
+  .perfect-order-page .showdown-poster-strip {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 72px;
+    justify-content: start;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 4px 18px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .perfect-order-page .showdown-poster-strip .showdown-poster-item {
+    width: 72px;
+    scroll-snap-align: start;
+  }
+  .perfect-order-page .showdown-poster-strip img {
+    width: 72px;
+  }
+}
