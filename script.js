@@ -4,6 +4,7 @@ const STORAGE_KEY = "summer-2026-box-office-contest";
 const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let completionPosterTimer = null;
 
 const MAX_PICKS = 15;
 const MAX_WEEKENDS = 4;
@@ -202,6 +203,7 @@ const els = {
   gradeForm: document.querySelector("#gradeForm"),
   gradePlayerSelect: document.querySelector("#gradePlayerSelect"),
   gradeMovies: document.querySelector("#gradeMovies"),
+  gradeFormActions: document.querySelector("#gradeFormActions"),
   gradeStatus: document.querySelector("#gradeStatus"),
   resetGrades: document.querySelector("#resetGrades"),
   contestantSelect: document.querySelector("#contestantSelect"),
@@ -2761,16 +2763,35 @@ function renderCompletion(entries, results) {
   const latestPoster = document.querySelector("[id=completionLatestPoster]");
   if (latestPoster) {
     const releaseDates = state.releaseDates || {};
-    const latestCompleted = completed.slice().sort((a, b) => {
-      const aDate = releaseDates[normalizeMovie(a.title)] || "";
-      const bDate = releaseDates[normalizeMovie(b.title)] || "";
-      return bDate.localeCompare(aDate) || a.title.localeCompare(b.title);
-    })[0];
-    const posterUrl = latestCompleted ? state.moviePosterImages?.[normalizeMovie(latestCompleted.title)] || "" : "";
-    latestPoster.hidden = !posterUrl;
-    latestPoster.innerHTML = posterUrl
-      ? "<img src=\"" + escapeHtml(posterUrl) + "\" alt=\"" + escapeHtml(latestCompleted.title) + " poster\">"
-      : "";
+    const completedPosters = completed
+      .map((movie) => ({
+        title: movie.title,
+        releaseDate: releaseDates[normalizeMovie(movie.title)] || "",
+        url: state.moviePosterImages?.[normalizeMovie(movie.title)] || "",
+      }))
+      .filter((movie) => movie.url)
+      .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate) || a.title.localeCompare(b.title));
+
+    if (completionPosterTimer) {
+      clearInterval(completionPosterTimer);
+      completionPosterTimer = null;
+    }
+
+    latestPoster.hidden = !completedPosters.length;
+    latestPoster.innerHTML = completedPosters.map((movie, index) =>
+      `<img class="completion-poster-slide${index === 0 ? " is-active" : ""}" src="${escapeHtml(movie.url)}" alt="${escapeHtml(movie.title)} poster">`
+    ).join("");
+
+    if (completedPosters.length > 1) {
+      let activePoster = 0;
+      completionPosterTimer = window.setInterval(() => {
+        const slides = latestPoster.querySelectorAll(".completion-poster-slide");
+        if (slides.length < 2) return;
+        slides[activePoster]?.classList.remove("is-active");
+        activePoster = (activePoster + 1) % slides.length;
+        slides[activePoster]?.classList.add("is-active");
+      }, 3500);
+    }
   }
 
   els.completedMovies.innerHTML = completed.length
@@ -2918,7 +2939,9 @@ function renderGradePage(entries, results) {
   if (!players.length) {
     els.gradePlayerSelect.innerHTML = `<option value="">No studios saved</option>`;
     els.gradePlayerSelect.disabled = true;
-    els.gradeMovies.innerHTML = `<div class="empty-state">No player lists have been saved yet.</div>`;
+    els.gradeMovies.hidden = true;
+    if (els.gradeFormActions) els.gradeFormActions.hidden = true;
+    els.gradeMovies.innerHTML = "";
     if (els.gradeStatus) els.gradeStatus.textContent = "No studios available yet.";
     return;
   }
@@ -2928,6 +2951,14 @@ function renderGradePage(entries, results) {
   const savedGrades = state.movieGrades?.[selectedPlayer] || {};
 
   renderContestantOptions(els.gradePlayerSelect, players, selectedPlayer, "Pick your studio name here");
+
+  els.gradeMovies.hidden = !selectedPlayer;
+  if (els.gradeFormActions) els.gradeFormActions.hidden = !selectedPlayer;
+  if (!selectedPlayer) {
+    els.gradeMovies.innerHTML = "";
+    if (els.gradeStatus) els.gradeStatus.textContent = "";
+    return;
+  }
 
   if (!movies.length) {
     els.gradeMovies.innerHTML = `<div class="empty-state">No released movies are available to grade yet.</div>`;
@@ -2960,7 +2991,7 @@ function renderGradePage(entries, results) {
   const gradeCount = Object.values(savedGrades).filter(Boolean).length;
   if (els.gradeStatus) {
     els.gradeStatus.textContent = !selectedPlayer
-      ? "Pick your studio name here to begin."
+      ? ""
       : gradeCount
         ? `${gradeCount} movie${gradeCount === 1 ? "" : "s"} already graded. Use Re-grade to update one.`
         : "No grades submitted yet.";
@@ -3358,7 +3389,15 @@ els.resetTopFive?.addEventListener("click", () => {
   render();
   if (els.topFiveStatus) els.topFiveStatus.textContent = `${storedName}'s submitted prediction was cleared.`;
 });els.gradePlayerSelect?.addEventListener("change", () => {
-  state.selectedGradePlayer = els.gradePlayerSelect.value;
+  const selectedPlayer = els.gradePlayerSelect.value;
+  if (!selectedPlayer) {
+    state.selectedGradePlayer = "";
+    render();
+    return;
+  }
+
+  const confirmed = window.confirm(`Are you ${selectedPlayer}?`);
+  state.selectedGradePlayer = confirmed ? selectedPlayer : "";
   render();
 });
 els.gradeMovies?.addEventListener("click", (event) => {
@@ -3405,6 +3444,9 @@ els.gradeForm?.addEventListener("submit", (event) => {
 els.resetGrades?.addEventListener("click", () => {
   const playerName = els.gradePlayerSelect?.value || "";
   if (!playerName) return;
+
+  const confirmed = window.confirm(`Are you sure you would like to clear ${playerName}'s grades?`);
+  if (!confirmed) return;
 
   state.movieGrades = { ...(state.movieGrades || {}), [playerName]: {} };
   saveState();

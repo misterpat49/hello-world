@@ -2474,3 +2474,137 @@
     top: 0;
   }
 }
+
+/* Contest entry action is the final dropdown item. */
+.main-design-canvas .site-header .test-toolbar-menu a.test-header-entry {
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 0;
+  background: transparent;
+  color: var(--test-gold);
+  font-size: inherit;
+  line-height: inherit;
+  text-align: left;
+  white-space: normal;
+}
+.main-design-canvas .site-header .test-toolbar-menu a.test-header-entry:hover,
+.main-design-canvas .site-header .test-toolbar-menu a.test-header-entry:focus-visible {
+  background: #231711;
+  color: #f0ce75;
+}
+.main-design-canvas .site-header .test-toolbar-menu a.test-header-entry[aria-disabled="true"],
+.main-design-canvas .site-header .test-toolbar-menu a.test-header-entry.is-disabled {
+  background: transparent;
+  color: #777;
+  pointer-events: none;
+}
+
+/* Keep the production toolbar anchored across iPhone widths. */
+@media (max-width: 700px) {
+  .main-design-canvas.production-home .site-header {
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  .main-design-canvas.production-home .test-menu-button {
+    margin-left: auto;
+  }
+  .main-design-canvas.production-home .site-header .test-toolbar-menu {
+    right: 12px;
+    left: auto;
+  }
+}
+
+/* Give the mobile Weekend Update action breathing room above the status strip. */
+@media (max-width: 760px) {
+  .main-design-canvas.production-home .test-hero-weekly .test-weekly-expand:not([hidden]) {
+    margin-bottom: 22px;
+  }
+}
+
+/* Remove the line beneath the contest status strip. */
+.main-design-canvas.production-home .quick-stats {
+  border-bottom: 0;
+}
+
+/* Remove the hero marquee bar that sits behind the overlapping status strip. */
+.main-design-canvas.production-home .hero::after {
+  display: none;
+  content: none;
+}
+
+/* Restore the strip edge without restoring the hero backing bar. */
+.main-design-canvas.production-home .quick-stats {
+  border-bottom: 1px solid #352b1b;
+}
+
+/* Crossfade through every completed movie with a saved poster. */
+.main-design-canvas .completion-latest-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+}
+.main-design-canvas .completion-latest-poster .completion-poster-slide {
+  position: absolute;
+  inset: 5px;
+  width: calc(100% - 10px);
+  height: calc(100% - 10px);
+  max-height: none;
+  opacity: 0;
+  object-fit: cover;
+  transition: opacity 900ms ease-in-out;
+}
+.main-design-canvas .completion-latest-poster .completion-poster-slide.is-active {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .main-design-canvas .completion-latest-poster .completion-poster-slide {
+    transition: none;
+  }
+}
+
+/* Preserve promo logo proportions at narrow iOS widths. */
+.main-design-canvas .promo-logo-link {
+  width: 115px;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+}
+.main-design-canvas .promo-logo-link img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
+}
+@media (max-width: 760px) {
+  .main-design-canvas .promo-logo-link {
+    flex: 0 0 115px;
+    width: 115px;
+    height: 115px;
+    max-width: 115px;
+  }
+}
+
+/* Show the complete promo artwork without the old circular crop mask. */
+.main-design-canvas .promo-logo-link {
+  overflow: visible;
+  border-radius: 4px;
+  background: transparent;
+}
+.main-design-canvas .promo-logo-link img {
+  border-radius: 4px;
+}
+
+/* Crop the promo artwork to a consistent true circle. */
+.main-design-canvas .promo-logo-link {
+  overflow: hidden;
+  border-radius: 50%;
+  background: #000;
+}
+.main-design-canvas .promo-logo-link img {
+  border-radius: 50%;
+  object-fit: cover;
+  clip-path: circle(50% at 50% 50%);
+}

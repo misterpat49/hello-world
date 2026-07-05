@@ -7,21 +7,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Graduate&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260705-paid-bullseye1">
+    <link rel="stylesheet" href="styles.css?v=20260705-subpage-menu2">
     <link rel="stylesheet" href="main-home.css?v=20260704-home-redesign1">
     <link rel="stylesheet" href="bullseye-pages.css?v=20260705-unpaid-total1">
   </head>
   <body class="main-design-canvas production-home bullseye-subpage">
-    <header class="site-header">
+    <header class="site-header subpage-menu-header">
       <a class="brand" href="index.html" aria-label="Back to Box Office Bullseye">
         <span class="test-bullseye-mark has-logo"><img src="assets/box-office-bullseye-logo.jpg" alt="Box Office Bullseye dartboard"></span>
         <span class="bullseye-brand-name">Box Office Bullseye: Summer 2026</span>
       </a>
-      <nav class="nav-links" aria-label="Payment status navigation">
-        <a href="index.html">Main Page</a>
-        <a href="all-movies.html">All Movies</a>
-        <a href="hall-of-fame.html">Hall of Fame</a>
+      <nav class="nav-links subpage-toolbar-menu" id="subpageToolbarMenu" aria-label="Site navigation">
+        <a href="./index.html">Main Page</a>
+        <a href="./grades.html">Grade Movies</a>
+        <a href="./all-movies.html">All Movies in Contest</a>
+        <a href="./paid-status.html">See If You Paid</a>
+        <a href="./top-five-perfect-order.html">The Weekend Wager</a>
+        <a href="./hall-of-fame.html">Hall of Fame</a>
+        <a class="test-header-entry" id="enterListButton" href="./enter-list.html">Enter Your List</a>
       </nav>
+      <button class="subpage-menu-button" id="subpageMenuButton" type="button" aria-expanded="false" aria-controls="subpageToolbarMenu" aria-label="Open navigation menu" title="Menu"><span aria-hidden="true">☰</span></button>
     </header>
 
     <main id="top">
@@ -48,5 +53,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js?v=20260705-unpaid-total1"></script>
+    <script src="subpage-menu.js?v=20260705-subpage-menu1"></script>
   </body>
 </html>
