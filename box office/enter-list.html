@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Enter Your List - 2026 Summer Box Office Challenge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260618-movie-grades1">
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to Summer Box Office Challenge">
+        <span class="brand-mark">BOC</span>
+        <span class="contest-name">2026 Summer Box Office Challenge</span>
+      </a>
+      <nav class="nav-links" aria-label="Entry navigation">
+        <a href="index.html">Main page</a>
+        <a href="index.html#leaderboard">Leaderboard</a>
+        <a href="admin.html">Projectionist Control Room</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="admin-hero hall-hero" aria-labelledby="new-entry-title">
+        <p class="eyebrow">New studio</p>
+        <h1 id="new-entry-title">Enter your list</h1>
+        <p>Choose your ranked top 15 from the movies already in the contest. Once a movie is picked, it is removed from the other ranking slots.</p>
+      </section>
+
+      <section class="section new-entry-section" aria-label="Enter contest list">
+        <form class="new-entry-card" id="newEntryForm">
+          <label for="newEntryName">Studio name</label>
+          <input id="newEntryName" type="text" autocomplete="name" placeholder="Your name">
+          <div class="new-entry-picks" id="newEntryPicks"></div>
+          <div class="form-actions">
+            <button class="button button-primary" type="submit">Submit list</button>
+            <button class="button button-secondary-dark" id="resetNewEntry" type="button">Reset</button>
+          </div>
+          <p class="admin-note" id="newEntryStatus">Choose one movie for each ranked slot.</p>
+        </form>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span><span class="contest-name">2026 Summer Box Office Challenge</span> entry</span>
+      <span><a class="footer-admin-link" href="./admin.html">Projectionist Control Room</a></span>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js?v=20260618-movie-grades1"></script>
+  </body>
+</html>

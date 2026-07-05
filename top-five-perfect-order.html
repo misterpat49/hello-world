@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Box Office Bullseye 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=20260705-wager-status1">
+  </head>
+  <body class="perfect-order-page" data-perfect-theme="dark">
+    <header class="site-header">
+      <a class="brand" href="index.html" aria-label="Back to the main box office contest">
+        <span class="brand-mark bullseye-brand-mark" aria-hidden="true"><img src="assets/box-office-bullseye-logo.jpg" alt=""></span>
+        <span class="contest-name" data-fixed-contest-name>Box Office Bullseye</span>
+      </a>
+      <div class="perfect-order-header-actions">
+        <nav class="nav-links" aria-label="Top Five navigation">
+          <a href="index.html">Main page</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="section showdown-poster-gallery" id="topFivePosterGallery" aria-label="Box Office Bullseye logo and movie posters" hidden>
+        <div class="perfect-order-logo" id="topFiveLogo" hidden><img id="topFiveLogoImage" alt="Box Office Bullseye"></div>
+        <h1 class="bullseye-poster-title">The Weekend Wager</h1>
+        <p class="bullseye-week-label">WEEK 11</p>
+        <p class="bullseye-rules" id="topFiveRules">Predict the domestic weekend top five films in exact order. $10 entry fee. If no one gets the perfect top five, money rolls over to the next weekend. Tie breaker: Predict the combined U.S. domestic weekend gross of <span id="topFiveNewFilmLabel">this weekend&apos;s new films</span>; <span id="topFiveTieBreakerMovieNames">this weekend&apos;s new films</span>.</p>
+        <div class="showdown-poster-showcase" id="topFivePosterShowcase"></div>
+        <div class="showdown-poster-strip" id="topFivePosterStrip"></div>
+        <p class="showdown-poster-note" id="topFivePosterNote">The movies above were recently in the top ten, but do your research!</p>
+      </section>
+
+
+      <section class="section top-five-section" id="topFiveEntrySection" aria-label="Enter The Box Office Bullseye prediction">
+        <form class="new-entry-card top-five-card" id="topFiveForm" data-pick-label="PICK CARD">
+          <label for="topFivePlayerSelect">Studio name</label>
+          <select id="topFivePlayerSelect"></select>
+          <p class="admin-note top-five-entry-note">Venmo the commish $10 to receive a custom password to enter.</p>
+          <div class="top-five-auth-panel" id="topFiveAuthPanel" hidden>
+            <label for="topFivePassword">Studio password</label>
+            <div class="top-five-auth-controls">
+              <input id="topFivePassword" type="text" inputmode="numeric" pattern="[0-9]{5}" maxlength="5" autocomplete="one-time-code" placeholder="5 digits">
+              <button class="button button-blue" id="unlockTopFive" type="button">Unlock picks</button>
+            </div>
+            <p class="admin-note" id="topFiveAuthStatus">Venmo the commish $10 to receive a custom password to enter.</p>
+          </div>
+          <fieldset class="top-five-entry-fields" id="topFiveEntryFields" hidden disabled>
+            <div class="top-five-picks" id="topFivePicks"></div>
+            <label class="top-five-tiebreaker" for="topFiveTotal">
+              <span>Tie-breaker</span>
+              <strong id="topFiveTieBreakerPrompt">Combined U.S. domestic weekend gross of this weekend&apos;s new films only</strong>
+              <div class="money-input"><span>$</span><input id="topFiveTotal" type="number" min="0" step="0.1" inputmode="decimal" placeholder="125.0" required><span>million</span></div>
+            </label>
+            <div class="form-actions">
+              <button class="button button-primary" type="submit">Submit prediction</button>
+              <button class="button button-secondary-dark" id="resetTopFive" type="button">Reset</button>
+            </div>
+          </fieldset>
+          <p class="admin-note" id="topFiveStatus">Choose your predicted top five in exact order.</p>
+        </form>
+      </section>
+
+      <section class="section top-five-results-section" id="topFiveResultsSection" aria-labelledby="top-five-results-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Current weekend</p>
+            <h2 id="top-five-results-title">Submitted Predictions</h2>
+            <p class="top-five-submission-count" id="topFiveSubmissionCount">0 submissions</p>
+            <div class="top-five-result-metrics">
+              <p class="top-five-tiebreaker-result top-five-weekend-prize" id="topFiveWeekendPrize"><span>Weekend prize pool</span><strong>$0</strong></p>
+              <p class="top-five-tiebreaker-result" id="topFiveTieBreakerResult"><span>Tie-breaker total of this weekend&apos;s new films</span><strong>$0</strong></p>
+            </div>
+          </div>
+        </div>
+        <div class="top-five-results" id="topFiveResults"></div>
+      </section>
+
+      <section class="section top-five-week-navigator" id="topFiveWeekNavigator" aria-label="Browse Box Office Bullseye weeks">
+        <div class="top-five-week-navigator-heading">
+          <span>Week by Week</span>
+        </div>
+        <div class="top-five-week-buttons" id="topFiveWeekButtons"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <a class="projectionist-footer-link" href="admin.html">Projectionist Control Room</a>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js?v=20260705-weekend-wager-fee10"></script>
+  </body>
+</html>

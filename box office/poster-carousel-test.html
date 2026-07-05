@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poster Carousel Test Canvas</title>
+  <style>
+    :root { color-scheme: dark; --gold:#e5b94f; --red:#b5212d; --ink:#080808; --paper:#f7ecd1; }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; margin:0; }
+    body { overflow:hidden; background:#080808; color:var(--paper); font-family:Arial, Helvetica, sans-serif; }
+    button { font:inherit; }
+    .canvas { position:relative; display:grid; grid-template-rows:auto 1fr auto; min-height:100vh; isolation:isolate; overflow:hidden; }
+    .canvas::before { content:""; position:absolute; inset:0; z-index:-2; background:radial-gradient(circle at 50% 42%, #2b2116 0, #111 36%, #050505 72%); }
+    .canvas::after { content:""; position:absolute; inset:0; z-index:-1; opacity:.14; pointer-events:none; background-image:repeating-linear-gradient(90deg, transparent 0 7vw, rgba(255,255,255,.04) 7vw 7.08vw); }
+    header { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px clamp(22px,5vw,72px) 12px; }
+    .brand { display:flex; align-items:center; gap:14px; }
+    .reel { width:42px; aspect-ratio:1; border:2px solid var(--gold); border-radius:50%; background:radial-gradient(circle, var(--red) 0 12%, transparent 13% 28%, var(--gold) 29% 34%, transparent 35%); box-shadow:0 0 22px rgba(229,185,79,.2); }
+    .eyebrow { margin:0 0 4px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
+    h1 { margin:0; font-family:Georgia, serif; font-size:clamp(22px,3vw,38px); font-weight:400; letter-spacing:0; }
+    .status { color:#9d9586; font-size:12px; text-align:right; }
+    .stage { position:relative; min-height:0; perspective:1200px; }
+    .carousel { position:absolute; inset:0; transform-style:preserve-3d; }
+    .poster { position:absolute; top:50%; left:50%; width:min(25vw,250px); aspect-ratio:2/3; margin:0; border:1px solid rgba(229,185,79,.35); background:#151515; box-shadow:0 20px 55px rgba(0,0,0,.8); overflow:hidden; cursor:pointer; transition:transform .8s cubic-bezier(.2,.75,.2,1), opacity .6s ease, filter .6s ease, border-color .6s ease; transform-origin:center; }
+    .poster img { display:block; width:100%; height:100%; object-fit:cover; }
+    .poster figcaption { position:absolute; inset:auto 0 0; padding:34px 12px 11px; background:linear-gradient(transparent,rgba(0,0,0,.92)); color:#fff; font-size:12px; font-weight:800; text-align:center; opacity:0; transition:opacity .35s; }
+    .poster.is-current { border-color:var(--gold); box-shadow:0 28px 75px rgba(0,0,0,.9), 0 0 0 2px rgba(229,185,79,.28); }
+    .poster.is-current figcaption, .poster:hover figcaption { opacity:1; }
+    .controls { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:20px; padding:10px clamp(22px,5vw,72px) 30px; }
+    .now-playing { min-width:0; }
+    .now-playing span { display:block; color:var(--gold); font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; }
+    .now-playing strong { display:block; margin-top:6px; overflow:hidden; font-family:Georgia, serif; font-size:clamp(18px,2.4vw,30px); font-weight:400; text-overflow:ellipsis; white-space:nowrap; }
+    .buttons { display:flex; align-items:center; gap:9px; }
+    .icon-button { display:grid; width:44px; height:44px; place-items:center; border:1px solid #5f5237; border-radius:50%; background:#111; color:var(--paper); cursor:pointer; font-size:20px; transition:border-color .2s,background .2s,transform .2s; }
+    .icon-button:hover, .icon-button:focus-visible { border-color:var(--gold); background:#241d12; transform:translateY(-1px); outline:none; }
+    .icon-button.primary { border-color:var(--red); background:var(--red); }
+    .counter { justify-self:end; color:#a9a092; font-size:13px; font-variant-numeric:tabular-nums; }
+    .counter strong { color:var(--paper); font-size:20px; }
+    .empty { position:absolute; inset:0; display:grid; place-items:center; color:#aaa; text-align:center; }
+    .theatre-valance { position:absolute; top:0; left:0; right:0; z-index:8; height:38px; pointer-events:none; background:repeating-linear-gradient(90deg,#6f0812 0 8vw,#9f1320 8vw 16vw,#650711 16vw 24vw); border-bottom:3px solid #d3a83e; box-shadow:0 12px 30px rgba(0,0,0,.65); clip-path:polygon(0 0,100% 0,100% 56%,96% 100%,92% 56%,88% 100%,84% 56%,80% 100%,76% 56%,72% 100%,68% 56%,64% 100%,60% 56%,56% 100%,52% 56%,48% 100%,44% 56%,40% 100%,36% 56%,32% 100%,28% 56%,24% 100%,20% 56%,16% 100%,12% 56%,8% 100%,4% 56%,0 100%); }
+    body::before, body::after { content:""; position:fixed; top:0; bottom:0; z-index:7; width:clamp(34px,7vw,110px); pointer-events:none; background:repeating-linear-gradient(90deg,#4e050c 0 18%,#98101b 18% 42%,#5f0710 42% 64%,#b01725 64% 82%,#53060d 82% 100%); box-shadow:inset 0 0 25px #2b0206,0 0 35px rgba(0,0,0,.75); }
+    body::before { left:0; border-right:2px solid #c99b35; clip-path:polygon(0 0,100% 0,76% 48%,100% 100%,0 100%); }
+    body::after { right:0; border-left:2px solid #c99b35; clip-path:polygon(0 0,100% 0,100% 100%,0 100%,24% 48%); }
+    .marquee { position:relative; width:min(880px,calc(100% - 18vw)); margin:46px auto 0; padding:17px 26px; border:3px solid #b88724; background:#18130b; box-shadow:0 0 0 5px #2d210e,0 0 0 7px #e5b94f,0 14px 40px rgba(0,0,0,.75); }
+    .marquee::before, .marquee::after { content:""; position:absolute; left:11px; right:11px; height:5px; background:radial-gradient(circle,#fff4ba 0 2px,#d79d29 2.5px 3px,transparent 3.5px) 0 0/22px 5px repeat-x; filter:drop-shadow(0 0 4px #efb83c); }
+    .marquee::before { top:5px; } .marquee::after { bottom:5px; }
+    .projector-beam { position:absolute; left:50%; top:-5%; width:min(78vw,1050px); height:110%; transform:translateX(-50%); pointer-events:none; background:linear-gradient(90deg,transparent,rgba(255,239,190,.045) 25%,rgba(255,246,215,.1) 50%,rgba(255,239,190,.045) 75%,transparent); clip-path:polygon(34% 0,66% 0,100% 100%,0 100%); }
+    .stage::after { content:""; position:absolute; left:8%; right:8%; bottom:0; height:24%; z-index:-1; background:repeating-linear-gradient(90deg,#160e08 0 80px,#21150c 80px 160px); border-top:1px solid #6d4c21; transform:perspective(500px) rotateX(58deg); transform-origin:bottom; opacity:.85; }
+    .stage-lights { position:absolute; left:14%; right:14%; bottom:2%; height:7px; background:radial-gradient(circle,#f8d77c 0 3px,#9b6515 3.5px 5px,transparent 5.5px) 0 0/34px 7px repeat-x; filter:drop-shadow(0 0 7px #d79d29); opacity:.8; }
+    .film-strip { position:relative; border-top:14px solid transparent; border-image:repeating-linear-gradient(90deg,#d8c9a4 0 12px,#17130e 12px 23px) 14; background:#090806; }
+    .reel { background:radial-gradient(circle,var(--red) 0 10%,#111 11% 18%,var(--gold) 19% 23%,transparent 24%),conic-gradient(from 0deg,transparent 0 8%,var(--gold) 9% 13%,transparent 14% 28%,var(--gold) 29% 33%,transparent 34% 48%,var(--gold) 49% 53%,transparent 54% 68%,var(--gold) 69% 73%,transparent 74% 88%,var(--gold) 89% 93%,transparent 94%); }
+    @media (max-width:700px) { header { padding-top:18px; } .status { display:none; } .poster { width:min(48vw,220px); } .controls { grid-template-columns:1fr auto; } .buttons { grid-column:2; grid-row:1 / span 2; } .counter { justify-self:start; } }
+    @media (prefers-reduced-motion:reduce) { .poster { transition:none; } }
+  </style>
+</head>
+<body>
+  <main class="canvas">
+    <div class="theatre-valance" aria-hidden="true"></div>
+    <header class="marquee">
+      <div class="brand"><div class="reel" aria-hidden="true"></div><div><p class="eyebrow">Now Showing</p><h1>Summer Poster Carousel</h1></div></div>
+      <div class="status" id="status">Loading poster library...</div>
+    </header>
+    <section class="stage" aria-label="Animated movie poster carousel"><div class="projector-beam" aria-hidden="true"></div><div class="carousel" id="carousel"></div><div class="stage-lights" aria-hidden="true"></div></section>
+    <footer class="controls film-strip">
+      <div class="now-playing"><span>Now rotating</span><strong id="movieTitle">Movie posters</strong></div>
+      <div class="buttons">
+        <button class="icon-button" id="previous" type="button" aria-label="Previous poster" title="Previous poster">&#8592;</button>
+        <button class="icon-button primary" id="toggle" type="button" aria-label="Pause carousel" title="Pause carousel">&#10074;&#10074;</button>
+        <button class="icon-button" id="next" type="button" aria-label="Next poster" title="Next poster">&#8594;</button>
+      </div>
+      <div class="counter"><strong id="currentCount">0</strong> / <span id="totalCount">0</span></div>
+    </footer>
+  </main>
+  <script>
+    const STORAGE_KEY = "summer-2026-box-office-contest";
+    const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
+    const carousel = document.querySelector("#carousel");
+    const title = document.querySelector("#movieTitle");
+    const status = document.querySelector("#status");
+    const currentCount = document.querySelector("#currentCount");
+    const totalCount = document.querySelector("#totalCount");
+    const toggle = document.querySelector("#toggle");
+    let posters = [];
+    let active = 0;
+    let playing = true;
+    let timer = 0;
+
+    function titleMap(entriesText = "") {
+      const map = {};
+      entriesText.split(/\n/).forEach((line) => {
+        const match = line.match(/^\s*\d+[.)]\s*(.+?)\s*$/);
+        if (match) map[match[1].toLowerCase().replace(/[^a-z0-9]+/g, " ").trim()] = match[1];
+      });
+      return map;
+    }
+    function prettyKey(key) { return key.replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+    function build(state) {
+      const names = titleMap(state.entriesText);
+      posters = Object.entries(state.moviePosterImages || {})
+        .filter(([, url]) => /^https?:\/\//i.test(url))
+        .map(([key, url]) => ({ title:names[key] || prettyKey(key), url }))
+        .sort((a,b) => a.title.localeCompare(b.title));
+      carousel.innerHTML = posters.length ? posters.map((poster,index) => 
+        '<figure class="poster" data-index="'+index+'"><img src="'+poster.url.replace(/"/g,'&quot;')+'" alt="'+poster.title.replace(/"/g,'&quot;')+' poster"><figcaption>'+poster.title+'</figcaption></figure>'
+      ).join("") : '<div class="empty">No poster URLs are saved in the contest library yet.</div>';
+      totalCount.textContent = posters.length;
+      status.textContent = posters.length ? posters.length + " posters loaded from the contest library" : "Poster library is empty";
+      render();
+      restart();
+    }
+    function circularOffset(index) {
+      let offset = index - active;
+      const half = posters.length / 2;
+      if (offset > half) offset -= posters.length;
+      if (offset < -half) offset += posters.length;
+      return offset;
+    }
+    function render() {
+      if (!posters.length) return;
+      carousel.querySelectorAll(".poster").forEach((card,index) => {
+        const offset = circularOffset(index);
+        const distance = Math.abs(offset);
+        const visible = distance <= 4;
+        const x = offset * Math.min(window.innerWidth * .17, 205);
+        const z = -distance * 115;
+        const rotate = offset * -10;
+        card.style.transform = 'translate(-50%,-50%) translateX('+x+'px) translateZ('+z+'px) rotateY('+rotate+'deg) scale('+(1-distance*.075)+')';
+        card.style.opacity = visible ? String(Math.max(.18,1-distance*.2)) : "0";
+        card.style.filter = 'brightness('+(1-distance*.14)+')';
+        card.style.zIndex = String(100-distance);
+        card.style.pointerEvents = visible ? "auto" : "none";
+        card.classList.toggle("is-current", offset === 0);
+      });
+      title.textContent = posters[active].title;
+      currentCount.textContent = active + 1;
+    }
+    function move(amount) { active = (active + amount + posters.length) % posters.length; render(); restart(); }
+    function restart() { clearInterval(timer); if (playing && posters.length > 1 && !matchMedia('(prefers-reduced-motion: reduce)').matches) timer = setInterval(() => move(1), 2400); }
+    function setPlaying(value) { playing = value; toggle.innerHTML = playing ? "&#10074;&#10074;" : "&#9654;"; toggle.setAttribute("aria-label", playing ? "Pause carousel" : "Play carousel"); toggle.title = playing ? "Pause carousel" : "Play carousel"; restart(); }
+    document.querySelector("#previous").addEventListener("click", () => move(-1));
+    document.querySelector("#next").addEventListener("click", () => move(1));
+    toggle.addEventListener("click", () => setPlaying(!playing));
+    carousel.addEventListener("click", (event) => { const card = event.target.closest(".poster"); if (card) { active = Number(card.dataset.index); render(); restart(); } });
+    window.addEventListener("resize", render);
+    document.addEventListener("keydown", (event) => { if (event.key === "ArrowLeft") move(-1); if (event.key === "ArrowRight") move(1); if (event.key === " ") { event.preventDefault(); setPlaying(!playing); } });
+
+    async function load() {
+      let local = {};
+      try { local = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch {}
+      if (Object.keys(local.moviePosterImages || {}).length) build(local);
+      try {
+        const response = await fetch(SUPABASE_URL + "/rest/v1/contest_state?id=eq.singleton&select=state", { headers:{ apikey:SUPABASE_KEY, Authorization:"Bearer " + SUPABASE_KEY } });
+        const rows = await response.json();
+        if (rows[0] && rows[0].state) build(rows[0].state);
+      } catch { if (!posters.length) build(local); status.textContent += " (local data)"; }
+    }
+    load();
+  </script>
+</body>
+</html>

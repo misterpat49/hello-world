@@ -1,0 +1,93 @@
+/* Shared Bullseye styling for supporting public pages. */
+.bullseye-subpage { min-height: 100vh; background: #080808; color: #f6edd9; }
+.bullseye-subpage .site-header { top: 0; border-bottom: 1px solid #3c3019; background: rgba(8,8,8,.96); box-shadow: 0 10px 35px rgba(0,0,0,.45); }
+.bullseye-subpage .brand { color: #f6edd9; text-decoration: none; }
+.bullseye-brand-name { font-family: "Space Grotesk", sans-serif; font-weight: 700; }
+.bullseye-subpage .nav-links a { color: #c7bfae; }
+.bullseye-subpage .nav-links a:hover, .bullseye-subpage .nav-links a:focus-visible { color: #e4b64a; }
+.bullseye-subpage .admin-hero { width: min(1160px, calc(100% - 36px)); margin: 0 auto; padding: clamp(54px,8vw,84px) 0 24px; }
+.bullseye-subpage .admin-hero h1 { max-width: 900px; margin-bottom: 14px; color: #fff8e8; font-family: "Graduate","Space Grotesk",sans-serif; font-size: clamp(38px,6vw,68px); font-weight: 400; line-height: 1; letter-spacing: 0; text-transform: uppercase; }
+.bullseye-subpage .admin-hero p:not(.eyebrow) { max-width: 720px; color: #aaa298; font-size: clamp(15px,1.7vw,19px); }
+.bullseye-subpage .eyebrow { color: #e4b64a; font-family: "Graduate","Space Grotesk",sans-serif; letter-spacing: 0; }
+.bullseye-subpage .section { margin-top: 38px; margin-bottom: 50px; border-top-color: transparent; background: transparent; }
+.bullseye-subpage .section::before { display: none; content: none; }
+.bullseye-subpage .section-heading h2 { color: #fff8e8; font-family: "Graduate","Space Grotesk",sans-serif; font-weight: 400; letter-spacing: 0; }
+.bullseye-subpage .all-movies-list, .bullseye-subpage .hall-list, .bullseye-subpage .new-entry-card { overflow: hidden; border: 1px solid #4b3e2b; border-radius: 4px; background: #11100e; color: #e9e2d6; box-shadow: 0 16px 38px rgba(0,0,0,.3); }
+.bullseye-subpage .all-movies-row, .bullseye-subpage .hall-list article, .bullseye-subpage .grade-row { border-bottom-color: #2c2821; background: #0d0d0d; }
+.bullseye-subpage .all-movies-row:nth-child(even), .bullseye-subpage .hall-list article:nth-child(even), .bullseye-subpage .grade-row:nth-child(even) { background: #11110f; }
+.bullseye-subpage .all-movies-row strong, .bullseye-subpage .hall-list strong, .bullseye-subpage .grade-row strong { color: #f4efe5; }
+.bullseye-subpage .all-movies-row-awaiting strong { color: #77716a; }
+.bullseye-subpage .all-movies-row span, .bullseye-subpage .all-movies-player-details, .bullseye-subpage .hall-list span, .bullseye-subpage .grade-row small, .bullseye-subpage .grade-control span, .bullseye-subpage .admin-note { color: #aaa196; }
+.bullseye-subpage .all-movies-player-details summary, .bullseye-subpage .paid-link, .bullseye-subpage .footer-admin-link { color: #e1c779; }
+.bullseye-subpage .hall-list article { padding: 14px 18px; }
+.bullseye-subpage .hall-list strong { font-size: 17px; }
+.bullseye-subpage .grade-card { gap: 16px; padding: clamp(18px,3vw,28px); }
+.bullseye-subpage .grade-card > label { color: #d9cdaf; }
+.bullseye-subpage .grade-card select, .bullseye-subpage .grade-row select { border-color: #5a4930; border-radius: 3px; background: #090909; color: #f4efe5; }
+.bullseye-subpage .grade-scale { border-color: #675631; border-radius: 3px; background: #211c13; color: #e1c779; }
+.bullseye-subpage .grade-movies { border-color: #4b3e2b; border-radius: 3px; background: #0d0d0d; }
+.bullseye-subpage .grade-regrade-button { border-color: #675631; border-radius: 3px; background: #211c13; color: #e1c779; }
+.bullseye-subpage .button { border-radius: 3px; }
+.bullseye-subpage .button-primary { border-color: #a91f2c; background: #a91f2c; color: #fff; }
+.bullseye-subpage .button-secondary-dark, .bullseye-subpage .button-quiet { border-color: #5b4b2d; background: #16130e; color: #f6edd9; }
+.bullseye-subpage .site-footer { border-top: 1px solid #705724; background: #050505; color: #9f978a; }
+.bullseye-subpage .test-footer-top-link { color: #d8cba9; font-weight: 700; text-decoration: none; }
+.bullseye-subpage .test-footer-top-link:hover, .bullseye-subpage .test-footer-top-link:focus-visible { color: #f0d788; text-decoration: underline; text-underline-offset: 4px; }
+.bullseye-subpage .hidden-codenames-link img { filter: sepia(.25) saturate(.8); }
+@media (max-width: 680px) {
+  .bullseye-subpage .site-header { gap: 12px; padding-inline: 16px; }
+  .bullseye-subpage .brand { align-items: center; flex-direction: row; }
+  .bullseye-brand-name { font-size: 13px; }
+  .bullseye-subpage .nav-links { width: auto; flex-wrap: wrap; justify-content: flex-start; }
+  .bullseye-subpage .admin-hero { width: calc(100% - 32px); padding-top: 40px; }
+  .bullseye-subpage .section { width: calc(100% - 32px); margin-top: 28px; margin-bottom: 38px; padding: 0; }
+}
+
+/* Payment status list */
+.bullseye-subpage .paid-status-list {
+  overflow: hidden;
+  border: 1px solid #4b3e2b;
+  border-radius: 4px;
+  background: #11100e;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .3);
+}
+.bullseye-subpage .paid-status-row {
+  border-bottom-color: #2c2821;
+  background: #0d0d0d;
+}
+.bullseye-subpage .paid-status-row:nth-child(even) { background: #11110f; }
+.bullseye-subpage .paid-status-row strong { color: #f4efe5; }
+.bullseye-subpage .paid-status-row.is-paid span { color: #69b894; }
+.bullseye-subpage .paid-status-row.is-unpaid span { color: #df6974; }
+
+.bullseye-subpage .paid-status-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 20px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 18px 20px;
+  border: 1px solid #705724;
+  border-radius: 4px;
+  background: #17130c;
+}
+.bullseye-subpage .paid-status-summary span {
+  color: #d8cba9;
+  font-family: "Graduate", "Space Grotesk", sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.bullseye-subpage .paid-status-summary strong {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: #f0d788;
+  font-family: "Graduate", "Space Grotesk", sans-serif;
+  font-size: clamp(30px, 5vw, 48px);
+  font-weight: 400;
+  line-height: 1;
+}
+.bullseye-subpage .paid-status-summary small { color: #aaa196; }
+@media (max-width: 480px) {
+  .bullseye-subpage .paid-status-summary { grid-template-columns: 1fr; align-items: start; }
+  .bullseye-subpage .paid-status-summary strong { grid-row: auto; grid-column: 1; }
+}
