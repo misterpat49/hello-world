@@ -2541,6 +2541,64 @@
   border-bottom: 1px solid #352b1b;
 }
 
+/* Weekly leaderboard movement highlights beneath the contest status strip. */
+.main-design-canvas .weekly-movement-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(1160px, calc(100% - 36px));
+  margin: 0 auto;
+  overflow: hidden;
+  border-right: 1px solid #352b1b;
+  border-bottom: 1px solid #352b1b;
+  border-left: 1px solid #352b1b;
+  border-radius: 0 0 8px 8px;
+  background: #111;
+}
+
+.main-design-canvas .weekly-movement-stat {
+  min-width: 0;
+  display: flex;
+  min-height: 48px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 14px 8px;
+  text-align: center;
+}
+
+.main-design-canvas .weekly-movement-stat + .weekly-movement-stat { border-left: 1px solid #352b1b; }
+.main-design-canvas .weekly-movement-stat .stat-label {
+  display: block;
+  margin-bottom: 5px;
+  color: #aaa298;
+  font-size: 8px;
+}
+.main-design-canvas .weekly-movement-stat strong {
+  display: block;
+  color: #e8e1d3;
+  font-family: "Inter", sans-serif;
+  font-size: clamp(11px, 1.25vw, 14px);
+  line-height: 1.35;
+}
+.main-design-canvas .weekly-movement-stat.is-up strong { color: #56d17c; }
+.main-design-canvas .weekly-movement-stat.is-down strong { color: #f05a67; }
+.main-design-canvas .weekly-movement-stat.is-link {
+  border-left: 1px solid #352b1b;
+  color: var(--test-gold);
+  text-decoration: none;
+}
+.main-design-canvas .weekly-movement-stat.is-link strong { color: var(--test-gold); }
+.main-design-canvas .weekly-movement-stat.is-link:hover,
+.main-design-canvas .weekly-movement-stat.is-link:focus-visible { background: #1a1710; }
+
+@media (max-width: 600px) {
+  .main-design-canvas .weekly-movement-stat { min-height: 44px; padding: 6px 7px 7px; }
+  .main-design-canvas .weekly-movement-stat strong {
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+}
+
 /* Crossfade through every completed movie with a saved poster. */
 .main-design-canvas .completion-latest-poster {
   position: relative;

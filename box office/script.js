@@ -4,6 +4,7 @@ const STORAGE_KEY = "summer-2026-box-office-contest";
 const SUPABASE_URL = "https://aagpivdjxecaejuilhaf.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFhZ3BpdmRqeGVjYWVqdWlsaGFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNjU1MDUsImV4cCI6MjA5NDc0MTUwNX0.lkx1UhkuKOz367Ns6Rpuczl2aqbC1eRc6dikvK1hx2Q";
 const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let completionPosterTimer = null;
 
 const MAX_PICKS = 15;
 const MAX_WEEKENDS = 4;
@@ -202,6 +203,7 @@ const els = {
   gradeForm: document.querySelector("#gradeForm"),
   gradePlayerSelect: document.querySelector("#gradePlayerSelect"),
   gradeMovies: document.querySelector("#gradeMovies"),
+  gradeFormActions: document.querySelector("#gradeFormActions"),
   gradeStatus: document.querySelector("#gradeStatus"),
   resetGrades: document.querySelector("#resetGrades"),
   contestantSelect: document.querySelector("#contestantSelect"),
@@ -239,6 +241,8 @@ const els = {
   statMovies: document.querySelector("#statMovies"),
   statGross: document.querySelector("#statGross"),
   statLeader: document.querySelector("#statLeader"),
+  statBiggestJump: document.querySelector("#statBiggestJump"),
+  statBiggestDrop: document.querySelector("#statBiggestDrop"),
 };
 
 const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardMovementWeek: "" };
@@ -847,6 +851,34 @@ function renderLeaderboardMovement(name) {
   const spots = Math.abs(delta);
   const label = escapeHtml(name) + " moved " + direction + " " + spots + " spot" + (spots === 1 ? "" : "s");
   return '<span class="leaderboard-move leaderboard-move-' + direction + '" aria-label="' + label + '">' + arrow + spots + '</span>';
+}
+
+function renderMovementHighlights() {
+  const movement = Object.entries(state.leaderboardRankMovement || {})
+    .map(([name, delta]) => ({ name, delta: Number(delta) }))
+    .filter((entry) => Number.isFinite(entry.delta) && entry.delta !== 0);
+
+  const renderHighlight = (target, direction) => {
+    if (!target) return;
+
+    const candidates = movement.filter((entry) => direction === "up" ? entry.delta > 0 : entry.delta < 0);
+    if (!candidates.length) {
+      target.textContent = "No movement yet";
+      return;
+    }
+
+    const biggestChange = Math.max(...candidates.map((entry) => Math.abs(entry.delta)));
+    const names = candidates
+      .filter((entry) => Math.abs(entry.delta) === biggestChange)
+      .map((entry) => entry.name)
+      .sort((a, b) => a.localeCompare(b));
+    const arrow = direction === "up" ? "↑" : "↓";
+    const spots = biggestChange === 1 ? "spot" : "spots";
+    target.textContent = names.join(", ") + " " + arrow + biggestChange + " " + spots;
+  };
+
+  renderHighlight(els.statBiggestJump, "up");
+  renderHighlight(els.statBiggestDrop, "down");
 }
 
 function formatRawGrossLeaders(rawScored) {
@@ -2761,16 +2793,35 @@ function renderCompletion(entries, results) {
   const latestPoster = document.querySelector("[id=completionLatestPoster]");
   if (latestPoster) {
     const releaseDates = state.releaseDates || {};
-    const latestCompleted = completed.slice().sort((a, b) => {
-      const aDate = releaseDates[normalizeMovie(a.title)] || "";
-      const bDate = releaseDates[normalizeMovie(b.title)] || "";
-      return bDate.localeCompare(aDate) || a.title.localeCompare(b.title);
-    })[0];
-    const posterUrl = latestCompleted ? state.moviePosterImages?.[normalizeMovie(latestCompleted.title)] || "" : "";
-    latestPoster.hidden = !posterUrl;
-    latestPoster.innerHTML = posterUrl
-      ? "<img src=\"" + escapeHtml(posterUrl) + "\" alt=\"" + escapeHtml(latestCompleted.title) + " poster\">"
-      : "";
+    const completedPosters = completed
+      .map((movie) => ({
+        title: movie.title,
+        releaseDate: releaseDates[normalizeMovie(movie.title)] || "",
+        url: state.moviePosterImages?.[normalizeMovie(movie.title)] || "",
+      }))
+      .filter((movie) => movie.url)
+      .sort((a, b) => b.releaseDate.localeCompare(a.releaseDate) || a.title.localeCompare(b.title));
+
+    if (completionPosterTimer) {
+      clearInterval(completionPosterTimer);
+      completionPosterTimer = null;
+    }
+
+    latestPoster.hidden = !completedPosters.length;
+    latestPoster.innerHTML = completedPosters.map((movie, index) =>
+      `<img class="completion-poster-slide${index === 0 ? " is-active" : ""}" src="${escapeHtml(movie.url)}" alt="${escapeHtml(movie.title)} poster">`
+    ).join("");
+
+    if (completedPosters.length > 1) {
+      let activePoster = 0;
+      completionPosterTimer = window.setInterval(() => {
+        const slides = latestPoster.querySelectorAll(".completion-poster-slide");
+        if (slides.length < 2) return;
+        slides[activePoster]?.classList.remove("is-active");
+        activePoster = (activePoster + 1) % slides.length;
+        slides[activePoster]?.classList.add("is-active");
+      }, 3500);
+    }
   }
 
   els.completedMovies.innerHTML = completed.length
@@ -2896,6 +2947,7 @@ function renderStats(entries, results, scored) {
   if (els.statMovies) els.statMovies.textContent = `${movies.length}/${uniquePicks.size}`;
   if (els.statGross) els.statGross.textContent = formatMoney(gross);
   if (els.statLeader) els.statLeader.textContent = formatCurrentLeaders(scored);
+  renderMovementHighlights();
   if (els.entryStatus) els.entryStatus.textContent = entries.length ? `${entries.length} player list${entries.length === 1 ? "" : "s"} saved` : "No lists saved";
   if (els.resultStatus) els.resultStatus.textContent = movies.length ? `${movies.length} movie total${movies.length === 1 ? "" : "s"} saved` : "No grosses saved";
 }
@@ -2918,7 +2970,9 @@ function renderGradePage(entries, results) {
   if (!players.length) {
     els.gradePlayerSelect.innerHTML = `<option value="">No studios saved</option>`;
     els.gradePlayerSelect.disabled = true;
-    els.gradeMovies.innerHTML = `<div class="empty-state">No player lists have been saved yet.</div>`;
+    els.gradeMovies.hidden = true;
+    if (els.gradeFormActions) els.gradeFormActions.hidden = true;
+    els.gradeMovies.innerHTML = "";
     if (els.gradeStatus) els.gradeStatus.textContent = "No studios available yet.";
     return;
   }
@@ -2928,6 +2982,14 @@ function renderGradePage(entries, results) {
   const savedGrades = state.movieGrades?.[selectedPlayer] || {};
 
   renderContestantOptions(els.gradePlayerSelect, players, selectedPlayer, "Pick your studio name here");
+
+  els.gradeMovies.hidden = !selectedPlayer;
+  if (els.gradeFormActions) els.gradeFormActions.hidden = !selectedPlayer;
+  if (!selectedPlayer) {
+    els.gradeMovies.innerHTML = "";
+    if (els.gradeStatus) els.gradeStatus.textContent = "";
+    return;
+  }
 
   if (!movies.length) {
     els.gradeMovies.innerHTML = `<div class="empty-state">No released movies are available to grade yet.</div>`;
@@ -2960,7 +3022,7 @@ function renderGradePage(entries, results) {
   const gradeCount = Object.values(savedGrades).filter(Boolean).length;
   if (els.gradeStatus) {
     els.gradeStatus.textContent = !selectedPlayer
-      ? "Pick your studio name here to begin."
+      ? ""
       : gradeCount
         ? `${gradeCount} movie${gradeCount === 1 ? "" : "s"} already graded. Use Re-grade to update one.`
         : "No grades submitted yet.";
@@ -3087,15 +3149,22 @@ els.saveResults?.addEventListener("click", () => {
   const nextResultsText = serializeAdminResultsGrid();
   const newResults = parseResults(nextResultsText);
   const movementWeek = state.currentContestWeek || "Auto";
+  const savedBaseline = state.leaderboardWeekBaseline || {};
+  const currentNames = entries.map((entry) => entry.name);
   const hasCurrentWeekBaseline = state.leaderboardMovementWeek === movementWeek
-    && Object.keys(state.leaderboardWeekBaseline || {}).length > 0;
+    && currentNames.length > 0
+    && currentNames.every((name) => Number(savedBaseline[name]) > 0);
   const baseline = hasCurrentWeekBaseline
-    ? state.leaderboardWeekBaseline
+    ? savedBaseline
     : rankSnapshot(entries, oldResults);
+  const weekMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
+  const latestSaveMovement = calculateLeaderboardMovement(entries, oldResults, newResults);
 
   state.leaderboardWeekBaseline = baseline;
   state.leaderboardMovementWeek = movementWeek;
-  state.leaderboardRankMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
+  state.leaderboardRankMovement = Object.keys(weekMovement).length
+    ? weekMovement
+    : latestSaveMovement;
   state.resultsText = nextResultsText;
   saveState();
   render();
@@ -3358,7 +3427,15 @@ els.resetTopFive?.addEventListener("click", () => {
   render();
   if (els.topFiveStatus) els.topFiveStatus.textContent = `${storedName}'s submitted prediction was cleared.`;
 });els.gradePlayerSelect?.addEventListener("change", () => {
-  state.selectedGradePlayer = els.gradePlayerSelect.value;
+  const selectedPlayer = els.gradePlayerSelect.value;
+  if (!selectedPlayer) {
+    state.selectedGradePlayer = "";
+    render();
+    return;
+  }
+
+  const confirmed = window.confirm(`Are you ${selectedPlayer}?`);
+  state.selectedGradePlayer = confirmed ? selectedPlayer : "";
   render();
 });
 els.gradeMovies?.addEventListener("click", (event) => {
@@ -3405,6 +3482,9 @@ els.gradeForm?.addEventListener("submit", (event) => {
 els.resetGrades?.addEventListener("click", () => {
   const playerName = els.gradePlayerSelect?.value || "";
   if (!playerName) return;
+
+  const confirmed = window.confirm(`Are you sure you would like to clear ${playerName}'s grades?`);
+  if (!confirmed) return;
 
   state.movieGrades = { ...(state.movieGrades || {}), [playerName]: {} };
   saveState();

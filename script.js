@@ -241,6 +241,8 @@ const els = {
   statMovies: document.querySelector("#statMovies"),
   statGross: document.querySelector("#statGross"),
   statLeader: document.querySelector("#statLeader"),
+  statBiggestJump: document.querySelector("#statBiggestJump"),
+  statBiggestDrop: document.querySelector("#statBiggestDrop"),
 };
 
 const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardMovementWeek: "" };
@@ -849,6 +851,34 @@ function renderLeaderboardMovement(name) {
   const spots = Math.abs(delta);
   const label = escapeHtml(name) + " moved " + direction + " " + spots + " spot" + (spots === 1 ? "" : "s");
   return '<span class="leaderboard-move leaderboard-move-' + direction + '" aria-label="' + label + '">' + arrow + spots + '</span>';
+}
+
+function renderMovementHighlights() {
+  const movement = Object.entries(state.leaderboardRankMovement || {})
+    .map(([name, delta]) => ({ name, delta: Number(delta) }))
+    .filter((entry) => Number.isFinite(entry.delta) && entry.delta !== 0);
+
+  const renderHighlight = (target, direction) => {
+    if (!target) return;
+
+    const candidates = movement.filter((entry) => direction === "up" ? entry.delta > 0 : entry.delta < 0);
+    if (!candidates.length) {
+      target.textContent = "No movement yet";
+      return;
+    }
+
+    const biggestChange = Math.max(...candidates.map((entry) => Math.abs(entry.delta)));
+    const names = candidates
+      .filter((entry) => Math.abs(entry.delta) === biggestChange)
+      .map((entry) => entry.name)
+      .sort((a, b) => a.localeCompare(b));
+    const arrow = direction === "up" ? "↑" : "↓";
+    const spots = biggestChange === 1 ? "spot" : "spots";
+    target.textContent = names.join(", ") + " " + arrow + biggestChange + " " + spots;
+  };
+
+  renderHighlight(els.statBiggestJump, "up");
+  renderHighlight(els.statBiggestDrop, "down");
 }
 
 function formatRawGrossLeaders(rawScored) {
@@ -2917,6 +2947,7 @@ function renderStats(entries, results, scored) {
   if (els.statMovies) els.statMovies.textContent = `${movies.length}/${uniquePicks.size}`;
   if (els.statGross) els.statGross.textContent = formatMoney(gross);
   if (els.statLeader) els.statLeader.textContent = formatCurrentLeaders(scored);
+  renderMovementHighlights();
   if (els.entryStatus) els.entryStatus.textContent = entries.length ? `${entries.length} player list${entries.length === 1 ? "" : "s"} saved` : "No lists saved";
   if (els.resultStatus) els.resultStatus.textContent = movies.length ? `${movies.length} movie total${movies.length === 1 ? "" : "s"} saved` : "No grosses saved";
 }
@@ -3118,15 +3149,22 @@ els.saveResults?.addEventListener("click", () => {
   const nextResultsText = serializeAdminResultsGrid();
   const newResults = parseResults(nextResultsText);
   const movementWeek = state.currentContestWeek || "Auto";
+  const savedBaseline = state.leaderboardWeekBaseline || {};
+  const currentNames = entries.map((entry) => entry.name);
   const hasCurrentWeekBaseline = state.leaderboardMovementWeek === movementWeek
-    && Object.keys(state.leaderboardWeekBaseline || {}).length > 0;
+    && currentNames.length > 0
+    && currentNames.every((name) => Number(savedBaseline[name]) > 0);
   const baseline = hasCurrentWeekBaseline
-    ? state.leaderboardWeekBaseline
+    ? savedBaseline
     : rankSnapshot(entries, oldResults);
+  const weekMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
+  const latestSaveMovement = calculateLeaderboardMovement(entries, oldResults, newResults);
 
   state.leaderboardWeekBaseline = baseline;
   state.leaderboardMovementWeek = movementWeek;
-  state.leaderboardRankMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
+  state.leaderboardRankMovement = Object.keys(weekMovement).length
+    ? weekMovement
+    : latestSaveMovement;
   state.resultsText = nextResultsText;
   saveState();
   render();

@@ -7,21 +7,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Graduate&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260704-bullseye-pages1">
+    <link rel="stylesheet" href="styles.css?v=20260705-subpage-menu2">
     <link rel="stylesheet" href="main-home.css?v=20260704-home-redesign1">
-    <link rel="stylesheet" href="bullseye-pages.css?v=20260704-bullseye-pages1">
+    <link rel="stylesheet" href="bullseye-pages.css?v=20260705-grading-system1">
   </head>
   <body class="main-design-canvas production-home bullseye-subpage">
-    <header class="site-header">
+    <header class="site-header subpage-menu-header">
       <a class="brand" href="index.html" aria-label="Back to Box Office Bullseye">
         <span class="test-bullseye-mark has-logo"><img src="assets/box-office-bullseye-logo.jpg" alt="Box Office Bullseye dartboard"></span>
         <span class="bullseye-brand-name">Box Office Bullseye: Summer 2026</span>
       </a>
-      <nav class="nav-links" aria-label="Grade movies navigation">
-        <a href="index.html">Main page</a>
-        <a href="all-movies.html">All Movies</a>
-        <a href="hall-of-fame.html">Hall of Fame</a>
+      <nav class="nav-links subpage-toolbar-menu" id="subpageToolbarMenu" aria-label="Site navigation">
+        <a href="./index.html">Main Page</a>
+        <a href="./grades.html">Grade Movies</a>
+        <a href="./all-movies.html">All Movies in Contest</a>
+        <a href="./paid-status.html">See If You Paid</a>
+        <a href="./top-five-perfect-order.html">The Weekend Wager</a>
+        <a href="./hall-of-fame.html">Hall of Fame</a>
+        <a class="test-header-entry" id="enterListButton" href="./enter-list.html">Enter Your List</a>
       </nav>
+      <button class="subpage-menu-button" id="subpageMenuButton" type="button" aria-expanded="false" aria-controls="subpageToolbarMenu" aria-label="Open navigation menu" title="Menu"><span aria-hidden="true">☰</span></button>
     </header>
 
     <main id="top">
@@ -35,23 +40,26 @@
         <form class="new-entry-card grade-card" id="gradeForm">
           <label for="gradePlayerSelect">Studio name</label>
           <select id="gradePlayerSelect"></select>
-          <div class="grade-scale" aria-label="Grade scale">A+ A A- B+ B B- C+ C C- D+ D D- F</div>
+          <div class="grade-scale" aria-label="Grading system">
+            <strong class="grade-scale-title">Grading System</strong>
+            <span>A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F</span>
+          </div>
           <div class="grade-movies" id="gradeMovies"></div>
-          <div class="form-actions">
+          <div class="form-actions" id="gradeFormActions" hidden>
             <button class="button button-primary" type="submit">Save grades</button>
             <button class="button button-secondary-dark" id="resetGrades" type="button">Clear my grades</button>
           </div>
-          <p class="admin-note" id="gradeStatus">Choose your studio to start grading.</p>
+          <p class="admin-note" id="gradeStatus"></p>
         </form>
       </section>
     </main>
 
     <footer class="site-footer">
       <a class="test-footer-top-link" href="#top">Box Office Bullseye: Summer 2026</a>
-      <span><a class="footer-admin-link" href="./index.html#contestants">Back to Water Cooler</a></span>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260704-bullseye-pages1"></script>
+    <script src="script.js?v=20260705-grade-actions-gate1"></script>
+    <script src="subpage-menu.js?v=20260705-subpage-menu1"></script>
   </body>
 </html>

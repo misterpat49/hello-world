@@ -7,18 +7,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Patrick+Hand&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=20260705-wager-status1">
+    <link rel="stylesheet" href="styles.css?v=20260705-wager-small-strip1">
   </head>
   <body class="perfect-order-page" data-perfect-theme="dark">
-    <header class="site-header">
+    <header class="site-header subpage-menu-header">
       <a class="brand" href="index.html" aria-label="Back to the main box office contest">
         <span class="brand-mark bullseye-brand-mark" aria-hidden="true"><img src="assets/box-office-bullseye-logo.jpg" alt=""></span>
         <span class="contest-name" data-fixed-contest-name>Box Office Bullseye</span>
       </a>
       <div class="perfect-order-header-actions">
-        <nav class="nav-links" aria-label="Top Five navigation">
-          <a href="index.html">Main page</a>
-        </nav>
+        <nav class="nav-links subpage-toolbar-menu" id="subpageToolbarMenu" aria-label="Site navigation">
+        <a href="./index.html">Main Page</a>
+        <a href="./grades.html">Grade Movies</a>
+        <a href="./all-movies.html">All Movies in Contest</a>
+        <a href="./paid-status.html">See If You Paid</a>
+        <a href="./top-five-perfect-order.html">The Weekend Wager</a>
+        <a href="./hall-of-fame.html">Hall of Fame</a>
+        <a class="test-header-entry" id="enterListButton" href="./enter-list.html">Enter Your List</a>
+      </nav>
+      <button class="subpage-menu-button" id="subpageMenuButton" type="button" aria-expanded="false" aria-controls="subpageToolbarMenu" aria-label="Open navigation menu" title="Menu"><span aria-hidden="true">☰</span></button>
       </div>
     </header>
 
@@ -92,5 +99,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js?v=20260705-weekend-wager-fee10"></script>
+    <script src="subpage-menu.js?v=20260705-subpage-menu1"></script>
   </body>
 </html>

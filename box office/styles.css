@@ -4340,3 +4340,150 @@ a.promo-logo-link:focus-visible {
 
 /* Hide an unused Weekend Wager status line before a studio is chosen. */
 .perfect-order-page #topFiveStatus:empty { display: none; }
+
+/* Shared upper-right navigation for public subpages. */
+.site-header.subpage-menu-header {
+  position: sticky;
+  align-items: center;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.subpage-menu-header .brand { min-width: 0; }
+.subpage-menu-button {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  place-items: center;
+  border: 1px solid #735b2b;
+  border-radius: 3px;
+  background: #13100c;
+  color: #f0dfb8;
+  cursor: pointer;
+  font-size: 25px;
+  line-height: 1;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .3);
+}
+.subpage-menu-button:hover,
+.subpage-menu-button:focus-visible,
+.subpage-menu-button.is-open {
+  border-color: #e4b64a;
+  background: #a91f2c;
+  color: #fff;
+  outline: none;
+}
+.site-header .subpage-toolbar-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: clamp(12px, 4vw, 54px);
+  left: auto;
+  z-index: 100;
+  display: none;
+  width: min(290px, calc(100vw - 24px));
+  max-height: calc(100dvh - 90px);
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #735b2b;
+  border-bottom: 5px solid #a91f2c;
+  border-radius: 4px;
+  background: #0b0b0b;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, .65);
+  -webkit-overflow-scrolling: touch;
+}
+.site-header .subpage-toolbar-menu.is-open { display: grid; }
+.site-header .subpage-toolbar-menu a,
+.site-header .subpage-toolbar-menu a.test-header-entry {
+  display: block;
+  width: auto;
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid #30291f;
+  border-radius: 0;
+  background: transparent;
+  color: #f0e8d8;
+  font: 700 14px/1.35 "Space Grotesk", sans-serif;
+  text-align: left;
+  text-decoration: none;
+  text-transform: none;
+  white-space: normal;
+  box-shadow: none;
+}
+.site-header .subpage-toolbar-menu a:last-child { border-bottom: 0; }
+.site-header .subpage-toolbar-menu a:hover,
+.site-header .subpage-toolbar-menu a:focus-visible {
+  background: #231711;
+  color: #e4b64a;
+  outline: none;
+}
+.site-header .subpage-toolbar-menu a.test-header-entry { color: #e4b64a; }
+.site-header .subpage-toolbar-menu a.test-header-entry[aria-disabled="true"],
+.site-header .subpage-toolbar-menu a.test-header-entry.is-disabled {
+  color: #777;
+  pointer-events: none;
+}
+@media (max-width: 680px) {
+  .site-header.subpage-menu-header {
+    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    padding: 10px 14px;
+  }
+  .subpage-menu-header .brand {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .subpage-menu-header .contest-name,
+  .subpage-menu-header .bullseye-brand-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .site-header .subpage-toolbar-menu {
+    right: 12px;
+    width: min(310px, calc(100vw - 24px));
+  }
+}
+
+/* Weekend Wager keeps the shared subpage menu in the upper-right. */
+.subpage-menu-header .perfect-order-header-actions {
+  width: auto;
+  margin-left: auto;
+  align-items: center;
+  flex-direction: row;
+}
+@media (max-width: 760px) {
+  .subpage-menu-header .perfect-order-header-actions {
+    width: auto;
+    align-items: center;
+    flex-direction: row;
+  }
+}
+
+/* Keep the Weekend Wager row-of-ten compact on narrow iOS screens. */
+@media (max-width: 680px) {
+  .perfect-order-page .showdown-poster-strip {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 72px;
+    justify-content: start;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 6px 4px 18px;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .perfect-order-page .showdown-poster-strip .showdown-poster-item {
+    width: 72px;
+    scroll-snap-align: start;
+  }
+  .perfect-order-page .showdown-poster-strip img {
+    width: 72px;
+  }
+}

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#172419">
+    <title>Camping 2026</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="camping-2026.css?v=20260705-campsite-popup1">
+  </head>
+  <body>
+    <header class="camping-header">
+      <p>Field guide</p>
+      <h1>Camping 2026</h1>
+      <span>Hover, focus, or tap a camper to find their campsite.</span>
+    </header>
+
+    <main>
+      <section class="campground-key" aria-labelledby="key-title">
+        <div class="key-heading">
+          <p>Campground key</p>
+          <h2 id="key-title">Find your camp</h2>
+        </div>
+        <div class="key-list" id="campgroundKey">
+          <button type="button" data-sites="B9"><strong>Darin Linder</strong><span>B9</span></button>
+          <button type="button" data-sites="B25"><strong>Johann, Aether &amp; Janine</strong><span>B25</span></button>
+          <button type="button" data-sites="C1"><strong>Emily &amp; Matt</strong><span>C1</span></button>
+          <button type="button" data-sites="C2"><strong>Sosines</strong><span>C2</span></button>
+          <button type="button" data-sites="C3"><strong>Brian &amp; Kelley</strong><span>C3</span></button>
+          <button type="button" data-sites="C3"><strong>Overflow site for friends</strong><span>C3</span></button>
+          <button type="button" data-sites="C4"><strong>Nate &amp; Nikki Lacy</strong><span>C4</span></button>
+          <button type="button" data-sites="C10"><strong>Kim &amp; Chris</strong><span>C10</span></button>
+          <button type="button" data-sites="C11"><strong>Bryan &amp; Mel</strong><span>C11</span></button>
+          <button type="button" data-sites="C13"><strong>Manny &amp; Earlene</strong><span>C13</span></button>
+          <button type="button" data-sites="C15"><strong>Tom &amp; Nancy</strong><span>C15</span></button>
+          <button type="button" data-sites="C16"><strong>Sanas</strong><span>C16</span></button>
+          <button type="button" data-sites="C20"><strong>Brian Weirsma</strong><span>C20</span></button>
+          <button type="button" data-sites="C22 C35"><strong>Amezquita&apos;s</strong><span>C22 &amp; C35</span></button>
+          <button type="button" data-sites="C23"><strong>Billy &amp; Zander</strong><span>C23</span></button>
+          <button type="button" data-sites="C25 C27"><strong>Lenny &amp; Andy</strong><span>C25 &amp; C27</span></button>
+          <button type="button" data-sites="C26"><strong>Patrick</strong><span>C26</span></button>
+          <button type="button" data-sites="C31"><strong>Aaron &amp; Cat Linder</strong><span>C31</span></button>
+          <button type="button" data-sites="C37"><strong>Smith&apos;s</strong><span>C37</span></button>
+          <button type="button" data-sites="C39"><strong>Shaun</strong><span>C39</span></button>
+          <button type="button" data-sites="D4"><strong>John &amp; Tiana Grgurina</strong><span>D4</span></button>
+        </div>
+      </section>
+
+      <section class="camping-map-section" aria-label="Interactive campground map">
+        <div class="camping-map" id="campingMap">
+          <img src="assets/camping-2026-map.png" alt="Camping 2026 campground map, campground key, and nearby store hours">
+          <div class="printed-key-hotspots" aria-label="Interactive printed campground key">
+            <button type="button" data-sites="B9" style="--y:66.1%" aria-label="Darin Linder, B9"></button>
+            <button type="button" data-sites="B25" style="--y:67.7%" aria-label="Johann, Aether and Janine, B25"></button>
+            <button type="button" data-sites="C1" style="--y:69.2%" aria-label="Emily and Matt, C1"></button>
+            <button type="button" data-sites="C2" style="--y:70.7%" aria-label="Sosines, C2"></button>
+            <button type="button" data-sites="C3" style="--y:72.2%" aria-label="Brian and Kelley, C3"></button>
+            <button type="button" data-sites="C3" style="--y:73.7%" aria-label="Overflow site for friends, C3"></button>
+            <button type="button" data-sites="C4" style="--y:75.2%" aria-label="Nate and Nikki Lacy, C4"></button>
+            <button type="button" data-sites="C10" style="--y:76.7%" aria-label="Kim and Chris, C10"></button>
+            <button type="button" data-sites="C11" style="--y:78.2%" aria-label="Bryan and Mel, C11"></button>
+            <button type="button" data-sites="C13" style="--y:79.7%" aria-label="Manny and Earlene, C13"></button>
+            <button type="button" data-sites="C15" style="--y:81.2%" aria-label="Tom and Nancy, C15"></button>
+            <button type="button" data-sites="C16" style="--y:82.7%" aria-label="Sanas, C16"></button>
+            <button type="button" data-sites="C20" style="--y:84.2%" aria-label="Brian Weirsma, C20"></button>
+            <button type="button" data-sites="C22 C35" style="--y:85.7%" aria-label="Amezquitas, C22 and C35"></button>
+            <button type="button" data-sites="C23" style="--y:87.2%" aria-label="Billy and Zander, C23"></button>
+            <button type="button" data-sites="C25 C27" style="--y:88.7%" aria-label="Lenny and Andy, C25 and C27"></button>
+            <button type="button" data-sites="C26" style="--y:90.2%" aria-label="Patrick, C26"></button>
+            <button type="button" data-sites="C31" style="--y:91.7%" aria-label="Aaron and Cat Linder, C31"></button>
+            <button type="button" data-sites="C37" style="--y:93.2%" aria-label="Smiths, C37"></button>
+            <button type="button" data-sites="C39" style="--y:94.7%" aria-label="Shaun, C39"></button>
+            <button type="button" data-sites="D4" style="--y:96.2%" aria-label="John and Tiana Grgurina, D4"></button>
+          </div>
+          <button type="button" class="site-marker" data-site="B9" data-name="Darin Linder" aria-label="Show Darin Linder at campsite B9" style="--x:36.1%;--y:27.3%">B9</button>
+          <button type="button" class="site-marker" data-site="B25" data-name="Johann, Aether & Janine" aria-label="Show Johann, Aether & Janine at campsite B25" style="--x:47.3%;--y:24.4%">B25</button>
+          <button type="button" class="site-marker" data-site="C1" data-name="Emily & Matt" aria-label="Show Emily & Matt at campsite C1" style="--x:35.4%;--y:37.8%">C1</button>
+          <button type="button" class="site-marker" data-site="C2" data-name="Sosines" aria-label="Show Sosines at campsite C2" style="--x:37.1%;--y:41.1%">C2</button>
+          <button type="button" class="site-marker" data-site="C3" data-name="Brian & Kelley / Friends Overflow" aria-label="Show Brian & Kelley / Friends Overflow at campsite C3" style="--x:37.5%;--y:36.2%">C3</button>
+          <button type="button" class="site-marker" data-site="C4" data-name="Nate & Nikki Lacy" aria-label="Show Nate & Nikki Lacy at campsite C4" style="--x:39.5%;--y:39.4%">C4</button>
+          <button type="button" class="site-marker" data-site="C10" data-name="Kim & Chris" aria-label="Show Kim & Chris at campsite C10" style="--x:44.1%;--y:40.5%">C10</button>
+          <button type="button" class="site-marker" data-site="C11" data-name="Bryan & Mel" aria-label="Show Bryan & Mel at campsite C11" style="--x:48.7%;--y:38.0%">C11</button>
+          <button type="button" class="site-marker" data-site="C13" data-name="Manny & Earlene" aria-label="Show Manny & Earlene at campsite C13" style="--x:49.0%;--y:40.2%">C13</button>
+          <button type="button" class="site-marker" data-site="C15" data-name="Tom & Nancy" aria-label="Show Tom & Nancy at campsite C15" style="--x:49.1%;--y:42.5%">C15</button>
+          <button type="button" class="site-marker" data-site="C16" data-name="Sanas" aria-label="Show Sanas at campsite C16" style="--x:45.4%;--y:46.4%">C16</button>
+          <button type="button" class="site-marker" data-site="C20" data-name="Brian Weirsma" aria-label="Show Brian Weirsma at campsite C20" style="--x:41.5%;--y:47.3%">C20</button>
+          <button type="button" class="site-marker" data-site="C22" data-name="Amezquita&apos;s" aria-label="Show Amezquita&apos;s at campsite C22" style="--x:41.2%;--y:45.4%">C22</button>
+          <button type="button" class="site-marker" data-site="C35" data-name="Amezquita&apos;s" aria-label="Show Amezquita&apos;s at campsite C35" style="--x:33.9%;--y:46.5%">C35</button>
+          <button type="button" class="site-marker" data-site="C23" data-name="Billy & Zander" aria-label="Show Billy & Zander at campsite C23" style="--x:47.3%;--y:51.8%">C23</button>
+          <button type="button" class="site-marker" data-site="C25" data-name="Lenny & Andy" aria-label="Show Lenny & Andy at campsite C25" style="--x:43.6%;--y:54.7%">C25</button>
+          <button type="button" class="site-marker" data-site="C27" data-name="Lenny & Andy" aria-label="Show Lenny & Andy at campsite C27" style="--x:42.2%;--y:52.8%">C27</button>
+          <button type="button" class="site-marker" data-site="C26" data-name="Patrick" aria-label="Show Patrick at campsite C26" style="--x:39.3%;--y:42.2%">C26</button>
+          <button type="button" class="site-marker" data-site="C31" data-name="Aaron & Cat Linder" aria-label="Show Aaron & Cat Linder at campsite C31" style="--x:33.8%;--y:50.3%">C31</button>
+          <button type="button" class="site-marker" data-site="C37" data-name="Smith&apos;s" aria-label="Show Smith&apos;s at campsite C37" style="--x:33.5%;--y:44.9%">C37</button>
+          <button type="button" class="site-marker" data-site="C39" data-name="Shaun" aria-label="Show Shaun at campsite C39" style="--x:33.3%;--y:42.9%">C39</button>
+          <button type="button" class="site-marker" data-site="D4" data-name="John & Tiana Grgurina" aria-label="Show John & Tiana Grgurina at campsite D4" style="--x:29.4%;--y:40.1%">D4</button>
+          <div class="camp-name-popup" id="campNamePopup" role="status" hidden></div>
+        </div>
+      </section>
+    </main>
+
+    <script src="camping-2026.js?v=20260705-campsite-popup1"></script>
+  </body>
+</html>

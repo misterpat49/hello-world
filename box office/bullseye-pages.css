@@ -91,3 +91,36 @@
   .bullseye-subpage .paid-status-summary { grid-template-columns: 1fr; align-items: start; }
   .bullseye-subpage .paid-status-summary strong { grid-row: auto; grid-column: 1; }
 }
+
+/* Hide the unused Grade Movies status row before a studio is chosen. */
+.bullseye-subpage #gradeStatus:empty {
+  display: none;
+}
+
+/* Keep the grade list out of view until a studio is selected. */
+.bullseye-subpage .grade-movies[hidden] {
+  display: none;
+}
+
+/* Hide grade actions until a studio has been confirmed. */
+.bullseye-subpage #gradeFormActions[hidden] {
+  display: none;
+}
+
+/* Clear, labeled grade reference. */
+.bullseye-subpage .grade-scale {
+  display: grid;
+  gap: 6px;
+  letter-spacing: 0;
+}
+.bullseye-subpage .grade-scale-title {
+  color: #fff8e8;
+  font-family: "Graduate", "Space Grotesk", sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.bullseye-subpage .grade-scale span {
+  color: #e1c779;
+  line-height: 1.5;
+}
