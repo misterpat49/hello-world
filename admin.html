@@ -277,7 +277,7 @@ Jordan Lee:
             <h3>Bullseye studio passwords</h3>
             <span>Mini-contest access</span>
           </div>
-          <p class="admin-note">Each studio has a unique randomized five-digit password. Share each code privately. Predictions remain sealed until official results are saved for that week.</p>
+          <p class="admin-note">Each studio has a unique randomized five-digit password. Share each code privately. Predictions remain sealed until you manually reveal that week or save official results.</p>
           <div class="top-five-password-key" id="topFivePasswordKey"></div>
         </article>
 
@@ -286,7 +286,7 @@ Jordan Lee:
             <h3>Bullseye weekly results</h3>
             <span>Weeks 1–18</span>
           </div>
-          <p class="admin-note">Choose a week and enter the official domestic top five in exact order. Saved answers rank that week&apos;s submitted predictions by consecutive correct positions starting at first place, then tie-breaker distance. Only a perfect five can win.</p>
+          <p class="admin-note">Choose a week and enter the official domestic top five in exact order. Use Reveal and lock to show that week&apos;s entries before official results are ready. Saved answers also reveal the week and rank predictions by consecutive correct positions starting at first place, then tie-breaker distance. Only a perfect five can win.</p>
           <label for="topFiveOfficialWeek">Results week</label>
           <select id="topFiveOfficialWeek">
             <option value="Week 1">Week 1</option>
@@ -311,6 +311,8 @@ Jordan Lee:
           <div class="top-five-official-picks" id="topFiveOfficialPicks"></div>
           <div class="form-actions">
             <button class="button button-primary" id="saveTopFiveOfficialResults" type="button">Save official top five</button>
+            <button class="button button-secondary-dark" id="revealTopFiveWeek" type="button">Reveal and lock entries</button>
+            <button class="button button-secondary-dark" id="sealTopFiveWeek" type="button">Seal / reopen entries</button>
             <button class="button button-secondary-dark" id="clearTopFiveOfficialResults" type="button">Clear this week</button>
             <button class="button button-danger" id="clearTopFiveWeekAll" type="button">Clear this week all</button>
           </div>
@@ -328,6 +330,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260705-leaderboard-movement-fix1"></script>
+    <script src="script.js?v=20260709-bullseye-manual-reveal1"></script>
   </body>
 </html>

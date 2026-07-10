@@ -124,6 +124,8 @@ const els = {
   saveTopFiveOfficialResults: document.querySelector("#saveTopFiveOfficialResults"),
   clearTopFiveOfficialResults: document.querySelector("#clearTopFiveOfficialResults"),
   clearTopFiveWeekAll: document.querySelector("#clearTopFiveWeekAll"),
+  revealTopFiveWeek: document.querySelector("#revealTopFiveWeek"),
+  sealTopFiveWeek: document.querySelector("#sealTopFiveWeek"),
   topFiveOfficialStatus: document.querySelector("#topFiveOfficialStatus"),
   topFiveWeeklyWinners: document.querySelector("#topFiveWeeklyWinners"),
   comingSoonInput: document.querySelector("#comingSoonInput"),
@@ -245,7 +247,7 @@ const els = {
   statBiggestDrop: document.querySelector("#statBiggestDrop"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardMovementWeek: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardMovementWeek: "" };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -1116,10 +1118,15 @@ function renderTopFiveWeeklyResultsAdmin(entries, results) {
   updateTopFiveOfficialOptions();
 
   if (els.topFiveOfficialStatus) {
+    const manuallyRevealed = isTopFiveWeekManuallyRevealed(selectedWeek);
     els.topFiveOfficialStatus.textContent = savedPicks.length === 5
-      ? `Official top five saved for ${selectedWeek}.`
-      : `No official results saved for ${selectedWeek}.`;
+      ? `Official top five saved for ${selectedWeek}. Entries are revealed and locked.`
+      : manuallyRevealed
+        ? `${selectedWeek} entries are manually revealed and locked.`
+        : `No official results saved for ${selectedWeek}. Entries are sealed and open.`;
   }
+  if (els.revealTopFiveWeek) els.revealTopFiveWeek.disabled = isTopFiveWeekLocked(selectedWeek);
+  if (els.sealTopFiveWeek) els.sealTopFiveWeek.disabled = !isTopFiveWeekManuallyRevealed(selectedWeek) || savedPicks.length === 5;
 
   if (els.topFiveWeeklyWinners) {
     const savedWeeks = Object.keys(state.topFiveWeeklyResults || {})
@@ -1226,9 +1233,19 @@ function topFiveOfficialPicks(week) {
   return Array.isArray(picks) ? picks.slice(0, 5) : [];
 }
 
+function isTopFiveWeekManuallyRevealed(week) {
+  return Boolean(state.topFiveRevealedWeeks?.[week]);
+}
+
+function isTopFiveWeekLocked(week) {
+  return isTopFiveWeekManuallyRevealed(week) || topFiveOfficialPicks(week).length === 5;
+}
+
 function rankedTopFiveSubmissions(week, results) {
   const officialPicks = topFiveOfficialPicks(week);
   const hasOfficialResults = officialPicks.length === 5;
+  const manuallyRevealed = isTopFiveWeekManuallyRevealed(week);
+  const isRevealed = hasOfficialResults || manuallyRevealed;
   const officialKeys = new Set(officialPicks.map(normalizeMovie));
   const tieBreakerActual = topFiveTieBreakerActual(week, results);
   const submissions = Object.entries(state.topFivePredictions?.[week] || {})
@@ -1266,7 +1283,7 @@ function rankedTopFiveSubmissions(week, results) {
       : index + 1;
   });
 
-  return { submissions, officialPicks, hasOfficialResults, tieBreakerActual };
+  return { submissions, officialPicks, hasOfficialResults, manuallyRevealed, isRevealed, tieBreakerActual };
 }
 
 function sameTopFiveStanding(a, b) {
@@ -1322,6 +1339,7 @@ function renderTopFivePredictionForm(entries) {
 
   const selectedPlayer = players.find((entry) => entry.name === state.selectedTopFivePlayer)?.name || "";
   state.selectedTopFivePlayer = selectedPlayer;
+  const isLocked = isTopFiveWeekLocked(week);
   const isAuthorized = Boolean(selectedPlayer && topFiveAuthorizedPlayer === selectedPlayer);
   const savedPrediction = isAuthorized ? state.topFivePredictions?.[week]?.[selectedPlayer] : null;
   const savedPicks = Array.isArray(savedPrediction) ? savedPrediction : savedPrediction?.picks || [];
@@ -1344,27 +1362,32 @@ function renderTopFivePredictionForm(entries) {
   });
   if (els.topFiveTotal) els.topFiveTotal.value = savedTotal;
   if (els.topFivePassword && !isAuthorized) els.topFivePassword.value = "";
-  if (els.topFiveAuthPanel) els.topFiveAuthPanel.hidden = !selectedPlayer || isAuthorized;
+  if (els.topFivePlayerSelect) els.topFivePlayerSelect.disabled = isLocked;
+  if (els.topFiveAuthPanel) els.topFiveAuthPanel.hidden = isLocked || !selectedPlayer || isAuthorized;
   if (els.topFiveEntryFields) {
-    els.topFiveEntryFields.hidden = !isAuthorized;
-    els.topFiveEntryFields.disabled = !isAuthorized;
+    els.topFiveEntryFields.hidden = isLocked || !isAuthorized;
+    els.topFiveEntryFields.disabled = isLocked || !isAuthorized;
   }
   if (els.topFiveAuthStatus) {
-    els.topFiveAuthStatus.textContent = !selectedPlayer
-      ? "Venmo the commish $10 to receive a custom password to enter."
-      : isAuthorized
-        ? `${selectedPlayer} unlocked.`
-        : "Enter your five-digit studio password.";
+    els.topFiveAuthStatus.textContent = isLocked
+      ? `${week} entries are locked.`
+      : !selectedPlayer
+        ? "Venmo the commish $10 to receive a custom password to enter."
+        : isAuthorized
+          ? `${selectedPlayer} unlocked.`
+          : "Enter your five-digit studio password.";
   }
   updateTopFiveOptions();
   if (els.topFiveStatus) {
-    els.topFiveStatus.textContent = !selectedPlayer
-      ? ""
-      : !isAuthorized
-        ? "Unlock your studio before making picks."
-        : savedPicks.length === 5
-          ? `Prediction saved for ${week}.`
-          : `Rank your predicted domestic top five for ${week}.`;
+    els.topFiveStatus.textContent = isLocked
+      ? `${week} entries are locked and revealed.`
+      : !selectedPlayer
+        ? ""
+        : !isAuthorized
+          ? "Unlock your studio before making picks."
+          : savedPicks.length === 5
+            ? `Prediction saved for ${week}.`
+            : `Rank your predicted domestic top five for ${week}.`;
   }
 }
 
@@ -1378,8 +1401,8 @@ function renderTopFiveResults(results) {
   }
   const tieBreakerMovies = topFiveTieBreakerMovies(week);
   const tieBreakerMovieNames = movieTitleList(tieBreakerMovies);
-  const { submissions, officialPicks, hasOfficialResults, tieBreakerActual } = rankedTopFiveSubmissions(week, results);
-  const revealed = hasOfficialResults;
+  const { submissions, officialPicks, hasOfficialResults, isRevealed, tieBreakerActual } = rankedTopFiveSubmissions(week, results);
+  const revealed = isRevealed;
   if (els.topFiveTieBreakerResult) {
     els.topFiveTieBreakerResult.innerHTML = `<span>Tie-breaker total of ${escapeHtml(tieBreakerMovieNames)}</span><strong>${formatMoney(tieBreakerActual)}</strong>`;
   }
@@ -1487,6 +1510,11 @@ function renderTopFiveResults(results) {
 function submitTopFivePrediction() {
   const playerName = els.topFivePlayerSelect?.value || "";
   const week = topFivePredictionWeek();
+
+  if (isTopFiveWeekLocked(week)) {
+    if (els.topFiveStatus) els.topFiveStatus.textContent = `${week} entries are locked.`;
+    return;
+  }
   const picks = Array.from(els.topFivePicks?.querySelectorAll("select") || []).map((select) => select.value.trim());
   const tieBreakerTotal = Number.parseFloat(els.topFiveTotal?.value || "");
 
@@ -1515,7 +1543,7 @@ function submitTopFivePrediction() {
 
   state.topFivePredictions = {
     ...(state.topFivePredictions || {}),
-    [week]: { ...((state.topFivePredictions || {})[week] || {}), [playerName]: { picks, tieBreakerTotal } },
+    [week]: { ...((state.topFivePredictions || {})[week] || {}), [playerName]: { picks, tieBreakerTotal, submittedAt: new Date().toISOString() } },
   };
   state.selectedTopFivePlayer = "";
   topFiveAuthorizedPlayer = "";
@@ -3267,6 +3295,7 @@ els.saveTopFiveOfficialResults?.addEventListener("click", () => {
     return;
   }
   state.topFiveWeeklyResults = { ...(state.topFiveWeeklyResults || {}), [week]: picks };
+  state.topFiveRevealedWeeks = { ...(state.topFiveRevealedWeeks || {}), [week]: true };
   state.selectedTopFiveResultsWeek = week;
   saveState();
   render();
@@ -3317,10 +3346,14 @@ els.clearTopFiveWeekAll?.addEventListener("click", async () => {
   const predictions = Object.fromEntries(
     Object.entries(state.topFivePredictions || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
   );
+  const revealedWeeks = Object.fromEntries(
+    Object.entries(state.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+  );
   const clearedState = {
     ...state,
     topFiveWeeklyResults: weeklyResults,
     topFivePredictions: predictions,
+    topFiveRevealedWeeks: revealedWeeks,
     selectedTopFiveResultsWeek: week
   };
 
@@ -3342,6 +3375,33 @@ els.clearTopFiveWeekAll?.addEventListener("click", async () => {
       ? `All official results and player submissions cleared for ${week}.`
       : `Week data cleared locally for ${week}, but the database save failed. Try again.`;
   }
+});
+
+els.revealTopFiveWeek?.addEventListener("click", () => {
+  const week = els.topFiveOfficialWeek?.value || "";
+  if (!week) return;
+  state.topFiveRevealedWeeks = { ...(state.topFiveRevealedWeeks || {}), [week]: true };
+  state.selectedTopFiveResultsWeek = week;
+  saveState();
+  render();
+  if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `${week} entries are revealed and locked.`;
+});
+
+els.sealTopFiveWeek?.addEventListener("click", () => {
+  const week = els.topFiveOfficialWeek?.value || "";
+  if (!week) return;
+  if (topFiveOfficialPicks(week).length === 5) {
+    if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `${week} has official results, so entries stay revealed.`;
+    return;
+  }
+  const normalizedWeek = week.trim().toLowerCase();
+  state.topFiveRevealedWeeks = Object.fromEntries(
+    Object.entries(state.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+  );
+  state.selectedTopFiveResultsWeek = week;
+  saveState();
+  render();
+  if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `${week} entries are sealed and open again.`;
 });
 
 els.topFivePlayerSelect?.addEventListener("change", () => {
@@ -3401,6 +3461,11 @@ els.resetTopFive?.addEventListener("click", () => {
   const selectedPlayer = els.topFivePlayerSelect?.value || "";
   const playerName = selectedPlayer || rememberedPlayer;
   const week = topFivePredictionWeek();
+
+  if (isTopFiveWeekLocked(week)) {
+    if (els.topFiveStatus) els.topFiveStatus.textContent = `${week} entries are locked.`;
+    return;
+  }
 
   if (!playerName) {
     if (els.topFiveStatus) els.topFiveStatus.textContent = "Pick your studio name before resetting an entry.";
