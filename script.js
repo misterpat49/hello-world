@@ -149,6 +149,7 @@ const els = {
   paidStatusList: document.querySelector("#paidStatusList"),
   paidUnpaidTotal: document.querySelector("#paidUnpaidTotal"),
   paidUnpaidDetail: document.querySelector("#paidUnpaidDetail"),
+  goldenCeoRows: document.querySelector("#goldenCeoRows"),
   patrickSecretImageUpload: document.querySelector("#patrickSecretImageUpload"),
   savePatrickSecretImage: document.querySelector("#savePatrickSecretImage"),
   clearPatrickSecretImage: document.querySelector("#clearPatrickSecretImage"),
@@ -247,7 +248,7 @@ const els = {
   statBiggestDrop: document.querySelector("#statBiggestDrop"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardMovementWeek: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "" };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -1671,7 +1672,7 @@ function winnerPlaces(scored, rawScored) {
   return [
     { label: "First Place - $2000", names: scored[0]?.name, value: scored[0]?.score, suffix: "points" },
     { label: "Second Place - $500", names: scored[1]?.name, value: scored[1]?.score, suffix: "points" },
-    { label: "The Golden CEO - $200", note: "(no multipliers here, simply who picked the best collection of 15 films for their studio)", names: goldenCeo.names, value: goldenCeo.value, suffix: "points" },
+    { label: "The Golden CEO - $200", note: "(no multipliers here, simply who picked the best collection of 15 films for their studio)", names: goldenCeo.names, value: goldenCeo.value, suffix: "points", href: "golden-ceo.html" },
   ];
 }
 
@@ -1680,7 +1681,7 @@ function renderWinnerCards(container, places, nameRenderer = formatNames) {
 
   container.innerHTML = places.map((place) => `
     <article class="standing-card">
-      <span class="standing-label">${place.label}</span>
+      <span class="standing-label">${place.href ? `<a href="${escapeHtml(place.href)}">${place.label}</a>` : place.label}</span>
       <strong>${nameRenderer(place.names)}</strong>
       <p>${place.value !== undefined ? `${formatScore(place.value)} ${place.suffix}` : "Save player lists and grosses to calculate this spot."}</p>
       ${place.note ? `<span class="standing-note">${place.note}</span>` : ""}
@@ -2654,6 +2655,35 @@ function renderPatrickSecretPage() {
   }
 }
 
+function renderGoldenCeoPage(entries, results) {
+  if (!els.goldenCeoRows) return;
+
+  if (!entries.length) {
+    els.goldenCeoRows.innerHTML = '<div class="empty-state">No studio lists have been saved yet.</div>';
+    return;
+  }
+
+  const ranked = scoreRawGross(entries, results);
+  let lastTotal = null;
+  let lastRank = 0;
+  const rankForIndex = (entry, index) => {
+    if (lastTotal !== null && Math.abs(entry.rawGross - lastTotal) < 0.0001) return lastRank;
+    lastTotal = entry.rawGross;
+    lastRank = index + 1;
+    return lastRank;
+  };
+
+  els.goldenCeoRows.innerHTML = ranked.map((entry, index) => {
+    const rank = rankForIndex(entry, index);
+    const detailsId = "golden-ceo-list-" + index;
+    const picks = entry.picks.map((pick, pickIndex) => {
+      const movie = results.get(normalizeMovie(pick));
+      return '<li><span>' + (pickIndex + 1) + '</span><strong>' + escapeHtml(pick) + '</strong><em>' + (movie ? formatMoney(movieTotal(movie)) : '-') + '</em></li>';
+    }).join('');
+    return '<details class="golden-ceo-row"><summary aria-controls="' + detailsId + '"><span class="golden-ceo-rank">' + rank + '</span><strong>' + escapeHtml(entry.name) + '</strong><span>' + formatMoney(entry.rawGross) + '</span></summary><div class="golden-ceo-list" id="' + detailsId + '"><ol>' + picks + '</ol></div></details>';
+  }).join('');
+}
+
 function renderPaidStatusPage(entries) {
   if (!els.paidStatusList) return;
 
@@ -3153,6 +3183,7 @@ function render() {
   renderAdminResultsGrid(entries, results);
   renderPaidAdmin(entries);
   renderPaidStatusPage(entries);
+  renderGoldenCeoPage(entries, results);
   renderPatrickSecretPage();
   renderMovies(results, entries);
   renderAllContestMovies(entries, results);
@@ -3174,25 +3205,35 @@ els.saveEntries?.addEventListener("click", () => {
 els.saveResults?.addEventListener("click", () => {
   const entries = parseEntries(state.entriesText);
   const oldResults = parseResults(state.resultsText);
+  const previousSnapshot = state.leaderboardLastRankSnapshot || {};
   const nextResultsText = serializeAdminResultsGrid();
   const newResults = parseResults(nextResultsText);
   const movementWeek = state.currentContestWeek || "Auto";
-  const savedBaseline = state.leaderboardWeekBaseline || {};
   const currentNames = entries.map((entry) => entry.name);
+  const hasPreviousSnapshot = currentNames.length > 0
+    && currentNames.every((name) => Number(previousSnapshot[name]) > 0);
+  const savedBaseline = state.leaderboardWeekBaseline || {};
   const hasCurrentWeekBaseline = state.leaderboardMovementWeek === movementWeek
     && currentNames.length > 0
     && currentNames.every((name) => Number(savedBaseline[name]) > 0);
   const baseline = hasCurrentWeekBaseline
     ? savedBaseline
     : rankSnapshot(entries, oldResults);
+  const saveBaseline = hasPreviousSnapshot
+    ? previousSnapshot
+    : rankSnapshot(entries, oldResults);
+  const saveMovement = calculateMovementFromSnapshot(saveBaseline, entries, newResults);
   const weekMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
   const latestSaveMovement = calculateLeaderboardMovement(entries, oldResults, newResults);
 
   state.leaderboardWeekBaseline = baseline;
+  state.leaderboardLastRankSnapshot = rankSnapshot(entries, newResults);
   state.leaderboardMovementWeek = movementWeek;
-  state.leaderboardRankMovement = Object.keys(weekMovement).length
-    ? weekMovement
-    : latestSaveMovement;
+  state.leaderboardRankMovement = Object.keys(saveMovement).length
+    ? saveMovement
+    : Object.keys(weekMovement).length
+      ? weekMovement
+      : latestSaveMovement;
   state.resultsText = nextResultsText;
   saveState();
   render();
@@ -3600,7 +3641,9 @@ els.currentContestWeek?.addEventListener("change", () => {
 
   state.currentContestWeek = els.currentContestWeek.value;
   state.leaderboardMovementWeek = state.currentContestWeek || "Auto";
-  state.leaderboardWeekBaseline = rankSnapshot(entries, results);
+  const snapshot = rankSnapshot(entries, results);
+  state.leaderboardWeekBaseline = snapshot;
+  state.leaderboardLastRankSnapshot = snapshot;
   state.leaderboardRankMovement = {};
   saveState();
   render();

@@ -2666,3 +2666,16 @@
   object-fit: cover;
   clip-path: circle(50% at 50% 50%);
 }
+
+
+.main-design-canvas .standing-label a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.main-design-canvas .standing-label a:hover,
+.main-design-canvas .standing-label a:focus-visible {
+  color: var(--test-gold, #e4b64a);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
