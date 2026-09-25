@@ -24,12 +24,10 @@
       return {};
     }
   }
-
   function renderWeekendWagerMenuVisibility() {
-    const hidden = Boolean(contestStorageState(selectedContest).weekendWagerMenuHidden);
     document.querySelectorAll('a[href*="top-five-perfect-order.html"]').forEach((link) => {
-      link.hidden = hidden;
-      link.setAttribute("aria-hidden", hidden ? "true" : "false");
+      link.hidden = true;
+      link.setAttribute("aria-hidden", "true");
     });
   }
 

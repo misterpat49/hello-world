@@ -110,9 +110,6 @@ const els = {
   saveStandingsGif: document.querySelector("#saveStandingsGif"),
   clearStandingsGif: document.querySelector("#clearStandingsGif"),
   standingsGifStatus: document.querySelector("#standingsGifStatus"),
-  weekendWagerMenuHidden: document.querySelector("#weekendWagerMenuHidden"),
-  saveWeekendWagerMenu: document.querySelector("#saveWeekendWagerMenu"),
-  weekendWagerMenuStatus: document.querySelector("#weekendWagerMenuStatus"),
   topFiveLogoUpload: document.querySelector("#topFiveLogoUpload"),
   saveTopFiveLogo: document.querySelector("#saveTopFiveLogo"),
   clearTopFiveLogo: document.querySelector("#clearTopFiveLogo"),
@@ -244,7 +241,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", weekendWagerMenuHidden: false, leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -291,7 +288,6 @@ function blankContestState(profile) {
     contestYear: profile.year,
     contestSeason: profile.season,
     currentContestWeek: "",
-    weekendWagerMenuHidden: false,
     leaderboardImageUrl: "",
     weeklyUpdateText: "",
     standingsGifUrl: "",
@@ -325,25 +321,10 @@ function activePublicContestState() {
   return contestStateFor(selectedPublicContestId());
 }
 
-function weekendWagerMenuHiddenForPublicContest() {
-  return Boolean(activePublicContestState().weekendWagerMenuHidden);
-}
-
-function renderWeekendWagerMenuControls() {
-  const hidden = Boolean(activeAdminContestState().weekendWagerMenuHidden);
-  if (els.weekendWagerMenuHidden) {
-    els.weekendWagerMenuHidden.checked = hidden;
-  }
-  if (els.weekendWagerMenuStatus) {
-    els.weekendWagerMenuStatus.textContent = hidden ? "Weekend Wager is hidden from site menus." : "Weekend Wager is visible in menus.";
-  }
-}
-
 function renderWeekendWagerMenuVisibility() {
-  const hidden = weekendWagerMenuHiddenForPublicContest();
   document.querySelectorAll('a[href*="top-five-perfect-order.html"]').forEach((link) => {
-    link.hidden = hidden;
-    link.setAttribute("aria-hidden", hidden ? "true" : "false");
+    link.hidden = true;
+    link.setAttribute("aria-hidden", "true");
   });
 }
 
@@ -3332,7 +3313,6 @@ function jumpToContestant(name) {
 function render() {
   renderContestSwitcher();
   renderAdminContestSelect();
-  renderWeekendWagerMenuControls();
 
   if (!isAdminPage() || els.adminContestSelect) {
     const originalState = state;
@@ -3863,10 +3843,6 @@ els.pathToWinSelect?.addEventListener("change", () => {
   render();
 });
 
-els.saveWeekendWagerMenu?.addEventListener("click", () => {
-  setActiveAdminContestValues({ weekendWagerMenuHidden: Boolean(els.weekendWagerMenuHidden?.checked) });
-  showSaveWarning(els.weekendWagerMenuStatus);
-});
 
 els.currentContestWeek?.addEventListener("change", () => {
   mutateActiveAdminContest((contest) => {
