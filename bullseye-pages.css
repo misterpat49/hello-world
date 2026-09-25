@@ -657,9 +657,67 @@
   line-height: 1;
 }
 
+.bullseye-subpage .army-shuffle-next {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid rgba(241, 193, 93, .3);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(241, 193, 93, .12), rgba(255, 255, 255, .04));
+}
+
+.bullseye-subpage .army-shuffle-next h3 {
+  margin: 0 0 5px;
+  color: #f8e2ad;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: 1rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-shuffle-next p {
+  margin: 0;
+  color: rgba(255, 248, 232, .66);
+  font-size: .9rem;
+}
+
+.bullseye-subpage .army-shuffle-button {
+  padding: 10px 16px;
+  border: 1px solid rgba(241, 193, 93, .62);
+  border-radius: 999px;
+  color: #17100b;
+  background: #f1c15d;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-shuffle-button:hover,
+.bullseye-subpage .army-shuffle-button:focus-visible {
+  background: #ffe2a0;
+}
+
+.bullseye-subpage .army-shuffle-result {
+  grid-column: 1 / -1;
+  display: block;
+  padding-top: 2px;
+  color: #fff8e8;
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  letter-spacing: .04em;
+}
+
 @media (max-width: 800px) {
-  .bullseye-subpage .army-archive-stat-grid {
+  .bullseye-subpage .army-archive-stat-grid,
+  .bullseye-subpage .army-shuffle-next {
     grid-template-columns: 1fr;
+  }
+
+  .bullseye-subpage .army-shuffle-button {
+    justify-self: start;
   }
 }
 

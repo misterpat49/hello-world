@@ -265,6 +265,7 @@ const contestProfiles = {
   "summer-2026": { id: "summer-2026", season: "Summer", year: "2026", edition: 27 },
   "winter-2026": { id: "winter-2026", season: "Winter", year: "2026", edition: 27 },
 };
+const sharedArmyStateKeys = ["armyMovieArchive", "armyClubMembers"];
 
 function selectedPublicContestId() {
   const params = new URLSearchParams(window.location.search);
@@ -381,9 +382,15 @@ function selectedRenderContestId() {
 
 function contestStateFor(id) {
   const profile = contestProfile(id);
-  if (id === "summer-2026") return { ...state, contestSeason: "Summer" };
+  const withSharedArmyState = (contestState) => {
+    sharedArmyStateKeys.forEach((key) => {
+      contestState[key] = state[key] ?? defaultState[key];
+    });
+    return contestState;
+  };
+  if (id === "summer-2026") return withSharedArmyState({ ...state, contestSeason: "Summer" });
   const scopedState = state.contests?.[id] || {};
-  return { ...state, ...blankContestState(profile), ...scopedState, contests: state.contests || {} };
+  return withSharedArmyState({ ...state, ...blankContestState(profile), ...scopedState, contests: state.contests || {} });
 }
 
 function activeAdminContestState() {
@@ -414,8 +421,16 @@ function renderAdminContestSelect() {
 }
 
 function setActiveAdminContestValues(values) {
+  const scopedValues = { ...values };
+  sharedArmyStateKeys.forEach((key) => {
+    if (Object.prototype.hasOwnProperty.call(scopedValues, key)) {
+      state[key] = scopedValues[key];
+      delete scopedValues[key];
+    }
+  });
+  if (!Object.keys(scopedValues).length) return;
   mutateActiveAdminContest((contest) => {
-    Object.assign(contest, values);
+    Object.assign(contest, scopedValues);
   });
 }
 
@@ -2701,6 +2716,12 @@ function armyClubMemberPickMap() {
   }, new Map());
 }
 
+function armyClubMembersWhoNeedPicks() {
+  const pickMap = armyClubMemberPickMap();
+  return getArmyClubMembers().filter((member) => !pickMap.has(normalizeArmyClubName(member.name)));
+}
+
+
 function renderArmyClubMembersPage() {
   const membersSection = document.querySelector("#armyClubMembers");
   if (!membersSection) return;
@@ -2791,6 +2812,14 @@ function armyArchiveStatsHtml(entries) {
           <div class="army-archive-stat-pills">${armyArchiveCountPills(decadeCounts, decadeLabels)}</div>
         </article>
       </div>
+      <section class="army-shuffle-next" aria-label="Shuffle up next">
+        <div>
+          <h3>Shuffle Up Next</h3>
+          <p>Randomly choose a club member who has not picked a movie yet.</p>
+        </div>
+        <button class="army-shuffle-button" id="armyShuffleNext" type="button">Shuffle</button>
+        <strong class="army-shuffle-result" id="armyShuffleResult" aria-live="polite">Ready when you are.</strong>
+      </section>
     </section>
   `;
 }
@@ -4172,6 +4201,28 @@ document.addEventListener("click", (event) => {
   const isOpening = list.classList.toggle("is-collapsed") === false;
   armyArchiveToggle.setAttribute("aria-expanded", String(isOpening));
   armyArchiveToggle.textContent = isOpening ? "Show latest three" : "View full lineup";
+});
+
+document.addEventListener("click", (event) => {
+  const shuffleButton = event.target.closest("#armyShuffleNext");
+  if (!shuffleButton) return;
+
+  const result = document.querySelector("#armyShuffleResult");
+  const waitingMembers = armyClubMembersWhoNeedPicks();
+  if (!result) return;
+
+  if (!getArmyClubMembers().length) {
+    result.textContent = "Add club members first.";
+    return;
+  }
+
+  if (!waitingMembers.length) {
+    result.textContent = "Everyone has chosen a movie.";
+    return;
+  }
+
+  const chosen = waitingMembers[Math.floor(Math.random() * waitingMembers.length)];
+  result.textContent = chosen.name || "Unnamed member";
 });
 
 els.compareContestantA?.addEventListener("change", () => {

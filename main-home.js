@@ -21,8 +21,14 @@
     const fromUrl = params.get("contest");
     const saved = localStorage.getItem("box-office-bullseye-public-contest");
     const contestId = fromUrl || saved || "summer-2026";
-    if (contestId === "summer-2026") return rootState || {};
-    return { ...(rootState || {}), ...((rootState?.contests || {})[contestId] || {}) };
+    const root = rootState || {};
+    if (contestId === "summer-2026") return root;
+    return {
+      ...root,
+      ...((root.contests || {})[contestId] || {}),
+      armyMovieArchive: root.armyMovieArchive || [],
+      armyClubMembers: root.armyClubMembers || [],
+    };
   };
   const validPosterUrl = (value) => /^https?:\/\//i.test(String(value || "").trim());
   const buildPosterCascade = (rootState) => {
