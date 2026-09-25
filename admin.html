@@ -30,6 +30,22 @@
         </p>
       </section>
 
+      <section class="section admin-contest-picker-section" aria-label="Active contest picker">
+        <article class="admin-card contest-season-card">
+          <div class="card-heading">
+            <h3>Active contest</h3>
+            <span>Summer / Winter</span>
+          </div>
+          <label for="adminContestSelect">Choose which contest you are editing</label>
+          <select id="adminContestSelect">
+            <option value="summer-2026">Summer 2026</option>
+            <option value="winter-2026">Winter 2026</option>
+          </select>
+          <p class="admin-note" id="adminContestStatus">Summer 2026 data is selected.</p>
+        </article>
+
+      </section>
+
       <section class="section admin-login-section" id="adminLogin" aria-label="Projectionist Control Room login">
         <article class="admin-card admin-login-card">
           <div class="card-heading">
@@ -106,6 +122,9 @@
             <option value="Week 16">Week 16</option>
             <option value="Week 17">Week 17</option>
             <option value="Week 18">Week 18</option>
+            <option value="Week 19">Week 19</option>
+            <option value="Week 20">Week 20</option>
+            <option value="Week 21">Week 21</option>
             <option value="After cap">After cap</option>
           </select>
           <p class="admin-note">Use this when you want to dictate the active contest week yourself. Changing weeks records the current leaderboard as the starting point for that week&apos;s up and down arrows.</p>
@@ -330,6 +349,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260723-leaderboard-movement-save-snapshot1"></script>
+    <script src="script.js?v=20260919-admin-contest-visible1"></script>
   </body>
 </html>

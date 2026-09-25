@@ -93,6 +93,8 @@ const els = {
   adminPassword: document.querySelector("#adminPassword"),
   unlockAdmin: document.querySelector("#unlockAdmin"),
   adminPasswordStatus: document.querySelector("#adminPasswordStatus"),
+  adminContestSelect: document.querySelector("#adminContestSelect"),
+  adminContestStatus: document.querySelector("#adminContestStatus"),
   entriesInput: document.querySelector("#entriesInput"),
   resultsInput: document.querySelector("#resultsInput"),
   resultsGrid: document.querySelector("#resultsGrid"),
@@ -246,15 +248,146 @@ const els = {
   statLeader: document.querySelector("#statLeader"),
   statBiggestJump: document.querySelector("#statBiggestJump"),
   statBiggestDrop: document.querySelector("#statBiggestDrop"),
+  contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "" };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
 let topFiveViewedWeek = "";
 let ignoreRemoteStateUntil = 0;
 let contestantSelectionMade = false;
+
+const ADMIN_CONTEST_SELECTION_KEY = "box-office-bullseye-admin-contest";
+const PUBLIC_CONTEST_SELECTION_KEY = "box-office-bullseye-public-contest";
+const contestProfiles = {
+  "summer-2026": { id: "summer-2026", season: "Summer", year: "2026", edition: 27 },
+  "winter-2026": { id: "winter-2026", season: "Winter", year: "2026", edition: 27 },
+};
+
+function selectedPublicContestId() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get("contest");
+  if (contestProfiles[fromUrl]) return fromUrl;
+  const saved = localStorage.getItem(PUBLIC_CONTEST_SELECTION_KEY);
+  return contestProfiles[saved] ? saved : "summer-2026";
+}
+
+function contestProfile(id = selectedPublicContestId()) {
+  return contestProfiles[id] || contestProfiles["summer-2026"];
+}
+
+function blankContestState(profile) {
+  return {
+    entriesText: "",
+    resultsText: "",
+    releaseDates: {},
+    contestYear: profile.year,
+    contestSeason: profile.season,
+    currentContestWeek: "",
+    leaderboardImageUrl: "",
+    weeklyUpdateText: "",
+    movieQuoteText: "",
+    movieQuoteCharacter: "",
+    movieQuoteActor: "",
+    movieQuoteMovie: "",
+    standingsGifUrl: "",
+    paidPlayers: {},
+    selectedContestant: "",
+    compareContestantA: "",
+    compareContestantB: "",
+    pathToWinContestant: "",
+    selectedGradePlayer: "",
+    movieGrades: {},
+    selectedTopFivePlayer: "",
+    topFivePredictions: {},
+    topFiveLogoUrl: "",
+    topFivePosterSelections: [],
+    topFiveAccessCodes: {},
+    topFiveWeeklyResults: {},
+    topFiveRevealedWeeks: {},
+    selectedTopFiveResultsWeek: "",
+    leaderboardRankMovement: {},
+    leaderboardWeekBaseline: {},
+    leaderboardLastRankSnapshot: {},
+    leaderboardMovementWeek: "",
+  };
+}
+
+function publicContestState() {
+  return contestStateFor(selectedPublicContestId());
+}
+
+function renderContestSwitcher() {
+  const selectedId = selectedPublicContestId();
+  document.body.classList.toggle("winter-contest-theme", selectedId === "winter-2026");
+  if (!els.contestSwitcher) return;
+  els.contestSwitcher.querySelectorAll("[data-contest-id]").forEach((button) => {
+    const isActive = button.dataset.contestId === selectedId;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  });
+}
+
+function setPublicContestSelection(id) {
+  if (!contestProfiles[id]) return;
+  localStorage.setItem(PUBLIC_CONTEST_SELECTION_KEY, id);
+  const url = new URL(window.location.href);
+  if (id === "summer-2026") url.searchParams.delete("contest");
+  else url.searchParams.set("contest", id);
+  window.history.replaceState({}, "", url);
+  render();
+}
+
+function selectedAdminContestId() {
+  const saved = localStorage.getItem(ADMIN_CONTEST_SELECTION_KEY);
+  return contestProfiles[saved] ? saved : "summer-2026";
+}
+
+function selectedRenderContestId() {
+  return els.adminContestSelect ? selectedAdminContestId() : selectedPublicContestId();
+}
+
+function contestStateFor(id) {
+  const profile = contestProfile(id);
+  if (id === "summer-2026") return { ...state, contestSeason: "Summer" };
+  const scopedState = state.contests?.[id] || {};
+  return { ...state, ...blankContestState(profile), ...scopedState, contests: state.contests || {} };
+}
+
+function activeAdminContestState() {
+  return contestStateFor(selectedAdminContestId());
+}
+
+function mutateActiveAdminContest(mutator) {
+  const id = selectedAdminContestId();
+  if (id === "summer-2026") {
+    mutator(state);
+    return;
+  }
+
+  const profile = contestProfile(id);
+  const nextContestState = { ...blankContestState(profile), ...(state.contests?.[id] || {}) };
+  mutator(nextContestState);
+  state.contests = { ...(state.contests || {}), [id]: nextContestState };
+}
+
+function renderAdminContestSelect() {
+  if (!els.adminContestSelect) return;
+  const id = selectedAdminContestId();
+  els.adminContestSelect.value = id;
+  const profile = contestProfile(id);
+  if (els.adminContestStatus) {
+    els.adminContestStatus.textContent = profile.season + " " + profile.year + " data is selected. Saves in this room apply only to that contest.";
+  }
+}
+
+function setActiveAdminContestValues(values) {
+  mutateActiveAdminContest((contest) => {
+    Object.assign(contest, values);
+  });
+}
 
 function loadState() {
   try {
@@ -424,8 +557,20 @@ function contestYear() {
   return Number.isFinite(year) ? year : 2026;
 }
 
+function contestSeason() {
+  return state.contestSeason || "Summer";
+}
+
 function contestName() {
-  return `${contestYear()} Summer Box Office Challenge`;
+  return `${contestYear()} ${contestSeason()} Box Office Challenge`;
+}
+
+function contestBrandName() {
+  return `Box Office Bullseye: ${contestSeason()} ${contestYear()}`;
+}
+
+function contestSeasonTitle() {
+  return `${contestSeason()} ${contestYear()}`.toUpperCase();
 }
 
 function contestEdition() {
@@ -453,7 +598,13 @@ function renderContestYear() {
   document.querySelectorAll(".contest-edition").forEach((element) => {
     element.textContent = contestEdition();
   });
-  document.title = document.title.replace(/\d{4} Summer Box Office Challenge/, contestName());
+  document.querySelectorAll(".test-summer-title").forEach((element) => {
+    element.textContent = contestSeasonTitle();
+  });
+  document.querySelectorAll(".test-canvas-brand-name, .test-footer-top-link").forEach((element) => {
+    element.textContent = contestBrandName();
+  });
+  document.title = contestBrandName();
 }
 
 function backupFileName() {
@@ -1051,11 +1202,27 @@ function ensureTopFiveAccessCodes(entries) {
   return changed;
 }
 
+function ensureTopFiveAccessCodesForContest(contest) {
+  const entries = parseEntries(contest.entriesText || "");
+  const codes = { ...(contest.topFiveAccessCodes || {}) };
+  const usedCodes = new Set(Object.values(codes));
+  let changed = false;
+
+  entries.forEach((entry) => {
+    if (codes[entry.name]) return;
+    const code = randomFiveDigitCode(usedCodes);
+    codes[entry.name] = code;
+    usedCodes.add(code);
+    changed = true;
+  });
+
+  if (changed) contest.topFiveAccessCodes = codes;
+}
+
 function renderTopFiveAdmin(entries) {
   if (!els.topFivePasswordKey) return;
 
-  const changed = ensureTopFiveAccessCodes(entries);
-  if (changed && isAdminUnlocked()) saveState();
+  ensureTopFiveAccessCodes(entries);
   const codes = state.topFiveAccessCodes || {};
   const sortedEntries = entries.slice().sort((a, b) => a.name.localeCompare(b.name));
 
@@ -3155,6 +3322,24 @@ function jumpToContestant(name) {
 }
 
 function render() {
+  renderContestSwitcher();
+  renderAdminContestSelect();
+
+  if (els.contestSwitcher || els.adminContestSelect) {
+    const originalState = state;
+    state = contestStateFor(selectedRenderContestId());
+    try {
+      renderContestBody();
+    } finally {
+      state = originalState;
+    }
+    return;
+  }
+
+  renderContestBody();
+}
+
+function renderContestBody() {
   const entries = parseEntries(state.entriesText);
   const results = parseResults(state.resultsText);
   const scored = scoreEntries(entries, results, "all");
@@ -3195,25 +3380,44 @@ function render() {
   renderStats(entries, results, scored);
 }
 
+els.contestSwitcher?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-contest-id]");
+  if (!button) return;
+  setPublicContestSelection(button.dataset.contestId);
+});
+
+els.adminContestSelect?.addEventListener("change", () => {
+  localStorage.setItem(ADMIN_CONTEST_SELECTION_KEY, els.adminContestSelect.value);
+  render();
+});
+
 els.saveEntries?.addEventListener("click", () => {
-  state.entriesText = els.entriesInput.value.trim();
+  mutateActiveAdminContest((contest) => {
+    contest.entriesText = els.entriesInput.value.trim();
+    ensureTopFiveAccessCodesForContest(contest);
+  });
   saveState();
   render();
   showSaveWarning(els.entryStatus);
 });
 
 els.saveResults?.addEventListener("click", () => {
-  const entries = parseEntries(state.entriesText);
-  const oldResults = parseResults(state.resultsText);
-  const previousSnapshot = state.leaderboardLastRankSnapshot || {};
+  const selectedId = selectedAdminContestId();
+  const activeContest = activeAdminContestState();
+  const entries = parseEntries(activeContest.entriesText);
+  const oldResults = parseResults(activeContest.resultsText);
+  const previousSnapshot = activeContest.leaderboardLastRankSnapshot || {};
+  const previousRootReleaseDates = state.releaseDates;
   const nextResultsText = serializeAdminResultsGrid();
+  const nextReleaseDates = state.releaseDates;
+  if (selectedId !== "summer-2026") state.releaseDates = previousRootReleaseDates;
   const newResults = parseResults(nextResultsText);
-  const movementWeek = state.currentContestWeek || "Auto";
+  const movementWeek = activeContest.currentContestWeek || "Auto";
   const currentNames = entries.map((entry) => entry.name);
   const hasPreviousSnapshot = currentNames.length > 0
     && currentNames.every((name) => Number(previousSnapshot[name]) > 0);
-  const savedBaseline = state.leaderboardWeekBaseline || {};
-  const hasCurrentWeekBaseline = state.leaderboardMovementWeek === movementWeek
+  const savedBaseline = activeContest.leaderboardWeekBaseline || {};
+  const hasCurrentWeekBaseline = activeContest.leaderboardMovementWeek === movementWeek
     && currentNames.length > 0
     && currentNames.every((name) => Number(savedBaseline[name]) > 0);
   const baseline = hasCurrentWeekBaseline
@@ -3226,37 +3430,50 @@ els.saveResults?.addEventListener("click", () => {
   const weekMovement = calculateMovementFromSnapshot(baseline, entries, newResults);
   const latestSaveMovement = calculateLeaderboardMovement(entries, oldResults, newResults);
 
-  state.leaderboardWeekBaseline = baseline;
-  state.leaderboardLastRankSnapshot = rankSnapshot(entries, newResults);
-  state.leaderboardMovementWeek = movementWeek;
-  state.leaderboardRankMovement = Object.keys(saveMovement).length
-    ? saveMovement
-    : Object.keys(weekMovement).length
-      ? weekMovement
-      : latestSaveMovement;
-  state.resultsText = nextResultsText;
+  mutateActiveAdminContest((contest) => {
+    contest.releaseDates = nextReleaseDates;
+    contest.leaderboardWeekBaseline = baseline;
+    contest.leaderboardLastRankSnapshot = rankSnapshot(entries, newResults);
+    contest.leaderboardMovementWeek = movementWeek;
+    contest.leaderboardRankMovement = Object.keys(saveMovement).length
+      ? saveMovement
+      : Object.keys(weekMovement).length
+        ? weekMovement
+        : latestSaveMovement;
+    contest.resultsText = nextResultsText;
+  });
   saveState();
   render();
   showSaveWarning(els.resultStatus);
 });
 
 els.clearEntries?.addEventListener("click", () => {
-  state.entriesText = "";
+  mutateActiveAdminContest((contest) => {
+    contest.entriesText = "";
+  });
   saveState();
   render();
 });
 
 els.clearResults?.addEventListener("click", () => {
+  const previousRootReleaseDates = state.releaseDates;
   preserveAdminReleaseDates();
-  state.resultsText = "";
+  const preservedReleaseDates = state.releaseDates;
+  if (selectedAdminContestId() !== "summer-2026") state.releaseDates = previousRootReleaseDates;
+  mutateActiveAdminContest((contest) => {
+    contest.releaseDates = preservedReleaseDates;
+    contest.resultsText = "";
+  });
   saveState();
   render();
 });
 
 els.loadDemo?.addEventListener("click", () => {
-  state.entriesText = demoEntries;
-  state.resultsText = demoResults;
-  state.releaseDates = demoReleaseDates;
+  mutateActiveAdminContest((contest) => {
+    contest.entriesText = demoEntries;
+    contest.resultsText = demoResults;
+    contest.releaseDates = demoReleaseDates;
+  });
   saveState();
   render();
 });
@@ -3278,7 +3495,10 @@ els.importBackupInput?.addEventListener("change", () => {
 els.clearBrowserStorage?.addEventListener("click", clearBrowserStorage);
 
 els.contestYear?.addEventListener("change", () => {
-  state.contestYear = els.contestYear.value;
+  mutateActiveAdminContest((contest) => {
+    contest.contestYear = els.contestYear.value;
+    contest.contestSeason = contestProfile(selectedAdminContestId()).season;
+  });
   saveState();
   render();
 });
@@ -3314,7 +3534,7 @@ els.topFiveWeekButtons?.addEventListener("click", (event) => {
 });
 
 els.topFiveOfficialWeek?.addEventListener("change", () => {
-  state.selectedTopFiveResultsWeek = els.topFiveOfficialWeek.value;
+  setActiveAdminContestValues({ selectedTopFiveResultsWeek: els.topFiveOfficialWeek.value });
   saveState();
   render();
 });
@@ -3335,9 +3555,12 @@ els.saveTopFiveOfficialResults?.addEventListener("click", () => {
     if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = "Each official movie can only appear once.";
     return;
   }
-  state.topFiveWeeklyResults = { ...(state.topFiveWeeklyResults || {}), [week]: picks };
-  state.topFiveRevealedWeeks = { ...(state.topFiveRevealedWeeks || {}), [week]: true };
-  state.selectedTopFiveResultsWeek = week;
+  const activeContest = activeAdminContestState();
+  setActiveAdminContestValues({
+    topFiveWeeklyResults: { ...(activeContest.topFiveWeeklyResults || {}), [week]: picks },
+    topFiveRevealedWeeks: { ...(activeContest.topFiveRevealedWeeks || {}), [week]: true },
+    selectedTopFiveResultsWeek: week,
+  });
   saveState();
   render();
   if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `Official top five saved for ${week}. Predictions are now revealed and ranked.`;
@@ -3349,23 +3572,19 @@ els.clearTopFiveOfficialResults?.addEventListener("click", async () => {
 
   const button = els.clearTopFiveOfficialResults;
   const normalizedWeek = week.trim().toLowerCase();
+  const activeContest = activeAdminContestState();
   const weeklyResults = Object.fromEntries(
-    Object.entries(state.topFiveWeeklyResults || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+    Object.entries(activeContest.topFiveWeeklyResults || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
   );
-  const clearedState = { ...state, topFiveWeeklyResults: weeklyResults, selectedTopFiveResultsWeek: week };
 
   ignoreRemoteStateUntil = Date.now() + 4000;
-  state = clearedState;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clearedState));
-  } catch (error) {
-    console.warn("Local storage could not save the cleared Bullseye week", error);
-  }
+  setActiveAdminContestValues({ topFiveWeeklyResults: weeklyResults, selectedTopFiveResultsWeek: week });
+  saveState();
   render();
   if (button) button.disabled = true;
   if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `Clearing official results for ${week}...`;
 
-  const synced = !supabaseClient || await saveStateToSupabase(clearedState);
+  const synced = !supabaseClient || await saveStateToSupabase(state);
   if (button) button.disabled = false;
   if (els.topFiveOfficialStatus) {
     els.topFiveOfficialStatus.textContent = synced
@@ -3381,35 +3600,30 @@ els.clearTopFiveWeekAll?.addEventListener("click", async () => {
 
   const button = els.clearTopFiveWeekAll;
   const normalizedWeek = week.trim().toLowerCase();
+  const activeContest = activeAdminContestState();
   const weeklyResults = Object.fromEntries(
-    Object.entries(state.topFiveWeeklyResults || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+    Object.entries(activeContest.topFiveWeeklyResults || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
   );
   const predictions = Object.fromEntries(
-    Object.entries(state.topFivePredictions || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+    Object.entries(activeContest.topFivePredictions || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
   );
   const revealedWeeks = Object.fromEntries(
-    Object.entries(state.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+    Object.entries(activeContest.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
   );
-  const clearedState = {
-    ...state,
+
+  ignoreRemoteStateUntil = Date.now() + 4000;
+  setActiveAdminContestValues({
     topFiveWeeklyResults: weeklyResults,
     topFivePredictions: predictions,
     topFiveRevealedWeeks: revealedWeeks,
-    selectedTopFiveResultsWeek: week
-  };
-
-  ignoreRemoteStateUntil = Date.now() + 4000;
-  state = clearedState;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clearedState));
-  } catch (error) {
-    console.warn("Local storage could not save the fully cleared Bullseye week", error);
-  }
+    selectedTopFiveResultsWeek: week,
+  });
+  saveState();
   render();
   if (button) button.disabled = true;
   if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `Clearing all results and submissions for ${week}...`;
 
-  const synced = !supabaseClient || await saveStateToSupabase(clearedState);
+  const synced = !supabaseClient || await saveStateToSupabase(state);
   if (button) button.disabled = false;
   if (els.topFiveOfficialStatus) {
     els.topFiveOfficialStatus.textContent = synced
@@ -3421,8 +3635,11 @@ els.clearTopFiveWeekAll?.addEventListener("click", async () => {
 els.revealTopFiveWeek?.addEventListener("click", () => {
   const week = els.topFiveOfficialWeek?.value || "";
   if (!week) return;
-  state.topFiveRevealedWeeks = { ...(state.topFiveRevealedWeeks || {}), [week]: true };
-  state.selectedTopFiveResultsWeek = week;
+  const activeContest = activeAdminContestState();
+  setActiveAdminContestValues({
+    topFiveRevealedWeeks: { ...(activeContest.topFiveRevealedWeeks || {}), [week]: true },
+    selectedTopFiveResultsWeek: week,
+  });
   saveState();
   render();
   if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `${week} entries are revealed and locked.`;
@@ -3436,10 +3653,13 @@ els.sealTopFiveWeek?.addEventListener("click", () => {
     return;
   }
   const normalizedWeek = week.trim().toLowerCase();
-  state.topFiveRevealedWeeks = Object.fromEntries(
-    Object.entries(state.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
-  );
-  state.selectedTopFiveResultsWeek = week;
+  const activeContest = activeAdminContestState();
+  setActiveAdminContestValues({
+    topFiveRevealedWeeks: Object.fromEntries(
+      Object.entries(activeContest.topFiveRevealedWeeks || {}).filter(([savedWeek]) => savedWeek.trim().toLowerCase() !== normalizedWeek)
+    ),
+    selectedTopFiveResultsWeek: week,
+  });
   saveState();
   render();
   if (els.topFiveOfficialStatus) els.topFiveOfficialStatus.textContent = `${week} entries are sealed and open again.`;
@@ -3636,15 +3856,17 @@ els.pathToWinSelect?.addEventListener("change", () => {
 });
 
 els.currentContestWeek?.addEventListener("change", () => {
-  const entries = parseEntries(state.entriesText);
-  const results = parseResults(state.resultsText);
+  mutateActiveAdminContest((contest) => {
+    const entries = parseEntries(contest.entriesText);
+    const results = parseResults(contest.resultsText);
 
-  state.currentContestWeek = els.currentContestWeek.value;
-  state.leaderboardMovementWeek = state.currentContestWeek || "Auto";
-  const snapshot = rankSnapshot(entries, results);
-  state.leaderboardWeekBaseline = snapshot;
-  state.leaderboardLastRankSnapshot = snapshot;
-  state.leaderboardRankMovement = {};
+    contest.currentContestWeek = els.currentContestWeek.value;
+    contest.leaderboardMovementWeek = contest.currentContestWeek || "Auto";
+    const snapshot = rankSnapshot(entries, results);
+    contest.leaderboardWeekBaseline = snapshot;
+    contest.leaderboardLastRankSnapshot = snapshot;
+    contest.leaderboardRankMovement = {};
+  });
   saveState();
   render();
 });
@@ -3677,7 +3899,7 @@ els.saveLeaderboardImage?.addEventListener("click", () => {
     imageFileToDataUrl(uploadedImage)
       .then((dataUrl) => resizeImageDataUrl(dataUrl))
       .then((dataUrl) => {
-        state.leaderboardImageUrl = dataUrl;
+        setActiveAdminContestValues({ leaderboardImageUrl: dataUrl });
         saveState();
         render();
         showSaveWarning(els.leaderboardImageStatus);
@@ -3690,14 +3912,14 @@ els.saveLeaderboardImage?.addEventListener("click", () => {
     return;
   }
 
-  state.leaderboardImageUrl = els.leaderboardImageInput.value.trim();
+  setActiveAdminContestValues({ leaderboardImageUrl: els.leaderboardImageInput.value.trim() });
   saveState();
   render();
   showSaveWarning(els.leaderboardImageStatus);
 });
 
 els.clearLeaderboardImage?.addEventListener("click", () => {
-  state.leaderboardImageUrl = "";
+  setActiveAdminContestValues({ leaderboardImageUrl: "" });
   if (els.leaderboardImageUpload) {
     els.leaderboardImageUpload.value = "";
   }
@@ -3714,7 +3936,7 @@ els.moviePosterLibrary?.addEventListener("click", (event) => {
   const movieKey = row?.dataset.movieKey || "";
   const movieTitle = row?.dataset.movieTitle || "movie";
   if (!movieKey) return;
-  const posters = { ...(state.moviePosterImages || {}) };
+  const posters = { ...(activeAdminContestState().moviePosterImages || {}) };
 
   if (saveButton) {
     const posterUrl = row.querySelector("[data-poster-url]")?.value.trim() || "";
@@ -3727,7 +3949,7 @@ els.moviePosterLibrary?.addEventListener("click", (event) => {
     delete posters[movieKey];
   }
 
-  state.moviePosterImages = posters;
+  setActiveAdminContestValues({ moviePosterImages: posters });
   saveState();
   render();
   showSaveWarning(els.moviePosterLibraryStatus);
@@ -3748,7 +3970,7 @@ els.saveTopFiveLogo?.addEventListener("click", () => {
   imageFileToDataUrl(file)
     .then((dataUrl) => resizeImageDataUrl(dataUrl, 1400, 0.9))
     .then((dataUrl) => {
-      state.topFiveLogoUrl = dataUrl;
+      setActiveAdminContestValues({ topFiveLogoUrl: dataUrl });
       saveState();
       render();
       showSaveWarning(els.topFiveLogoStatus);
@@ -3759,7 +3981,7 @@ els.saveTopFiveLogo?.addEventListener("click", () => {
 });
 
 els.clearTopFiveLogo?.addEventListener("click", () => {
-  state.topFiveLogoUrl = "";
+  setActiveAdminContestValues({ topFiveLogoUrl: "" });
   if (els.topFiveLogoUpload) els.topFiveLogoUpload.value = "";
   saveState();
   render();
@@ -3768,16 +3990,14 @@ els.clearTopFiveLogo?.addEventListener("click", () => {
 
 els.saveTopFivePosters?.addEventListener("click", () => {
   const selections = Array.from(els.topFivePosterSelectors?.querySelectorAll("select") || []).map((select) => select.value);
-  state.topFivePosterSelections = selections;
-  state.topFivePosterImages = [];
+  setActiveAdminContestValues({ topFivePosterSelections: selections, topFivePosterImages: [] });
   saveState();
   render();
   showSaveWarning(els.topFivePosterStatus);
 });
 
 els.clearTopFivePosters?.addEventListener("click", () => {
-  state.topFivePosterSelections = [];
-  state.topFivePosterImages = [];
+  setActiveAdminContestValues({ topFivePosterSelections: [], topFivePosterImages: [] });
   saveState();
   render();
   showSaveWarning(els.topFivePosterStatus);
@@ -3796,7 +4016,7 @@ els.saveStandingsGif?.addEventListener("click", () => {
 
     imageFileToDataUrl(uploadedGif)
       .then((dataUrl) => {
-        state.standingsGifUrl = dataUrl;
+        setActiveAdminContestValues({ standingsGifUrl: dataUrl });
         saveState();
         render();
         showSaveWarning(els.standingsGifStatus);
@@ -3809,14 +4029,14 @@ els.saveStandingsGif?.addEventListener("click", () => {
     return;
   }
 
-  state.standingsGifUrl = els.standingsGifInput.value.trim();
+  setActiveAdminContestValues({ standingsGifUrl: els.standingsGifInput.value.trim() });
   saveState();
   render();
   showSaveWarning(els.standingsGifStatus);
 });
 
 els.clearStandingsGif?.addEventListener("click", () => {
-  state.standingsGifUrl = "";
+  setActiveAdminContestValues({ standingsGifUrl: "" });
   if (els.standingsGifUpload) {
     els.standingsGifUpload.value = "";
   }
@@ -3826,31 +4046,35 @@ els.clearStandingsGif?.addEventListener("click", () => {
 });
 
 els.saveWeeklyUpdate?.addEventListener("click", () => {
-  state.weeklyUpdateText = els.weeklyUpdateInput.value.trim();
+  setActiveAdminContestValues({ weeklyUpdateText: els.weeklyUpdateInput.value.trim() });
   saveState();
   render();
 });
 
 els.clearWeeklyUpdate?.addEventListener("click", () => {
-  state.weeklyUpdateText = "";
+  setActiveAdminContestValues({ weeklyUpdateText: "" });
   saveState();
   render();
 });
 
 els.saveMovieQuote?.addEventListener("click", () => {
-  state.movieQuoteText = els.movieQuoteInput.value.trim();
-  state.movieQuoteCharacter = els.movieQuoteCharacter?.value.trim() || "";
-  state.movieQuoteActor = els.movieQuoteActor?.value.trim() || "";
-  state.movieQuoteMovie = els.movieQuoteMovie?.value.trim() || "";
+  setActiveAdminContestValues({
+    movieQuoteText: els.movieQuoteInput.value.trim(),
+    movieQuoteCharacter: els.movieQuoteCharacter?.value.trim() || "",
+    movieQuoteActor: els.movieQuoteActor?.value.trim() || "",
+    movieQuoteMovie: els.movieQuoteMovie?.value.trim() || "",
+  });
   saveState();
   render();
 });
 
 els.clearMovieQuote?.addEventListener("click", () => {
-  state.movieQuoteText = "";
-  state.movieQuoteCharacter = "";
-  state.movieQuoteActor = "";
-  state.movieQuoteMovie = "";
+  setActiveAdminContestValues({
+    movieQuoteText: "",
+    movieQuoteCharacter: "",
+    movieQuoteActor: "",
+    movieQuoteMovie: "",
+  });
   saveState();
   render();
 });
@@ -3897,7 +4121,7 @@ els.savePaidStatus?.addEventListener("click", () => {
     }
   });
 
-  state.paidPlayers = paidPlayers;
+  setActiveAdminContestValues({ paidPlayers });
   saveState();
   render();
 });
@@ -3919,7 +4143,15 @@ els.resultsGrid?.addEventListener("click", (event) => {
     row?.querySelectorAll(".result-week input").forEach((input) => {
       input.value = "";
     });
-    state.resultsText = serializeAdminResultsGrid();
+    const selectedId = selectedAdminContestId();
+    const previousRootReleaseDates = state.releaseDates;
+    const nextResultsText = serializeAdminResultsGrid();
+    const nextReleaseDates = state.releaseDates;
+    if (selectedId !== "summer-2026") state.releaseDates = previousRootReleaseDates;
+    mutateActiveAdminContest((contest) => {
+      contest.resultsText = nextResultsText;
+      contest.releaseDates = nextReleaseDates;
+    });
     saveState();
     render();
     return;
@@ -3928,8 +4160,16 @@ els.resultsGrid?.addEventListener("click", (event) => {
   const button = event.target.closest(".result-sort-button[data-sort='release-date']");
   if (!button) return;
 
-  state.resultsText = serializeAdminResultsGrid();
-  state.adminReleaseDateSort = state.adminReleaseDateSort === "asc" ? "desc" : "asc";
+  const selectedId = selectedAdminContestId();
+  const previousRootReleaseDates = state.releaseDates;
+  const nextResultsText = serializeAdminResultsGrid();
+  const nextReleaseDates = state.releaseDates;
+  if (selectedId !== "summer-2026") state.releaseDates = previousRootReleaseDates;
+  mutateActiveAdminContest((contest) => {
+    contest.resultsText = nextResultsText;
+    contest.releaseDates = nextReleaseDates;
+    contest.adminReleaseDateSort = contest.adminReleaseDateSort === "asc" ? "desc" : "asc";
+  });
   saveState();
   render();
 });
