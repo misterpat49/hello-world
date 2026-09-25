@@ -110,6 +110,9 @@ const els = {
   saveStandingsGif: document.querySelector("#saveStandingsGif"),
   clearStandingsGif: document.querySelector("#clearStandingsGif"),
   standingsGifStatus: document.querySelector("#standingsGifStatus"),
+  weekendWagerMenuHidden: document.querySelector("#weekendWagerMenuHidden"),
+  saveWeekendWagerMenu: document.querySelector("#saveWeekendWagerMenu"),
+  weekendWagerMenuStatus: document.querySelector("#weekendWagerMenuStatus"),
   topFiveLogoUpload: document.querySelector("#topFiveLogoUpload"),
   saveTopFiveLogo: document.querySelector("#saveTopFiveLogo"),
   clearTopFiveLogo: document.querySelector("#clearTopFiveLogo"),
@@ -138,13 +141,6 @@ const els = {
   saveWeeklyUpdate: document.querySelector("#saveWeeklyUpdate"),
   clearWeeklyUpdate: document.querySelector("#clearWeeklyUpdate"),
   weeklyUpdateStatus: document.querySelector("#weeklyUpdateStatus"),
-  movieQuoteInput: document.querySelector("#movieQuoteInput"),
-  movieQuoteCharacter: document.querySelector("#movieQuoteCharacter"),
-  movieQuoteActor: document.querySelector("#movieQuoteActor"),
-  movieQuoteMovie: document.querySelector("#movieQuoteMovie"),
-  saveMovieQuote: document.querySelector("#saveMovieQuote"),
-  clearMovieQuote: document.querySelector("#clearMovieQuote"),
-  movieQuoteStatus: document.querySelector("#movieQuoteStatus"),
   paidPlayerList: document.querySelector("#paidPlayerList"),
   savePaidStatus: document.querySelector("#savePaidStatus"),
   paidStatusNote: document.querySelector("#paidStatusNote"),
@@ -173,9 +169,6 @@ const els = {
   enterListButton: document.querySelector("#enterListButton"),
   weeklyUpdateSection: document.querySelector("#weeklyUpdateSection"),
   weeklyUpdateText: document.querySelector("#weeklyUpdateText"),
-  movieQuoteSection: document.querySelector("#movieQuoteSection"),
-  movieQuoteText: document.querySelector("#movieQuoteText"),
-  movieQuoteMeta: document.querySelector("#movieQuoteMeta"),
   newEntryForm: document.querySelector("#newEntryForm"),
   newEntryName: document.querySelector("#newEntryName"),
   newEntryPicks: document.querySelector("#newEntryPicks"),
@@ -251,7 +244,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", movieQuoteText: "", movieQuoteCharacter: "", movieQuoteActor: "", movieQuoteMovie: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", weekendWagerMenuHidden: false, leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -298,12 +291,9 @@ function blankContestState(profile) {
     contestYear: profile.year,
     contestSeason: profile.season,
     currentContestWeek: "",
+    weekendWagerMenuHidden: false,
     leaderboardImageUrl: "",
     weeklyUpdateText: "",
-    movieQuoteText: "",
-    movieQuoteCharacter: "",
-    movieQuoteActor: "",
-    movieQuoteMovie: "",
     standingsGifUrl: "",
     paidPlayers: {},
     selectedContestant: "",
@@ -331,6 +321,32 @@ function publicContestState() {
   return contestStateFor(selectedPublicContestId());
 }
 
+function activePublicContestState() {
+  return contestStateFor(selectedPublicContestId());
+}
+
+function weekendWagerMenuHiddenForPublicContest() {
+  return Boolean(activePublicContestState().weekendWagerMenuHidden);
+}
+
+function renderWeekendWagerMenuControls() {
+  const hidden = Boolean(activeAdminContestState().weekendWagerMenuHidden);
+  if (els.weekendWagerMenuHidden) {
+    els.weekendWagerMenuHidden.checked = hidden;
+  }
+  if (els.weekendWagerMenuStatus) {
+    els.weekendWagerMenuStatus.textContent = hidden ? "Weekend Wager is hidden from site menus." : "Weekend Wager is visible in menus.";
+  }
+}
+
+function renderWeekendWagerMenuVisibility() {
+  const hidden = weekendWagerMenuHiddenForPublicContest();
+  document.querySelectorAll('a[href*="top-five-perfect-order.html"]').forEach((link) => {
+    link.hidden = hidden;
+    link.setAttribute("aria-hidden", hidden ? "true" : "false");
+  });
+}
+
 function renderContestSwitcher() {
   const selectedId = selectedPublicContestId();
   const headerId = selectedHeaderContestId();
@@ -339,6 +355,7 @@ function renderContestSwitcher() {
   document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name, .bullseye-brand-name, .subpage-menu-header .contest-name").forEach((element) => {
     element.textContent = `BOX OFFICE BULLSEYE: ${profile.season.toUpperCase()} ${profile.year}`;
   });
+  renderWeekendWagerMenuVisibility();
   if (!els.contestSwitcher) return;
   els.contestSwitcher.querySelectorAll("[data-contest-id]").forEach((button) => {
     const isActive = button.dataset.contestId === selectedId;
@@ -2622,38 +2639,6 @@ function renderTopFivePosterGallery(entries) {
     `)
     .join("");
 }
-function renderMovieQuote() {
-  const quote = state.movieQuoteText.trim();
-  const character = state.movieQuoteCharacter.trim();
-  const actor = state.movieQuoteActor.trim();
-  const movie = state.movieQuoteMovie.trim();
-  const metaParts = [character, actor, movie].filter(Boolean);
-
-  if (els.movieQuoteInput) {
-    els.movieQuoteInput.value = quote;
-  }
-  if (els.movieQuoteCharacter) {
-    els.movieQuoteCharacter.value = character;
-  }
-  if (els.movieQuoteActor) {
-    els.movieQuoteActor.value = actor;
-  }
-  if (els.movieQuoteMovie) {
-    els.movieQuoteMovie.value = movie;
-  }
-  if (els.movieQuoteStatus) {
-    els.movieQuoteStatus.textContent = quote ? "Movie quote saved." : "No movie quote saved.";
-  }
-  if (!els.movieQuoteSection || !els.movieQuoteText) return;
-
-  els.movieQuoteSection.hidden = !quote;
-  els.movieQuoteText.innerHTML = quote ? escapeHtml(quote).replace(/\n/g, "<br>") : "";
-  if (els.movieQuoteMeta) {
-    els.movieQuoteMeta.hidden = !metaParts.length;
-    els.movieQuoteMeta.textContent = metaParts.join(" • ");
-  }
-}
-
 function listCountForMovie(entries, movieTitle) {
   const key = normalizeMovie(movieTitle);
   return entries.reduce((count, entry) => count + (entry.picks.some((pick) => normalizeMovie(pick) === key) ? 1 : 0), 0);
@@ -3347,6 +3332,7 @@ function jumpToContestant(name) {
 function render() {
   renderContestSwitcher();
   renderAdminContestSelect();
+  renderWeekendWagerMenuControls();
 
   if (!isAdminPage() || els.adminContestSelect) {
     const originalState = state;
@@ -3377,7 +3363,6 @@ function renderContestBody() {
   renderLeaderboardImage();
   renderStandingsGif();
   renderWeeklyUpdate();
-  renderMovieQuote();
   renderNewEntryForm(entries);
   renderTopFivePredictionForm(entries);
   renderTopFiveWeekNavigator(results);
@@ -3878,6 +3863,11 @@ els.pathToWinSelect?.addEventListener("change", () => {
   render();
 });
 
+els.saveWeekendWagerMenu?.addEventListener("click", () => {
+  setActiveAdminContestValues({ weekendWagerMenuHidden: Boolean(els.weekendWagerMenuHidden?.checked) });
+  showSaveWarning(els.weekendWagerMenuStatus);
+});
+
 els.currentContestWeek?.addEventListener("change", () => {
   mutateActiveAdminContest((contest) => {
     const entries = parseEntries(contest.entriesText);
@@ -4080,27 +4070,6 @@ els.clearWeeklyUpdate?.addEventListener("click", () => {
   render();
 });
 
-els.saveMovieQuote?.addEventListener("click", () => {
-  setActiveAdminContestValues({
-    movieQuoteText: els.movieQuoteInput.value.trim(),
-    movieQuoteCharacter: els.movieQuoteCharacter?.value.trim() || "",
-    movieQuoteActor: els.movieQuoteActor?.value.trim() || "",
-    movieQuoteMovie: els.movieQuoteMovie?.value.trim() || "",
-  });
-  saveState();
-  render();
-});
-
-els.clearMovieQuote?.addEventListener("click", () => {
-  setActiveAdminContestValues({
-    movieQuoteText: "",
-    movieQuoteCharacter: "",
-    movieQuoteActor: "",
-    movieQuoteMovie: "",
-  });
-  saveState();
-  render();
-});
 
 els.savePatrickSecretImage?.addEventListener("click", () => {
   const uploadedImage = els.patrickSecretImageUpload?.files?.[0];

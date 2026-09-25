@@ -177,35 +177,13 @@
             <h3>Weekly update</h3>
             <span>Main page</span>
           </div>
-          <label for="weeklyUpdateInput">Enter the weekly update shown above Movie quote of the week</label>
+          <label for="weeklyUpdateInput">Enter the weekend update shown above the leaderboard</label>
           <textarea id="weeklyUpdateInput" spellcheck="false" autocomplete="off" placeholder="Write this week's commissioner note..."></textarea>
           <div class="form-actions">
             <button class="button button-primary" id="saveWeeklyUpdate" type="button">Save update</button>
             <button class="button button-secondary-dark" id="clearWeeklyUpdate" type="button">Clear update</button>
           </div>
           <p class="admin-note" id="weeklyUpdateStatus">No weekly update saved.</p>
-        </article>
-
-        <article class="admin-card movie-quote-admin-card">
-          <div class="card-heading">
-            <h3>Movie quote of the week</h3>
-            <span>Main page</span>
-          </div>
-          <label for="movieQuoteInput">Enter the quote shown above the leaderboard</label>
-          <textarea id="movieQuoteInput" spellcheck="false" autocomplete="off" placeholder="You're gonna need a bigger boat."></textarea>
-          <div class="movie-quote-admin-fields">
-            <label for="movieQuoteCharacter">Character</label>
-            <input id="movieQuoteCharacter" type="text" placeholder="Martin Brody" autocomplete="off">
-            <label for="movieQuoteActor">Actor</label>
-            <input id="movieQuoteActor" type="text" placeholder="Roy Scheider" autocomplete="off">
-            <label for="movieQuoteMovie">Movie</label>
-            <input id="movieQuoteMovie" type="text" placeholder="Jaws" autocomplete="off">
-          </div>
-          <div class="form-actions">
-            <button class="button button-primary" id="saveMovieQuote" type="button">Save quote</button>
-            <button class="button button-secondary-dark" id="clearMovieQuote" type="button">Clear quote</button>
-          </div>
-          <p class="admin-note" id="movieQuoteStatus">No movie quote saved.</p>
         </article>
 
         <article class="admin-card paid-status-card">
@@ -273,6 +251,22 @@ Jordan Lee:
             </div>
             <span>Media, access, and weekly results</span>
           </div>
+
+        <article class="admin-card top-five-menu-admin-card">
+          <div class="card-heading">
+            <h3>Weekend Wager menu link</h3>
+            <span>Site navigation</span>
+          </div>
+          <label class="checkbox-row" for="weekendWagerMenuHidden">
+            <input id="weekendWagerMenuHidden" type="checkbox">
+            <span>Hide The Weekend Wager from site menus</span>
+          </label>
+          <p class="admin-note">Use this to activate the mini-contest only during the weeks you want. The page remains available by direct link.</p>
+          <div class="form-actions">
+            <button class="button button-primary" id="saveWeekendWagerMenu" type="button">Save menu setting</button>
+          </div>
+          <p class="admin-note" id="weekendWagerMenuStatus">Weekend Wager is visible in menus.</p>
+        </article>
 
         <article class="admin-card top-five-poster-admin-card">
           <div class="card-heading">
@@ -349,6 +343,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260924-subpage-season1"></script>
+    <script src="script.js?v=20260925-weekend-update-moved1"></script>
   </body>
 </html>

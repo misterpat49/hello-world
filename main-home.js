@@ -93,13 +93,21 @@
   const text = document.querySelector("#weeklyUpdateText");
   const button = document.querySelector("#weeklyUpdateExpand");
   if (!section || !text || !button) return;
+  const card = section.querySelector(".weekly-update-card");
+  if (!card) return;
 
   const reset = () => {
-    const isLong = text.textContent.trim().length > 220;
     section.classList.remove("is-expanded");
-    button.hidden = !isLong;
+    button.hidden = true;
     button.setAttribute("aria-expanded", "false");
     button.textContent = "Read more";
+
+    requestAnimationFrame(() => {
+      if (section.hidden || !text.textContent.trim()) return;
+      const textClipped = text.scrollHeight > text.clientHeight + 1;
+      const cardClipped = card.scrollHeight > card.clientHeight + 1;
+      button.hidden = !(textClipped || cardClipped);
+    });
   };
 
   button.addEventListener("click", () => {

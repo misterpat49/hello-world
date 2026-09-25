@@ -2834,3 +2834,131 @@
   text-shadow: 0 0 18px rgba(31, 117, 255, .62);
   box-shadow: inset 0 0 18px rgba(31, 117, 255, .12), 0 10px 30px rgba(31, 117, 255, .12);
 }
+
+/* Keep Weekend Update paired to the animated GIF height. */
+.main-design-canvas .weekly-update-section {
+  align-items: stretch;
+}
+
+.main-design-canvas .weekly-update-section .weekly-update-card {
+  max-height: 280px;
+  overflow: hidden;
+}
+
+.main-design-canvas .weekly-update-section .weekly-update-card p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+}
+
+@media (min-width: 761px) {
+  .main-design-canvas .weekly-update-section .weekly-update-card p {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+    font-size: clamp(15px, 1.15vw, 19px);
+    line-height: 1.45;
+  }
+}
+
+.main-design-canvas .weekly-update-section.is-expanded .weekly-update-card {
+  max-height: none;
+  overflow: visible;
+}
+
+.main-design-canvas .weekly-update-section.is-expanded .weekly-update-card p {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+}
+
+.main-design-canvas .weekly-update-section .quote-side-gif,
+.main-design-canvas .weekly-update-section .quote-side-gif img {
+  max-height: 280px;
+}
+
+@media (max-width: 760px) {
+  .main-design-canvas .weekly-update-section .weekly-update-card {
+    max-height: 280px;
+  }
+
+  .main-design-canvas .weekly-update-section.is-expanded .weekly-update-card {
+    max-height: none;
+  }
+}
+
+
+/* Final hero brand stack centering override. */
+.main-design-canvas .test-hero-primary {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.main-design-canvas .test-hero-primary .test-hero-logo,
+.main-design-canvas .test-hero-primary .test-summer-title,
+.main-design-canvas .test-hero-primary .hero-kicker {
+  align-self: center;
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
+}
+
+.main-design-canvas .test-hero-primary .test-hero-logo {
+  display: flex;
+  width: min(620px, 100%);
+  justify-content: center;
+}
+
+.main-design-canvas .test-hero-primary .test-hero-logo img {
+  display: block;
+  margin-right: auto;
+  margin-left: auto;
+  object-position: center center;
+}
+
+.main-design-canvas .test-hero-primary .test-summer-title {
+  width: fit-content;
+  max-width: min(620px, 100%);
+}
+
+.main-design-canvas .test-hero-primary .hero-kicker {
+  width: min(620px, 100%);
+  max-width: min(620px, 100%);
+}
+
+
+/* Final centered single-column hero layout after Weekend Update moved below. */
+.main-design-canvas .hero-content.test-hero-dashboard {
+  display: grid;
+  width: min(1180px, 92vw);
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-items: center;
+  text-align: center;
+}
+
+.main-design-canvas .hero-content.test-hero-dashboard .test-hero-primary {
+  width: min(620px, 100%);
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.main-design-canvas .hero-content.test-hero-dashboard .test-hero-logo,
+.main-design-canvas .hero-content.test-hero-dashboard .test-summer-title,
+.main-design-canvas .hero-content.test-hero-dashboard .hero-kicker {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+
+/* Mobile breathing room between hero subtext and the status strip. */
+@media (max-width: 760px) {
+  .main-design-canvas .test-hero-primary .hero-kicker {
+    margin-bottom: 18px;
+  }
+}

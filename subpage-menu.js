@@ -15,6 +15,24 @@
   const brandText = "BOX OFFICE BULLSEYE: " + headerProfile.season.toUpperCase() + " " + headerProfile.year;
   const titleText = "Box Office Bullseye: " + profile.season + " " + profile.year;
 
+  function contestStorageState(contestId) {
+    try {
+      const savedState = JSON.parse(localStorage.getItem("summer-2026-box-office-contest") || "{}");
+      if (contestId === "summer-2026") return savedState || {};
+      return { ...(savedState || {}), ...((savedState.contests || {})[contestId] || {}) };
+    } catch {
+      return {};
+    }
+  }
+
+  function renderWeekendWagerMenuVisibility() {
+    const hidden = Boolean(contestStorageState(selectedContest).weekendWagerMenuHidden);
+    document.querySelectorAll('a[href*="top-five-perfect-order.html"]').forEach((link) => {
+      link.hidden = hidden;
+      link.setAttribute("aria-hidden", hidden ? "true" : "false");
+    });
+  }
+
   if (contestProfiles[sourceFromUrl]) {
     localStorage.setItem(publicContestKey, sourceFromUrl);
   } else if (contestProfiles[fromUrl]) {
@@ -69,6 +87,8 @@
       link.setAttribute("href", contestHref(href));
     }
   });
+  renderWeekendWagerMenuVisibility();
+
   if (/Box Office Bullseye: (Summer|Winter) 2026/i.test(document.title)) {
     document.title = document.title.replace(/Box Office Bullseye: (Summer|Winter) 2026/i, titleText);
   }

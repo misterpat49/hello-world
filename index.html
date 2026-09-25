@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Graduate&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20260701-coming-posters3">
-    <link rel="stylesheet" href="main-home.css?v=20260925-toggle-red-summer1">
+    <link rel="stylesheet" href="main-home.css?v=20260925-mobile-hero-kicker-gap1">
   </head>
   <body class="main-design-canvas production-home">
     <header class="site-header">
@@ -42,11 +42,6 @@
             <p class="test-summer-title">SUMMER 2026</p>
             <p class="hero-kicker">Year <span class="contest-edition">27</span> of America&apos;s least known Box Office Contest!</p>
           </div>
-          <aside class="test-hero-weekly" aria-label="Weekend update" id="weeklyUpdateSection" hidden>
-            <span class="standing-label">Weekend Update</span>
-            <p id="weeklyUpdateText"></p>
-            <button class="test-weekly-expand" id="weeklyUpdateExpand" type="button" aria-expanded="false" hidden>Read more</button>
-          </aside>
         </div>
       </section>
 
@@ -83,11 +78,11 @@
       </section>
 
 
-      <section class="section movie-quote-section" aria-label="Movie quote of the week" id="movieQuoteSection" hidden>
-        <article class="movie-quote-card">
-          <span class="standing-label">Movie quote of the week</span>
-          <p id="movieQuoteText"></p>
-          <div class="movie-quote-meta" id="movieQuoteMeta"></div>
+      <section class="section movie-quote-section weekly-update-section" aria-label="Weekend update" id="weeklyUpdateSection" hidden>
+        <article class="movie-quote-card weekly-update-card">
+          <span class="standing-label">Weekend Update</span>
+          <p id="weeklyUpdateText"></p>
+          <button class="test-weekly-expand" id="weeklyUpdateExpand" type="button" aria-expanded="false" hidden>Read more</button>
         </article>
         <div class="standings-gif quote-side-gif" id="standingsGif" hidden></div>
       </section>
@@ -304,7 +299,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260924-winter-eligibility1"></script>
+    <script src="script.js?v=20260925-weekend-update-moved1"></script>
     <script>
       (() => {
         const contest = new URLSearchParams(window.location.search).get("contest")
@@ -317,6 +312,6 @@
         document.title = isWinter ? "Box Office Bullseye: Winter 2026" : "Box Office Bullseye: Summer 2026";
       })();
     </script>
-    <script src="main-home.js?v=20260924-winter-eligibility1"></script>
+    <script src="main-home.js?v=20260925-weekend-natural-height1"></script>
   </body>
 </html>
