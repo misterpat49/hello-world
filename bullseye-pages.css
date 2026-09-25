@@ -249,3 +249,6 @@
     grid-column: 2;
   }
 }
+
+.bullseye-subpage .hall-results-link { display: inline-block; margin-left: 10px; color: #f2c75c; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; font-size: 11px; text-decoration: none; }
+.bullseye-subpage .hall-results-link:hover { color: #fff1b3; text-decoration: underline; }

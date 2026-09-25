@@ -2803,8 +2803,8 @@
   background: rgba(3, 9, 18, .84);
 }
 
-.main-design-canvas.winter-contest-theme .contest-switcher button,
-.contest-switcher a.is-active {
+.main-design-canvas.winter-contest-theme .contest-switcher button.is-active,
+.main-design-canvas.winter-contest-theme .contest-switcher a.is-active {
   background: linear-gradient(135deg, #9fd8ff, #1f75ff);
   color: #04101f;
   box-shadow: 0 8px 22px rgba(31, 117, 255, .32);

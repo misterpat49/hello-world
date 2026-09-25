@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Graduate&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css?v=20260701-coming-posters3">
-    <link rel="stylesheet" href="main-home.css?v=20260924-contest-links1">
+    <link rel="stylesheet" href="main-home.css?v=20260925-toggle-red-summer1">
   </head>
   <body class="main-design-canvas production-home">
     <header class="site-header">
@@ -21,7 +21,6 @@
         <a href="./index.html?contest=winter-2026#top" data-contest-id="winter-2026">Winter 2026</a>
       </div>
       <nav class="nav-links test-toolbar-menu" id="testToolbarMenu" aria-label="Primary navigation">
-        <a href="./grades.html">Grade Movies</a>
         <a href="./all-movies.html">All Movies in Contest</a>
         <a href="./paid-status.html">See If You Paid</a>
         <a href="./top-five-perfect-order.html">The Weekend Wager</a>
@@ -264,7 +263,7 @@
         <div class="info-grid">
           <article>
             <h3>Eligibility</h3>
-            <p>Only movies released from May 1 through August 31, <span class="contest-year">2026</span> are eligible.</p>
+            <p>Only movies released from <span id="eligibilityDateRange">May 1 through August 31</span>, <span class="contest-year">2026</span> are eligible.</p>
           </article>
           <article>
             <h3>Gross window</h3>
@@ -305,18 +304,19 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260924-contest-links1"></script>
+    <script src="script.js?v=20260924-winter-eligibility1"></script>
     <script>
       (() => {
-        const contest = new URLSearchParams(window.location.search).get("contest");
+        const contest = new URLSearchParams(window.location.search).get("contest")
+          || localStorage.getItem("box-office-bullseye-public-contest");
         const isWinter = contest === "winter-2026";
         const brandText = isWinter ? "BOX OFFICE BULLSEYE: WINTER 2026" : "BOX OFFICE BULLSEYE: SUMMER 2026";
         document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name").forEach((element) => {
           element.textContent = brandText;
         });
-        if (isWinter) document.title = "Box Office Bullseye: Winter 2026";
+        document.title = isWinter ? "Box Office Bullseye: Winter 2026" : "Box Office Bullseye: Summer 2026";
       })();
     </script>
-    <script src="main-home.js?v=20260704-home-redesign1"></script>
+    <script src="main-home.js?v=20260924-winter-eligibility1"></script>
   </body>
 </html>

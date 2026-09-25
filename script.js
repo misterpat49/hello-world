@@ -269,9 +269,21 @@ const contestProfiles = {
 function selectedPublicContestId() {
   const params = new URLSearchParams(window.location.search);
   const fromUrl = params.get("contest");
-  if (contestProfiles[fromUrl]) return fromUrl;
+  const sourceFromUrl = params.get("from");
+  if (contestProfiles[fromUrl]) {
+    if (!contestProfiles[sourceFromUrl]) {
+      localStorage.setItem(PUBLIC_CONTEST_SELECTION_KEY, fromUrl);
+    }
+    return fromUrl;
+  }
   const saved = localStorage.getItem(PUBLIC_CONTEST_SELECTION_KEY);
   return contestProfiles[saved] ? saved : "summer-2026";
+}
+
+function selectedHeaderContestId() {
+  const params = new URLSearchParams(window.location.search);
+  const fromUrl = params.get("from");
+  return contestProfiles[fromUrl] ? fromUrl : selectedPublicContestId();
 }
 
 function contestProfile(id = selectedPublicContestId()) {
@@ -321,9 +333,10 @@ function publicContestState() {
 
 function renderContestSwitcher() {
   const selectedId = selectedPublicContestId();
+  const headerId = selectedHeaderContestId();
   document.body.classList.toggle("winter-contest-theme", selectedId === "winter-2026");
-  const profile = contestProfile(selectedId);
-  document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name").forEach((element) => {
+  const profile = contestProfile(headerId);
+  document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name, .bullseye-brand-name, .subpage-menu-header .contest-name").forEach((element) => {
     element.textContent = `BOX OFFICE BULLSEYE: ${profile.season.toUpperCase()} ${profile.year}`;
   });
   if (!els.contestSwitcher) return;
@@ -605,6 +618,7 @@ function renderContestYear() {
   }
 
   document.querySelectorAll(".contest-name:not([data-fixed-contest-name])").forEach((element) => {
+    if (element.closest(".subpage-menu-header")) return;
     element.textContent = contestName();
   });
   document.querySelectorAll(".contest-year").forEach((element) => {
@@ -615,6 +629,9 @@ function renderContestYear() {
   });
   document.querySelectorAll(".test-summer-title").forEach((element) => {
     element.textContent = contestSeasonTitle();
+  });
+  document.querySelectorAll("#eligibilityDateRange").forEach((element) => {
+    element.textContent = contestSeason().toLowerCase() === "winter" ? "October 1 through December 31" : "May 1 through August 31";
   });
   updateHeaderContestBrand();
   document.querySelectorAll(".test-footer-top-link").forEach((element) => {
@@ -2174,16 +2191,6 @@ function renderContestFunStats(entries, results, scored) {
           ${formatRankList(topChoices.map((movie) => `${escapeHtml(movie.title)} <em>${movie.firstPlaceVotes} first-place vote${movie.firstPlaceVotes === 1 ? "" : "s"}</em>`), "No first-place votes.")}
         </ul>
       </article>
-      <article>
-        <span>Audience report card</span>
-        <div class="report-card-winner">
-          <strong>${summerGradeWinnerLabel}</strong>
-          <p>${summerGradeWinnerText}</p>
-        </div>
-        <ul class="fun-mini-list">
-          ${formatRankList(audienceReportList.map((movie) => `${escapeHtml(movie.title)} <em>${movie.averageGrade} average, ${movie.votes} grade${movie.votes === 1 ? "" : "s"}</em>`), summerGradeWinners.length ? "No other movie grades submitted yet." : "No movie grades submitted yet.")}
-        </ul>
-      </article>
       <article class="fun-wide">
         <span>Aggregate list <em>(${aggregateRank} if this was a real user, the optimum list based off everyone&apos;s averages)</em></span>
         <ul class="fun-mini-list">
@@ -3341,7 +3348,7 @@ function render() {
   renderContestSwitcher();
   renderAdminContestSelect();
 
-  if (els.contestSwitcher || els.adminContestSelect) {
+  if (!isAdminPage() || els.adminContestSelect) {
     const originalState = state;
     state = contestStateFor(selectedRenderContestId());
     try {

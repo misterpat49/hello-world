@@ -4487,3 +4487,17 @@ a.promo-logo-link:focus-visible {
     width: 72px;
   }
 }
+
+.year-results-season {
+  margin: 4px 0 10px;
+  color: #000;
+  font-family: "Bungee", "Space Grotesk", system-ui, sans-serif;
+  font-size: clamp(42px, 9vw, 88px);
+  line-height: .9;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  text-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+.winter-contest-theme .year-results-season {
+  color: #000;
+}

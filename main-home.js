@@ -41,10 +41,18 @@
 })();
 
 (() => {
-  const brand = document.querySelector(".test-canvas-brand-name");
+  const brand = document.querySelector("#headerContestBrand, .test-canvas-brand-name");
   if (!brand) return;
-  const label = "Box Office Bullseye: Summer 2026";
-  const restore = () => { if (brand.textContent !== label) brand.textContent = label; };
+  const activeContest = () => new URLSearchParams(window.location.search).get("contest")
+    || localStorage.getItem("box-office-bullseye-public-contest")
+    || "summer-2026";
+  const label = () => activeContest() === "winter-2026"
+    ? "BOX OFFICE BULLSEYE: WINTER 2026"
+    : "BOX OFFICE BULLSEYE: SUMMER 2026";
+  const restore = () => {
+    const nextLabel = label();
+    if (brand.textContent !== nextLabel) brand.textContent = nextLabel;
+  };
   restore();
   new MutationObserver(restore).observe(brand, { childList: true, characterData: true, subtree: true });
 })();
