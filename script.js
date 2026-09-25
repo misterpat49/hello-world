@@ -322,6 +322,10 @@ function publicContestState() {
 function renderContestSwitcher() {
   const selectedId = selectedPublicContestId();
   document.body.classList.toggle("winter-contest-theme", selectedId === "winter-2026");
+  const profile = contestProfile(selectedId);
+  document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name").forEach((element) => {
+    element.textContent = `BOX OFFICE BULLSEYE: ${profile.season.toUpperCase()} ${profile.year}`;
+  });
   if (!els.contestSwitcher) return;
   els.contestSwitcher.querySelectorAll("[data-contest-id]").forEach((button) => {
     const isActive = button.dataset.contestId === selectedId;
@@ -569,6 +573,17 @@ function contestBrandName() {
   return `Box Office Bullseye: ${contestSeason()} ${contestYear()}`;
 }
 
+function contestHeaderBrandName() {
+  return contestBrandName().toUpperCase();
+}
+
+function updateHeaderContestBrand() {
+  const text = contestHeaderBrandName();
+  document.querySelectorAll("#headerContestBrand, .test-canvas-brand-name").forEach((element) => {
+    element.textContent = text;
+  });
+}
+
 function contestSeasonTitle() {
   return `${contestSeason()} ${contestYear()}`.toUpperCase();
 }
@@ -601,7 +616,8 @@ function renderContestYear() {
   document.querySelectorAll(".test-summer-title").forEach((element) => {
     element.textContent = contestSeasonTitle();
   });
-  document.querySelectorAll(".test-canvas-brand-name, .test-footer-top-link").forEach((element) => {
+  updateHeaderContestBrand();
+  document.querySelectorAll(".test-footer-top-link").forEach((element) => {
     element.textContent = contestBrandName();
   });
   document.title = contestBrandName();

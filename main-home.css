@@ -1481,6 +1481,8 @@
   color: #f0c75e;
   font: 700 12px/1.3 "Inter", sans-serif;
   cursor: pointer;
+  text-decoration: none;
+  text-align: center;
 }
 
 .test-weekly-expand:hover,
@@ -2696,7 +2698,8 @@
   box-shadow: 0 16px 34px rgba(0, 0, 0, .34);
 }
 
-.contest-switcher button {
+.contest-switcher button,
+.contest-switcher a {
   appearance: none;
   border: 0;
   border-radius: 999px;
@@ -2709,13 +2712,16 @@
   cursor: pointer;
 }
 
-.contest-switcher button:hover,
-.contest-switcher button:focus-visible {
+.contest-switcher button,
+.contest-switcher a:hover,
+.contest-switcher button,
+.contest-switcher a:focus-visible {
   color: #fff8e8;
   outline: none;
 }
 
-.contest-switcher button.is-active {
+.contest-switcher button,
+.contest-switcher a.is-active {
   background: linear-gradient(135deg, #f4cf72, #b21f2d);
   color: #140d08;
   box-shadow: 0 8px 20px rgba(178, 31, 45, .26);
@@ -2723,7 +2729,8 @@
 
 @media (max-width: 560px) {
   .contest-switcher { width: min(100%, 330px); justify-content: center; }
-  .contest-switcher button { flex: 1; padding-inline: 10px; }
+  .contest-switcher button,
+.contest-switcher a { flex: 1; padding-inline: 10px; }
 }
 
 
@@ -2751,7 +2758,8 @@
     padding: 3px;
   }
 
-  .header-contest-switcher button {
+  .header-contest-switcher button,
+  .header-contest-switcher a {
     padding: 7px 8px;
     font-size: 9px;
     letter-spacing: .04em;
@@ -2795,7 +2803,8 @@
   background: rgba(3, 9, 18, .84);
 }
 
-.main-design-canvas.winter-contest-theme .contest-switcher button.is-active {
+.main-design-canvas.winter-contest-theme .contest-switcher button,
+.contest-switcher a.is-active {
   background: linear-gradient(135deg, #9fd8ff, #1f75ff);
   color: #04101f;
   box-shadow: 0 8px 22px rgba(31, 117, 255, .32);
