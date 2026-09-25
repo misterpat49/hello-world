@@ -232,6 +232,7 @@ const els = {
   hallCurrentWinners: document.querySelector("#hallCurrentWinners"),
   currentYearHall: document.querySelector("#currentYearHall"),
   finalStandingsGrid: document.querySelector("#finalStandingsGrid"),
+  finalPostgameStats: document.querySelector("#finalPostgameStats"),
   finalLeaderboardRows: document.querySelector("#finalLeaderboardRows"),
   finalMovieRows: document.querySelector("#finalMovieRows"),
   finalStudioLists: document.querySelector("#finalStudioLists"),
@@ -3493,10 +3494,178 @@ function renderFinalStudioLists(entries, results, scored) {
     .join("");
 }
 
+function postgameList(items, emptyText = "No data yet.") {
+  return items.length ? items.map((item) => `<li>${item}</li>`).join("") : `<li>${emptyText}</li>`;
+}
+
+function postgameMovieStats(entries, results) {
+  const stats = new Map();
+  entries.forEach((entry) => {
+    entry.picks.forEach((pick, index) => {
+      const key = normalizeMovie(pick);
+      const stat = stats.get(key) || { key, title: pick, ranks: [], players: [] };
+      stat.ranks.push(index + 1);
+      stat.players.push({ name: entry.name, rank: index + 1 });
+      stats.set(key, stat);
+    });
+  });
+
+  const actual = Array.from(results.values())
+    .map((movie) => ({ key: normalizeMovie(movie.title), title: movie.title, total: movieTotal(movie), weekOne: movieTotal(movie, 1) }))
+    .sort((a, b) => b.total - a.total || a.title.localeCompare(b.title));
+  const actualRank = new Map(actual.map((movie, index) => [movie.key, index + 1]));
+
+  return {
+    actual,
+    movies: Array.from(stats.values()).map((movie) => {
+      const resultMovie = results.get(movie.key);
+      return {
+        ...movie,
+        pickCount: movie.players.length,
+        averageRank: movie.ranks.reduce((sum, rank) => sum + rank, 0) / movie.ranks.length,
+        total: movieTotal(resultMovie),
+        weekOne: movieTotal(resultMovie, 1),
+        actualRank: actualRank.get(movie.key) || null,
+      };
+    }),
+  };
+}
+
+function entryTopFiveScore(entry, results) {
+  return entry.picks.slice(0, 5).reduce((sum, pick, index) => {
+    const movie = results.get(normalizeMovie(pick));
+    return sum + (movie ? movieTotal(movie) * (MAX_PICKS - index) : 0);
+  }, 0);
+}
+
+function entryTopTenScore(entry, results) {
+  return entry.picks.slice(0, 10).reduce((sum, pick, index) => {
+    const movie = results.get(normalizeMovie(pick));
+    return sum + (movie ? movieTotal(movie) * (MAX_PICKS - index) : 0);
+  }, 0);
+}
+
+function entryWeekOneScore(entry, results) {
+  return entry.picks.reduce((sum, pick, index) => {
+    const movie = results.get(normalizeMovie(pick));
+    return sum + (movie ? movieTotal(movie, 1) * (MAX_PICKS - index) : 0);
+  }, 0);
+}
+
+function closestPerfectListScores(entries, actual) {
+  const actualTop = actual.slice(0, MAX_PICKS);
+  const actualRanks = new Map(actualTop.map((movie, index) => [movie.key, index + 1]));
+  return entries.map((entry) => {
+    const picked = new Map(entry.picks.map((pick, index) => [normalizeMovie(pick), index + 1]));
+    const distance = actualTop.reduce((sum, movie) => {
+      const rank = picked.get(movie.key);
+      return sum + (rank ? Math.abs(rank - actualRanks.get(movie.key)) : MAX_PICKS + 1);
+    }, 0);
+    const hits = actualTop.filter((movie) => picked.has(movie.key)).length;
+    return { name: entry.name, distance, hits };
+  }).sort((a, b) => a.distance - b.distance || b.hits - a.hits || a.name.localeCompare(b.name));
+}
+
+function renderFinalPostgameStats(entries, results, scored, rawScored) {
+  if (!els.finalPostgameStats) return;
+  if (!entries.length || !results.size) {
+    els.finalPostgameStats.innerHTML = `<div class="empty-state">Save final lists and grosses to generate the postgame autopsy.</div>`;
+    return;
+  }
+
+  const { actual, movies } = postgameMovieStats(entries, results);
+  const actualTop = actual.slice(0, MAX_PICKS);
+  const topKeys = new Set(actualTop.map((movie) => movie.key));
+  const topGross = actual[0]?.total || 0;
+  const topTwo = scored.slice(0, 2);
+
+  const bestValue = movies.filter((movie) => movie.actualRank && movie.total > 0)
+    .sort((a, b) => (b.averageRank - b.actualRank) - (a.averageRank - a.actualRank) || b.total - a.total)
+    .slice(0, 5);
+  const worstValue = movies.filter((movie) => movie.actualRank && movie.total > 0)
+    .sort((a, b) => (b.actualRank - b.averageRank) - (a.actualRank - a.averageRank) || a.total - b.total)
+    .slice(0, 5);
+  const deepCuts = entries.flatMap((entry) => entry.picks.slice(9).map((pick, index) => ({ player: entry.name, title: pick, rank: index + 10, total: movieTotal(results.get(normalizeMovie(pick))) })))
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total || a.title.localeCompare(b.title))
+    .slice(0, 5);
+  const draftBoards = entries.map((entry) => {
+    const hits = entry.picks.filter((pick) => topKeys.has(normalizeMovie(pick))).length;
+    const actualRankSum = entry.picks.reduce((sum, pick) => {
+      const actualIndex = actualTop.findIndex((movie) => movie.key === normalizeMovie(pick));
+      return sum + (actualIndex >= 0 ? actualIndex + 1 : 0);
+    }, 0);
+    return { name: entry.name, hits, actualRankSum };
+  }).sort((a, b) => b.hits - a.hits || a.actualRankSum - b.actualRankSum || a.name.localeCompare(b.name));
+  const topWeighting = entries.map((entry) => ({ name: entry.name, score: entryTopFiveScore(entry, results) }))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+    .slice(0, 5);
+  const mvpRows = scored.slice(0, 8).map((entry) => {
+    const best = entry.picks.map((pick, index) => ({ title: pick, points: movieTotal(results.get(normalizeMovie(pick))) * (MAX_PICKS - index) }))
+      .sort((a, b) => b.points - a.points || a.title.localeCompare(b.title))[0];
+    return { name: entry.name, ...best };
+  });
+  const killerRows = entries.map((entry) => {
+    const killer = entry.picks.map((pick, index) => {
+      const gross = movieTotal(results.get(normalizeMovie(pick)));
+      return { title: pick, rank: index + 1, pain: (MAX_PICKS - index) * Math.max(0, topGross - gross), gross };
+    }).sort((a, b) => b.pain - a.pain || a.rank - b.rank)[0];
+    return { name: entry.name, ...killer };
+  }).sort((a, b) => b.pain - a.pain || a.name.localeCompare(b.name)).slice(0, 8);
+  const consensus = movies.filter((movie) => movie.pickCount === entries.length).sort((a, b) => a.actualRank - b.actualRank || a.averageRank - b.averageRank);
+  const respectedLeast = movies.filter((movie) => movie.actualRank && movie.actualRank <= MAX_PICKS).sort((a, b) => (b.averageRank - b.actualRank) - (a.averageRank - a.actualRank)).slice(0, 5);
+  const expensiveMisses = entries.map((entry) => {
+    const picked = new Set(entry.picks.map(normalizeMovie));
+    const miss = actualTop.filter((movie) => !picked.has(movie.key)).sort((a, b) => b.total - a.total)[0];
+    return miss ? { name: entry.name, title: miss.title, total: miss.total } : null;
+  }).filter(Boolean).sort((a, b) => b.total - a.total || a.name.localeCompare(b.name)).slice(0, 8);
+  const closestPerfect = closestPerfectListScores(entries, actual).slice(0, 5);
+  const topTenWinner = entries.map((entry) => ({ name: entry.name, score: entryTopTenScore(entry, results) })).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0];
+  const weekOneWinner = entries.map((entry) => ({ name: entry.name, score: entryWeekOneScore(entry, results) })).sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))[0];
+  const golden = rawScored[0];
+  const closestMargins = scored.map((entry, index) => ({ name: entry.name, aheadBy: index < scored.length - 1 ? entry.score - scored[index + 1].score : null, behindBy: index > 0 ? scored[index - 1].score - entry.score : null }))
+    .filter((entry) => entry.aheadBy != null || entry.behindBy != null);
+  const luckiest = closestMargins.filter((entry) => entry.aheadBy != null).sort((a, b) => a.aheadBy - b.aheadBy)[0];
+  const unluckiest = closestMargins.filter((entry) => entry.behindBy != null).sort((a, b) => a.behindBy - b.behindBy)[0];
+  const whatIf = topTwo.length === 2 ? actual.map((movie) => {
+    const diff = topTwo.map((entry) => {
+      const index = entry.picks.findIndex((pick) => normalizeMovie(pick) === movie.key);
+      return index >= 0 ? MAX_PICKS - index : 0;
+    });
+    return { title: movie.title, leverage: Math.abs(diff[0] - diff[1]), total: movie.total };
+  }).sort((a, b) => b.leverage - a.leverage || b.total - a.total)[0] : null;
+
+  const conclusionRows = [
+    scored[0] ? `${escapeHtml(scored[0].name)} won the weighted contest with ${formatScore(scored[0].score)} points.` : "No weighted winner yet.",
+    golden ? `${escapeHtml(golden.name)} had the strongest raw studio slate at ${formatMoney(golden.rawGross)}.` : "No Golden CEO result yet.",
+    bestValue[0] ? `The room most underpriced ${escapeHtml(bestValue[0].title)}.` : "No value read yet.",
+    worstValue[0] ? `The biggest draft tax came from ${escapeHtml(worstValue[0].title)}.` : "No bust read yet.",
+  ];
+
+  els.finalPostgameStats.innerHTML = `
+    <article class="postgame-card postgame-wide"><span>The Autopsy</span><ul class="fun-mini-list">${postgameList(conclusionRows)}</ul></article>
+    <article class="postgame-card"><span>Biggest What If?</span><strong>${whatIf ? escapeHtml(whatIf.title) : "N/A"}</strong><em>Largest first-vs-second multiplier leverage${whatIf ? `: ${whatIf.leverage} multiplier points` : ""}</em></article>
+    <article class="postgame-card"><span>Best Value Picks</span><ul class="fun-mini-list">${postgameList(bestValue.map((movie) => `${escapeHtml(movie.title)} <em>Actual #${movie.actualRank}, avg draft #${movie.averageRank.toFixed(1)}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Worst Value Picks</span><ul class="fun-mini-list">${postgameList(worstValue.map((movie) => `${escapeHtml(movie.title)} <em>Actual #${movie.actualRank}, avg draft #${movie.averageRank.toFixed(1)}</em>`))}</ul></article>
+    <article class="postgame-card postgame-wide"><span>Studio MVPs</span><ul class="fun-mini-list">${postgameList(mvpRows.map((row) => `${escapeHtml(row.name)}: ${escapeHtml(row.title)} <em>${formatScore(row.points)} points</em>`))}</ul></article>
+    <article class="postgame-card postgame-wide"><span>Studio Killers</span><ul class="fun-mini-list">${postgameList(killerRows.map((row) => `${escapeHtml(row.name)}: ${escapeHtml(row.title)} <em>#${row.rank}, ${formatMoney(row.gross)}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Best Draft Board</span><ul class="fun-mini-list">${postgameList(draftBoards.slice(0, 5).map((row) => `${escapeHtml(row.name)} <em>${row.hits}/15 final top movies</em>`))}</ul></article>
+    <article class="postgame-card"><span>Best Weighting Strategy</span><ul class="fun-mini-list">${postgameList(topWeighting.map((row) => `${escapeHtml(row.name)} <em>top-five score: ${formatScore(row.score)}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Deep Cut Champion</span><ul class="fun-mini-list">${postgameList(deepCuts.map((item) => `${escapeHtml(item.title)} <em>${escapeHtml(item.player)} #${item.rank}, ${formatMoney(item.total)}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Consensus Was Right / Wrong</span><ul class="fun-mini-list">${postgameList(consensus.slice(0, 5).map((movie) => `${escapeHtml(movie.title)} <em>Actual #${movie.actualRank || "N/A"}, avg #${movie.averageRank.toFixed(1)}</em>`), "No unanimous picks.")}</ul></article>
+    <article class="postgame-card"><span>Nobody Respected Enough</span><ul class="fun-mini-list">${postgameList(respectedLeast.map((movie) => `${escapeHtml(movie.title)} <em>Actual #${movie.actualRank}, avg #${movie.averageRank.toFixed(1)}</em>`))}</ul></article>
+    <article class="postgame-card postgame-wide"><span>Most Expensive Misses</span><ul class="fun-mini-list">${postgameList(expensiveMisses.map((miss) => `${escapeHtml(miss.name)} left off ${escapeHtml(miss.title)} <em>${formatMoney(miss.total)}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Closest to Perfect List</span><ul class="fun-mini-list">${postgameList(closestPerfect.map((row) => `${escapeHtml(row.name)} <em>${row.hits}/15 hits, distance ${row.distance}</em>`))}</ul></article>
+    <article class="postgame-card"><span>Alternate Winners</span><ul class="fun-mini-list">${postgameList([golden ? `No multipliers: ${escapeHtml(golden.name)}` : "No raw winner", topTenWinner ? `Top 10 only: ${escapeHtml(topTenWinner.name)}` : "No top-10 winner", weekOneWinner ? `Opening week only: ${escapeHtml(weekOneWinner.name)}` : "No week-one winner"])}</ul></article>
+    <article class="postgame-card"><span>Luckiest / Unluckiest</span><ul class="fun-mini-list">${postgameList([luckiest ? `Luckiest hold: ${escapeHtml(luckiest.name)} <em>ahead by ${formatScore(luckiest.aheadBy)}</em>` : "No margin read", unluckiest ? `Toughest beat: ${escapeHtml(unluckiest.name)} <em>behind by ${formatScore(unluckiest.behindBy)}</em>` : "No margin read"])}</ul></article>
+  `;
+}
+
 function renderFinalYearResults(entries, results, scored, rawScored) {
   if (!els.finalStandingsGrid && !els.finalLeaderboardRows && !els.finalMovieRows && !els.finalStudioLists) return;
 
   renderWinnerCards(els.finalStandingsGrid, winnerPlaces(scored, rawScored));
+  renderFinalPostgameStats(entries, results, scored, rawScored);
   renderFinalLeaderboard(scored);
   renderFinalMovieRows(entries, results);
   renderFinalStudioLists(entries, results, scored);

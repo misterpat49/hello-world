@@ -4501,3 +4501,57 @@ a.promo-logo-link:focus-visible {
 .winter-contest-theme .year-results-season {
   color: #000;
 }
+
+
+.postgame-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.postgame-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: #fffdf9;
+}
+
+.postgame-card.postgame-wide {
+  grid-column: span 2;
+}
+
+.postgame-card > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.postgame-card strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font: 700 22px/1.05 "Space Grotesk", sans-serif;
+}
+
+.postgame-card em {
+  display: block;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .postgame-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .postgame-card.postgame-wide {
+    grid-column: auto;
+  }
+}
