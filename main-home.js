@@ -1,9 +1,9 @@
 (() => {
   const logo = document.querySelector("#testBullseyeLogo");
   const heroLogo = document.querySelector("#testBullseyeHeroLogo");
-  if (!logo && !heroLogo) return;
-  const storageKey = "summer-2026-box-office-contest";
   const cascade = document.querySelector("#testPosterCascade");
+  if (!logo && !heroLogo && !cascade) return;
+  const storageKey = "summer-2026-box-office-contest";
   const applyLogo = (state) => {
     const url = state?.topFiveLogoUrl || "";
     if (!url) return;
@@ -16,11 +16,36 @@
       heroLogo.closest(".test-hero-logo")?.classList.add("has-logo");
     }
   };
-  const buildPosterCascade = (state) => {
+  const selectedContestState = (rootState) => {
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get("contest");
+    const saved = localStorage.getItem("box-office-bullseye-public-contest");
+    const contestId = fromUrl || saved || "summer-2026";
+    if (contestId === "summer-2026") return rootState || {};
+    return { ...(rootState || {}), ...((rootState?.contests || {})[contestId] || {}) };
+  };
+  const validPosterUrl = (value) => /^https?:\/\//i.test(String(value || "").trim());
+  const buildPosterCascade = (rootState) => {
     if (!cascade) return;
+    const state = selectedContestState(rootState);
+    const isArmyTicker = cascade.classList.contains("army-poster-row");
+    const armyPosters = (Array.isArray(state?.armyMoviePosters) ? state.armyMoviePosters : [])
+      .map((movie) => ({
+        key: String(movie?.title || "").trim().toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim(),
+        title: String(movie?.title || "").trim(),
+        url: String(movie?.url || "").trim(),
+      }))
+      .filter((movie) => movie.title && validPosterUrl(movie.url));
+    const selectedArmyKeys = isArmyTicker && Array.isArray(state?.armyTickerPosterSelections)
+      ? state.armyTickerPosterSelections.filter(Boolean)
+      : [];
+    const selectedArmyPosters = selectedArmyKeys
+      .map((key) => armyPosters.find((poster) => poster.key === key))
+      .filter(Boolean);
+
     const releaseDates = state?.releaseDates || {};
-    const posters = Object.entries(state?.moviePosterImages || {})
-      .filter(([, url]) => /^https?:\/\//i.test(url))
+    const contestPosters = Object.entries(state?.moviePosterImages || {})
+      .filter(([, url]) => validPosterUrl(url))
       .map(([key, url]) => ({ key, url, releaseDate: releaseDates[key] || "" }))
       .sort((a, b) => {
         if (a.releaseDate && b.releaseDate) return a.releaseDate.localeCompare(b.releaseDate) || a.key.localeCompare(b.key);
@@ -28,6 +53,9 @@
         if (b.releaseDate) return 1;
         return a.key.localeCompare(b.key);
       });
+    const posters = isArmyTicker
+      ? (selectedArmyPosters.length ? selectedArmyPosters : (armyPosters.length ? armyPosters : contestPosters))
+      : contestPosters;
     if (!posters.length) return;
     const posterMarkup = posters.map(({ url }) => `<img src="${url.replace(/"/g, "&quot;")}" alt="">`).join("");
     cascade.innerHTML = `<div class="test-poster-track"><div class="test-poster-set">${posterMarkup}</div><div class="test-poster-set" aria-hidden="true">${posterMarkup}</div></div>`;

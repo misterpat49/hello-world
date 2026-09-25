@@ -120,6 +120,14 @@ const els = {
   topFivePosterStatus: document.querySelector("#topFivePosterStatus"),
   moviePosterLibrary: document.querySelector("#moviePosterLibrary"),
   moviePosterLibraryStatus: document.querySelector("#moviePosterLibraryStatus"),
+  armyMoviePosterList: document.querySelector("#armyMoviePosterList"),
+  saveArmyMoviePosterList: document.querySelector("#saveArmyMoviePosterList"),
+  clearArmyMoviePosterList: document.querySelector("#clearArmyMoviePosterList"),
+  armyMoviePosterListStatus: document.querySelector("#armyMoviePosterListStatus"),
+  armyTickerPosterSelectors: document.querySelector("#armyTickerPosterSelectors"),
+  saveArmyTickerPosters: document.querySelector("#saveArmyTickerPosters"),
+  clearArmyTickerPosters: document.querySelector("#clearArmyTickerPosters"),
+  armyTickerPosterStatus: document.querySelector("#armyTickerPosterStatus"),
   topFivePasswordKey: document.querySelector("#topFivePasswordKey"),
   topFiveOfficialWeek: document.querySelector("#topFiveOfficialWeek"),
   topFiveOfficialPicks: document.querySelector("#topFiveOfficialPicks"),
@@ -241,7 +249,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -302,6 +310,9 @@ function blankContestState(profile) {
     topFivePredictions: {},
     topFiveLogoUrl: "",
     topFivePosterSelections: [],
+    moviePosterImages: {},
+    armyMoviePosters: [],
+    armyTickerPosterSelections: [],
     topFiveAccessCodes: {},
     topFiveWeeklyResults: {},
     topFiveRevealedWeeks: {},
@@ -2495,6 +2506,93 @@ function renderMoviePosterLibrary(entries) {
     `;
   }).join("");
 }
+function isHttpImageUrl(value) {
+  return /^https?:\/\//i.test(String(value || "").trim());
+}
+
+function getArmyMoviePosters() {
+  return (Array.isArray(state.armyMoviePosters) ? state.armyMoviePosters : [])
+    .map((movie) => ({
+      title: String(movie?.title || "").trim(),
+      key: normalizeMovie(String(movie?.title || "").trim()),
+      url: String(movie?.url || "").trim(),
+    }))
+    .filter((movie) => movie.title && isHttpImageUrl(movie.url));
+}
+
+function renderArmyMoviePosterListControls() {
+  if (!els.armyMoviePosterList) return;
+
+  const savedMovies = Array.isArray(state.armyMoviePosters) ? state.armyMoviePosters : [];
+  const rows = Array.from({ length: 12 }, (_, index) => savedMovies[index] || { title: "", url: "" });
+  const savedCount = getArmyMoviePosters().length;
+
+  if (els.armyMoviePosterListStatus) {
+    els.armyMoviePosterListStatus.textContent = savedCount
+      ? `${savedCount} Army movie poster${savedCount === 1 ? "" : "s"} saved.`
+      : "No Army movie posters saved.";
+  }
+
+  els.armyMoviePosterList.innerHTML = rows.map((movie, index) => {
+    const title = String(movie?.title || "");
+    const url = String(movie?.url || "");
+    return `
+      <article class="movie-poster-library-row army-movie-poster-row">
+        <div class="movie-poster-library-preview ${isHttpImageUrl(url) ? "has-poster" : ""}">
+          ${isHttpImageUrl(url) ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(title || `Army movie ${index + 1}`)} poster preview">` : `<span>No poster</span>`}
+        </div>
+        <div class="movie-poster-library-info">
+          <strong>Army movie ${index + 1}</strong>
+          <label>
+            <span>Movie title</span>
+            <input type="text" value="${escapeHtml(title)}" placeholder="Movie title" data-army-movie-title>
+          </label>
+          <label>
+            <span>Poster image URL</span>
+            <input type="url" value="${escapeHtml(url)}" placeholder="https://example.com/poster.jpg" data-army-movie-url>
+          </label>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderArmyTickerPosterControls() {
+  if (!els.armyTickerPosterSelectors) return;
+
+  const moviesWithPosters = getArmyMoviePosters();
+  const selections = Array.isArray(state.armyTickerPosterSelections) ? state.armyTickerPosterSelections : [];
+  const selectedCount = selections.filter(Boolean).length;
+
+  if (els.armyTickerPosterStatus) {
+    els.armyTickerPosterStatus.textContent = moviesWithPosters.length
+      ? `${selectedCount} Army ticker poster${selectedCount === 1 ? "" : "s"} selected. Leave slots blank to use the Army list order.`
+      : "Save movie titles and poster URLs in the Army list to build the Army ticker.";
+  }
+
+  if (!moviesWithPosters.length) {
+    els.armyTickerPosterSelectors.innerHTML = `<div class="empty-state">No Army movie poster URLs saved yet.</div>`;
+    return;
+  }
+
+  const options = moviesWithPosters
+    .map((movie) => `<option value="${escapeHtml(movie.key)}">${escapeHtml(movie.title)}</option>`)
+    .join("");
+
+  els.armyTickerPosterSelectors.innerHTML = Array.from({ length: 12 }, (_, index) => `
+    <label>
+      <span>Army ticker poster ${index + 1}</span>
+      <select data-army-ticker-poster>
+        <option value="">Use Army list order</option>
+        ${options}
+      </select>
+    </label>
+  `).join("");
+
+  els.armyTickerPosterSelectors.querySelectorAll("select").forEach((select, index) => {
+    select.value = selections[index] || "";
+  });
+}
 
 function activeBullseyeWeekLabel() {
   const comingAttractionsWeek = nextContestWeekLabel(state.currentContestWeek);
@@ -3351,6 +3449,8 @@ function renderContestBody() {
   renderTopFiveWeeklyResultsAdmin(entries, results);
   renderTopFivePosterGallery(entries);
   renderMoviePosterLibrary(entries);
+  renderArmyMoviePosterListControls();
+  renderArmyTickerPosterControls();
   renderGradePage(entries, results);
   renderContestantLists(entries, results, scored);
   renderAdminResultsGrid(entries, results);
@@ -3915,6 +4015,41 @@ els.clearLeaderboardImage?.addEventListener("click", () => {
   saveState();
   render();
   showSaveWarning(els.leaderboardImageStatus);
+});
+
+els.saveArmyMoviePosterList?.addEventListener("click", () => {
+  const rows = Array.from(els.armyMoviePosterList?.querySelectorAll(".army-movie-poster-row") || []);
+  const movies = [];
+  for (const row of rows) {
+    const title = row.querySelector("[data-army-movie-title]")?.value.trim() || "";
+    const url = row.querySelector("[data-army-movie-url]")?.value.trim() || "";
+    if (!title && !url) continue;
+    if (!title || !isHttpImageUrl(url)) {
+      if (els.armyMoviePosterListStatus) els.armyMoviePosterListStatus.textContent = "Every Army movie row needs both a title and a complete http or https poster URL.";
+      return;
+    }
+    movies.push({ title, url });
+  }
+  const allowedKeys = new Set(movies.map((movie) => normalizeMovie(movie.title)));
+  const selections = (Array.isArray(activeAdminContestState().armyTickerPosterSelections) ? activeAdminContestState().armyTickerPosterSelections : []).filter((key) => allowedKeys.has(key));
+  setActiveAdminContestValues({ armyMoviePosters: movies, armyTickerPosterSelections: selections });
+  showSaveWarning(els.armyMoviePosterListStatus);
+});
+
+els.clearArmyMoviePosterList?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyMoviePosters: [], armyTickerPosterSelections: [] });
+  showSaveWarning(els.armyMoviePosterListStatus);
+});
+
+els.saveArmyTickerPosters?.addEventListener("click", () => {
+  const selections = Array.from(els.armyTickerPosterSelectors?.querySelectorAll("select") || []).map((select) => select.value);
+  setActiveAdminContestValues({ armyTickerPosterSelections: selections });
+  showSaveWarning(els.armyTickerPosterStatus);
+});
+
+els.clearArmyTickerPosters?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyTickerPosterSelections: [] });
+  showSaveWarning(els.armyTickerPosterStatus);
 });
 
 els.moviePosterLibrary?.addEventListener("click", (event) => {

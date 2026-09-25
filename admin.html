@@ -172,6 +172,32 @@
           <p class="admin-note" id="moviePosterLibraryStatus">Save player lists to build the movie poster library.</p>
         </article>
 
+        <article class="admin-card army-movie-list-admin-card">
+          <div class="card-heading">
+            <h3>Army of the 12 Movies list</h3>
+            <span>Army page posters</span>
+          </div>
+          <p class="admin-note">Enter the movie title and direct poster image URL for the Army page ticker.</p>
+          <div class="movie-poster-library army-movie-poster-list" id="armyMoviePosterList"></div>
+          <div class="form-actions">
+            <button class="button button-primary" id="saveArmyMoviePosterList" type="button">Save Army movie list</button>
+            <button class="button button-secondary-dark" id="clearArmyMoviePosterList" type="button">Clear Army movie list</button>
+          </div>
+          <p class="admin-note" id="armyMoviePosterListStatus">No Army movie posters saved.</p>
+        </article>
+        <article class="admin-card army-ticker-admin-card">
+          <div class="card-heading">
+            <h3>Army of the 12 Movies ticker</h3>
+            <span>Army page only</span>
+          </div>
+          <p class="admin-note">Choose the posters that scroll above the Army of the 12 Movies image. These choices only affect that page.</p>
+          <div class="top-five-poster-selectors" id="armyTickerPosterSelectors"></div>
+          <div class="form-actions">
+            <button class="button button-primary" id="saveArmyTickerPosters" type="button">Save Army ticker</button>
+            <button class="button button-secondary-dark" id="clearArmyTickerPosters" type="button">Clear Army ticker</button>
+          </div>
+          <p class="admin-note" id="armyTickerPosterStatus">Save poster URLs in the library to build the Army ticker.</p>
+        </article>
         <article class="admin-card weekly-update-admin-card">
           <div class="card-heading">
             <h3>Weekly update</h3>
@@ -326,6 +352,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260925-weekend-wager-menu-removed1"></script>
+    <script src="script.js?v=20260925-army-movie-list1"></script>
   </body>
 </html>
