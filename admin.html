@@ -171,32 +171,33 @@
           <div class="movie-poster-library" id="moviePosterLibrary"></div>
           <p class="admin-note" id="moviePosterLibraryStatus">Save player lists to build the movie poster library.</p>
         </article>
-
-        <article class="admin-card army-movie-list-admin-card">
+        <article class="admin-card army-archive-admin-card">
           <div class="card-heading">
-            <h3>Army of the 12 Movies list</h3>
-            <span>Army page posters</span>
+            <h3>Army of the 12 Movies archive</h3>
+            <span>Army page history</span>
           </div>
-          <p class="admin-note">Enter the movie title and direct poster image URL for the Army page ticker.</p>
-          <div class="movie-poster-library army-movie-poster-list" id="armyMoviePosterList"></div>
+          <p class="admin-note">Add each Army movie with its year, director, poster URL, IMDb URL, and who chose the movie. Poster URLs feed the Army ticker, and IMDb URLs make Film Lineup thumbnails clickable.</p>
+          <div class="army-archive-editor" id="armyMovieArchiveList"></div>
           <div class="form-actions">
-            <button class="button button-primary" id="saveArmyMoviePosterList" type="button">Save Army movie list</button>
-            <button class="button button-secondary-dark" id="clearArmyMoviePosterList" type="button">Clear Army movie list</button>
+            <button class="button button-secondary-dark" id="addArmyMovieArchiveEntry" type="button">+ Add archive entry</button>
+            <button class="button button-primary" id="saveArmyMovieArchive" type="button">Save Army archive</button>
+            <button class="button button-secondary-dark" id="clearArmyMovieArchive" type="button">Clear Army archive</button>
           </div>
-          <p class="admin-note" id="armyMoviePosterListStatus">No Army movie posters saved.</p>
+          <p class="admin-note" id="armyMovieArchiveStatus">No Army archive entries saved.</p>
         </article>
-        <article class="admin-card army-ticker-admin-card">
+        <article class="admin-card army-members-admin-card">
           <div class="card-heading">
-            <h3>Army of the 12 Movies ticker</h3>
-            <span>Army page only</span>
+            <h3>Army of the 12 Movies club members</h3>
+            <span>Army page contacts</span>
           </div>
-          <p class="admin-note">Choose the posters that scroll above the Army of the 12 Movies image. These choices only affect that page.</p>
-          <div class="top-five-poster-selectors" id="armyTickerPosterSelectors"></div>
+          <p class="admin-note">Add club members and email addresses. These appear on the Army page from the CLUB MEMBERS link.</p>
+          <div class="army-club-member-editor" id="armyClubMemberList"></div>
           <div class="form-actions">
-            <button class="button button-primary" id="saveArmyTickerPosters" type="button">Save Army ticker</button>
-            <button class="button button-secondary-dark" id="clearArmyTickerPosters" type="button">Clear Army ticker</button>
+            <button class="button button-secondary-dark" id="addArmyClubMember" type="button">+ Add club member</button>
+            <button class="button button-primary" id="saveArmyClubMembers" type="button">Save club members</button>
+            <button class="button button-secondary-dark" id="clearArmyClubMembers" type="button">Clear club members</button>
           </div>
-          <p class="admin-note" id="armyTickerPosterStatus">Save poster URLs in the library to build the Army ticker.</p>
+          <p class="admin-note" id="armyClubMemberStatus">No club members saved.</p>
         </article>
         <article class="admin-card weekly-update-admin-card">
           <div class="card-heading">
@@ -352,6 +353,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260925-army-movie-list1"></script>
+    <script src="script.js?v=20260925-army-imdb-url1"></script>
   </body>
 </html>

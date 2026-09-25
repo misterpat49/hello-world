@@ -120,14 +120,16 @@ const els = {
   topFivePosterStatus: document.querySelector("#topFivePosterStatus"),
   moviePosterLibrary: document.querySelector("#moviePosterLibrary"),
   moviePosterLibraryStatus: document.querySelector("#moviePosterLibraryStatus"),
-  armyMoviePosterList: document.querySelector("#armyMoviePosterList"),
-  saveArmyMoviePosterList: document.querySelector("#saveArmyMoviePosterList"),
-  clearArmyMoviePosterList: document.querySelector("#clearArmyMoviePosterList"),
-  armyMoviePosterListStatus: document.querySelector("#armyMoviePosterListStatus"),
-  armyTickerPosterSelectors: document.querySelector("#armyTickerPosterSelectors"),
-  saveArmyTickerPosters: document.querySelector("#saveArmyTickerPosters"),
-  clearArmyTickerPosters: document.querySelector("#clearArmyTickerPosters"),
-  armyTickerPosterStatus: document.querySelector("#armyTickerPosterStatus"),
+  armyMovieArchiveList: document.querySelector("#armyMovieArchiveList"),
+  addArmyMovieArchiveEntry: document.querySelector("#addArmyMovieArchiveEntry"),
+  saveArmyMovieArchive: document.querySelector("#saveArmyMovieArchive"),
+  clearArmyMovieArchive: document.querySelector("#clearArmyMovieArchive"),
+  armyMovieArchiveStatus: document.querySelector("#armyMovieArchiveStatus"),
+  armyClubMemberList: document.querySelector("#armyClubMemberList"),
+  addArmyClubMember: document.querySelector("#addArmyClubMember"),
+  saveArmyClubMembers: document.querySelector("#saveArmyClubMembers"),
+  clearArmyClubMembers: document.querySelector("#clearArmyClubMembers"),
+  armyClubMemberStatus: document.querySelector("#armyClubMemberStatus"),
   topFivePasswordKey: document.querySelector("#topFivePasswordKey"),
   topFiveOfficialWeek: document.querySelector("#topFiveOfficialWeek"),
   topFiveOfficialPicks: document.querySelector("#topFiveOfficialPicks"),
@@ -249,7 +251,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMovieArchive: [], armyClubMembers: [], topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -313,6 +315,8 @@ function blankContestState(profile) {
     moviePosterImages: {},
     armyMoviePosters: [],
     armyTickerPosterSelections: [],
+    armyMovieArchive: [],
+    armyClubMembers: [],
     topFiveAccessCodes: {},
     topFiveWeeklyResults: {},
     topFiveRevealedWeeks: {},
@@ -2510,88 +2514,320 @@ function isHttpImageUrl(value) {
   return /^https?:\/\//i.test(String(value || "").trim());
 }
 
-function getArmyMoviePosters() {
-  return (Array.isArray(state.armyMoviePosters) ? state.armyMoviePosters : [])
-    .map((movie) => ({
-      title: String(movie?.title || "").trim(),
-      key: normalizeMovie(String(movie?.title || "").trim()),
-      url: String(movie?.url || "").trim(),
+const armyMovieGenres = ["Drama", "Comedy", "Musical", "Documentary", "Animated", "Sci Fi", "Fantasy", "Horror", "Action", "Mystery / Thriller"];
+const armyMovieLanguages = ["English", "Foreign"];
+
+function getArmyMovieArchive() {
+  return (Array.isArray(state.armyMovieArchive) ? state.armyMovieArchive : [])
+    .map((entry) => ({
+      movie: String(entry?.movie || "").trim(),
+      year: String(entry?.year || "").trim(),
+      director: String(entry?.director || "").trim(),
+      posterUrl: String(entry?.posterUrl || "").trim(),
+      imdbUrl: String(entry?.imdbUrl || "").trim(),
+      genre: String(entry?.genre || "").trim(),
+      language: String(entry?.language || "").trim(),
+      chosenBy: String(entry?.chosenBy || "").trim(),
+      datePicked: String(entry?.datePicked || "").trim(),
     }))
-    .filter((movie) => movie.title && isHttpImageUrl(movie.url));
+    .filter((entry) => entry.movie || entry.year || entry.director || entry.posterUrl || entry.imdbUrl || entry.genre || entry.language || entry.chosenBy || entry.datePicked);
 }
 
-function renderArmyMoviePosterListControls() {
-  if (!els.armyMoviePosterList) return;
-
-  const savedMovies = Array.isArray(state.armyMoviePosters) ? state.armyMoviePosters : [];
-  const rows = Array.from({ length: 12 }, (_, index) => savedMovies[index] || { title: "", url: "" });
-  const savedCount = getArmyMoviePosters().length;
-
-  if (els.armyMoviePosterListStatus) {
-    els.armyMoviePosterListStatus.textContent = savedCount
-      ? `${savedCount} Army movie poster${savedCount === 1 ? "" : "s"} saved.`
-      : "No Army movie posters saved.";
-  }
-
-  els.armyMoviePosterList.innerHTML = rows.map((movie, index) => {
-    const title = String(movie?.title || "");
-    const url = String(movie?.url || "");
-    return `
-      <article class="movie-poster-library-row army-movie-poster-row">
-        <div class="movie-poster-library-preview ${isHttpImageUrl(url) ? "has-poster" : ""}">
-          ${isHttpImageUrl(url) ? `<img src="${escapeHtml(url)}" alt="${escapeHtml(title || `Army movie ${index + 1}`)} poster preview">` : `<span>No poster</span>`}
-        </div>
-        <div class="movie-poster-library-info">
-          <strong>Army movie ${index + 1}</strong>
-          <label>
-            <span>Movie title</span>
-            <input type="text" value="${escapeHtml(title)}" placeholder="Movie title" data-army-movie-title>
-          </label>
-          <label>
-            <span>Poster image URL</span>
-            <input type="url" value="${escapeHtml(url)}" placeholder="https://example.com/poster.jpg" data-army-movie-url>
-          </label>
-        </div>
-      </article>
-    `;
-  }).join("");
+function armyMovieGenreOptions(selectedGenre = "") {
+  const selected = String(selectedGenre || "").trim();
+  return [`<option value="">Pick genre</option>`, ...armyMovieGenres.map((genre) => `<option value="${escapeHtml(genre)}" ${genre === selected ? "selected" : ""}>${escapeHtml(genre)}</option>`)].join("");
 }
 
-function renderArmyTickerPosterControls() {
-  if (!els.armyTickerPosterSelectors) return;
+function armyMovieLanguageOptions(selectedLanguage = "") {
+  const selected = String(selectedLanguage || "").trim();
+  return [`<option value="">Pick language</option>`, ...armyMovieLanguages.map((language) => `<option value="${escapeHtml(language)}" ${language === selected ? "selected" : ""}>${escapeHtml(language)}</option>`)].join("");
+}
 
-  const moviesWithPosters = getArmyMoviePosters();
-  const selections = Array.isArray(state.armyTickerPosterSelections) ? state.armyTickerPosterSelections : [];
-  const selectedCount = selections.filter(Boolean).length;
+function armyMovieArchiveRowHtml(entry = {}, index = 0) {
+  return `
+    <article class="army-archive-row">
+      <div class="army-archive-row-heading">
+        <strong>Archive entry ${index + 1}</strong>
+        <button class="button button-secondary-dark" type="button" data-remove-army-archive-row>Remove</button>
+      </div>
+      <label>
+        <span>Movie</span>
+        <input type="text" value="${escapeHtml(entry.movie || "")}" placeholder="Movie title" data-army-archive-movie>
+      </label>
+      <label>
+        <span>Year</span>
+        <input type="text" value="${escapeHtml(entry.year || "")}" placeholder="1975" data-army-archive-year>
+      </label>
+      <label>
+        <span>Directed by</span>
+        <input type="text" value="${escapeHtml(entry.director || "")}" placeholder="Director" data-army-archive-director>
+      </label>
+      <label>
+        <span>Movie poster URL</span>
+        <input type="url" value="${escapeHtml(entry.posterUrl || "")}" placeholder="https://example.com/poster.jpg" data-army-archive-poster-url>
+      </label>
+      <label>
+        <span>IMDb URL</span>
+        <input type="url" value="${escapeHtml(entry.imdbUrl || "")}" placeholder="https://www.imdb.com/title/..." data-army-archive-imdb-url>
+      </label>
+      <label>
+        <span>Genre</span>
+        <select data-army-archive-genre>
+          ${armyMovieGenreOptions(entry.genre)}
+        </select>
+      </label>
+      <label>
+        <span>Foreign / English</span>
+        <select data-army-archive-language>
+          ${armyMovieLanguageOptions(entry.language)}
+        </select>
+      </label>
+      <label>
+        <span>Chosen by</span>
+        <input type="text" value="${escapeHtml(entry.chosenBy || "")}" placeholder="Studio or person" data-army-archive-chosen>
+      </label>
+      <label>
+        <span>Date picked</span>
+        <input type="text" value="${escapeHtml(entry.datePicked || "")}" placeholder="September 23, 2026" data-army-archive-date-picked>
+      </label>
+    </article>
+  `;
+}
 
-  if (els.armyTickerPosterStatus) {
-    els.armyTickerPosterStatus.textContent = moviesWithPosters.length
-      ? `${selectedCount} Army ticker poster${selectedCount === 1 ? "" : "s"} selected. Leave slots blank to use the Army list order.`
-      : "Save movie titles and poster URLs in the Army list to build the Army ticker.";
-  }
-
-  if (!moviesWithPosters.length) {
-    els.armyTickerPosterSelectors.innerHTML = `<div class="empty-state">No Army movie poster URLs saved yet.</div>`;
-    return;
-  }
-
-  const options = moviesWithPosters
-    .map((movie) => `<option value="${escapeHtml(movie.key)}">${escapeHtml(movie.title)}</option>`)
-    .join("");
-
-  els.armyTickerPosterSelectors.innerHTML = Array.from({ length: 12 }, (_, index) => `
-    <label>
-      <span>Army ticker poster ${index + 1}</span>
-      <select data-army-ticker-poster>
-        <option value="">Use Army list order</option>
-        ${options}
-      </select>
-    </label>
-  `).join("");
-
-  els.armyTickerPosterSelectors.querySelectorAll("select").forEach((select, index) => {
-    select.value = selections[index] || "";
+function renumberArmyMovieArchiveRows() {
+  els.armyMovieArchiveList?.querySelectorAll(".army-archive-row-heading strong").forEach((label, index) => {
+    label.textContent = `Archive entry ${index + 1}`;
   });
+}
+
+function renderArmyMovieArchiveControls(extraBlankRows = 1) {
+  if (!els.armyMovieArchiveList) return;
+
+  const savedEntries = getArmyMovieArchive();
+  const rows = [...savedEntries, ...Array.from({ length: Math.max(1, extraBlankRows) }, () => ({ movie: "", year: "", director: "", posterUrl: "", imdbUrl: "", genre: "", language: "", chosenBy: "", datePicked: "" }))];
+  if (els.armyMovieArchiveStatus) {
+    els.armyMovieArchiveStatus.textContent = savedEntries.length
+      ? `${savedEntries.length} Army archive entr${savedEntries.length === 1 ? "y" : "ies"} saved.`
+      : "No Army archive entries saved.";
+  }
+
+  els.armyMovieArchiveList.innerHTML = rows.map((entry, index) => armyMovieArchiveRowHtml(entry, index)).join("");
+}
+
+function collectArmyMovieArchiveRows() {
+  return Array.from(els.armyMovieArchiveList?.querySelectorAll(".army-archive-row") || [])
+    .map((row) => ({
+      movie: row.querySelector("[data-army-archive-movie]")?.value.trim() || "",
+      year: row.querySelector("[data-army-archive-year]")?.value.trim() || "",
+      director: row.querySelector("[data-army-archive-director]")?.value.trim() || "",
+      posterUrl: row.querySelector("[data-army-archive-poster-url]")?.value.trim() || "",
+      imdbUrl: row.querySelector("[data-army-archive-imdb-url]")?.value.trim() || "",
+      genre: row.querySelector("[data-army-archive-genre]")?.value.trim() || "",
+      language: row.querySelector("[data-army-archive-language]")?.value.trim() || "",
+      chosenBy: row.querySelector("[data-army-archive-chosen]")?.value.trim() || "",
+      datePicked: row.querySelector("[data-army-archive-date-picked]")?.value.trim() || "",
+    }))
+    .filter((entry) => entry.movie || entry.year || entry.director || entry.posterUrl || entry.imdbUrl || entry.genre || entry.language || entry.chosenBy || entry.datePicked);
+}
+
+function getArmyClubMembers() {
+  return (Array.isArray(state.armyClubMembers) ? state.armyClubMembers : [])
+    .map((member) => ({
+      name: String(member?.name || "").trim(),
+      email: String(member?.email || "").trim(),
+    }))
+    .filter((member) => member.name || member.email);
+}
+
+function armyClubMemberRowHtml(member = {}, index = 0) {
+  return `
+    <article class="army-club-member-row">
+      <div class="army-club-member-row-heading">
+        <strong>Club member ${index + 1}</strong>
+        <button class="button button-secondary-dark" type="button" data-remove-army-club-member>Remove</button>
+      </div>
+      <label>
+        <span>Name</span>
+        <input type="text" value="${escapeHtml(member.name || "")}" placeholder="Member name" data-army-club-member-name>
+      </label>
+      <label>
+        <span>Email</span>
+        <input type="email" value="${escapeHtml(member.email || "")}" placeholder="name@example.com" data-army-club-member-email>
+      </label>
+    </article>
+  `;
+}
+
+function renumberArmyClubMemberRows() {
+  els.armyClubMemberList?.querySelectorAll(".army-club-member-row-heading strong").forEach((label, index) => {
+    label.textContent = `Club member ${index + 1}`;
+  });
+}
+
+function renderArmyClubMemberControls(extraBlankRows = 1) {
+  if (!els.armyClubMemberList) return;
+
+  const savedMembers = getArmyClubMembers();
+  const rows = [...savedMembers, ...Array.from({ length: Math.max(1, extraBlankRows) }, () => ({ name: "", email: "" }))];
+  if (els.armyClubMemberStatus) {
+    els.armyClubMemberStatus.textContent = savedMembers.length
+      ? `${savedMembers.length} club member${savedMembers.length === 1 ? "" : "s"} saved.`
+      : "No club members saved.";
+  }
+
+  els.armyClubMemberList.innerHTML = rows.map((member, index) => armyClubMemberRowHtml(member, index)).join("");
+}
+
+function collectArmyClubMemberRows() {
+  return Array.from(els.armyClubMemberList?.querySelectorAll(".army-club-member-row") || [])
+    .map((row) => ({
+      name: row.querySelector("[data-army-club-member-name]")?.value.trim() || "",
+      email: row.querySelector("[data-army-club-member-email]")?.value.trim() || "",
+    }))
+    .filter((member) => member.name || member.email);
+}
+
+function normalizeArmyClubName(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function armyClubMemberPickMap() {
+  return getArmyMovieArchive().reduce((map, entry) => {
+    const key = normalizeArmyClubName(entry.chosenBy);
+    if (!key) return map;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(entry.movie || "Untitled movie");
+    return map;
+  }, new Map());
+}
+
+function renderArmyClubMembersPage() {
+  const membersSection = document.querySelector("#armyClubMembers");
+  if (!membersSection) return;
+
+  const members = getArmyClubMembers();
+  const pickMap = armyClubMemberPickMap();
+  membersSection.innerHTML = `
+    <div class="army-club-members-inner">
+      <h1>Club Members</h1>
+      ${members.length ? `
+        <div class="army-club-member-list">
+          ${members.map((member) => {
+            const pickedMovies = pickMap.get(normalizeArmyClubName(member.name)) || [];
+            return `
+              <article class="army-club-member-card ${pickedMovies.length ? "has-picked" : "needs-pick"}">
+                <div>
+                  <strong>${escapeHtml(member.name || "Unnamed member")}</strong>
+                  ${member.email ? `<a href="mailto:${escapeHtml(member.email)}">${escapeHtml(member.email)}</a>` : `<span>No email saved</span>`}
+                </div>
+                <div class="army-club-pick-status">
+                  <span>${pickedMovies.length ? "Movie chosen" : "No movie chosen yet"}</span>
+                  ${pickedMovies.length ? `<small>${escapeHtml(pickedMovies.join(", "))}</small>` : ""}
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      ` : `<p>No club members have been added yet.</p>`}
+    </div>
+  `;
+}
+
+function countArmyArchiveValues(entries, getValue) {
+  return entries.reduce((counts, entry) => {
+    const value = String(getValue(entry) || "").trim();
+    if (!value) return counts;
+    counts.set(value, (counts.get(value) || 0) + 1);
+    return counts;
+  }, new Map());
+}
+
+function armyArchiveDecade(yearValue) {
+  const year = Number.parseInt(String(yearValue || "").match(/\d{4}/)?.[0] || "", 10);
+  if (!Number.isFinite(year)) return "";
+  return String(Math.floor(year / 10) * 10) + "s";
+}
+
+function armyArchiveDecadeLabels(entries) {
+  const pickedYears = entries
+    .map((entry) => Number.parseInt(String(entry.year || "").match(/\d{4}/)?.[0] || "", 10))
+    .filter(Number.isFinite);
+  const latestDecade = pickedYears.length ? Math.max(2020, Math.floor(Math.max(...pickedYears) / 10) * 10) : 2020;
+  const labels = [];
+  for (let decade = 1920; decade <= latestDecade; decade += 10) {
+    labels.push(String(decade) + "s");
+  }
+  return labels;
+}
+
+function armyArchiveCountPills(counts, labels = []) {
+  const rows = labels.length
+    ? labels.map((label) => [label, counts.get(label) || 0])
+    : Array.from(counts.entries()).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return rows.length
+    ? rows.map(([label, count]) => `<span class="${count ? "" : "is-zero"}"><strong>${escapeHtml(String(count))}</strong>${escapeHtml(label)}</span>`).join("")
+    : `<em>No picks yet</em>`;
+}
+
+function armyArchiveStatsHtml(entries) {
+  const genreCounts = countArmyArchiveValues(entries, (entry) => entry.genre);
+  const decadeCounts = countArmyArchiveValues(entries, (entry) => armyArchiveDecade(entry.year));
+  const foreignCount = entries.filter((entry) => String(entry.language || "").trim().toLowerCase() === "foreign").length;
+  const decadeLabels = armyArchiveDecadeLabels(entries);
+  return `
+    <section class="army-archive-stats" aria-label="Film lineup stats">
+      <h2>Lineup Stats</h2>
+      <div class="army-archive-stat-grid">
+        <article>
+          <h3>Genres</h3>
+          <div class="army-archive-stat-pills">${armyArchiveCountPills(genreCounts, armyMovieGenres)}</div>
+        </article>
+        <article>
+          <h3>Foreign Films</h3>
+          <div class="army-archive-stat-big">${escapeHtml(String(foreignCount))}</div>
+        </article>
+        <article>
+          <h3>Decades</h3>
+          <div class="army-archive-stat-pills">${armyArchiveCountPills(decadeCounts, decadeLabels)}</div>
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderArmyMovieArchivePage() {
+  const archive = document.querySelector("#armyMovieArchive");
+  if (!archive) return;
+
+  const entries = getArmyMovieArchive();
+  const shouldCollapseLineup = entries.length > 3;
+  archive.innerHTML = `
+    <div class="army-archive-inner">
+      <div class="army-archive-title-row">
+        <h1>FILM LINEUP</h1>
+      </div>
+      ${entries.length ? `
+        <div class="army-archive-list ${shouldCollapseLineup ? "is-collapsed" : ""}" id="armyArchiveList">
+          ${entries.map((entry, index) => ({ entry, originalIndex: index })).reverse().map(({ entry, originalIndex }) => `
+            <article class="army-archive-card">
+              ${isHttpImageUrl(entry.posterUrl) && isHttpImageUrl(entry.imdbUrl) ? `<a class="army-archive-poster-thumb has-poster is-link" href="${escapeHtml(entry.imdbUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(entry.movie || "this film")} on IMDb"><img src="${escapeHtml(entry.posterUrl)}" alt="${escapeHtml(entry.movie || "Army movie")} poster" loading="lazy"></a>` : `<div class="army-archive-poster-thumb ${isHttpImageUrl(entry.posterUrl) ? "has-poster" : ""}">${isHttpImageUrl(entry.posterUrl) ? `<img src="${escapeHtml(entry.posterUrl)}" alt="${escapeHtml(entry.movie || "Army movie")} poster" loading="lazy">` : `<span>No poster</span>`}</div>`}
+              <div class="army-archive-film-info">
+                <span class="army-film-number">FILM #${originalIndex + 1}</span>
+                <h2>${escapeHtml(entry.movie || "Untitled movie")}</h2>
+                <p>${escapeHtml([entry.year, entry.genre, entry.director ? `Directed by ${entry.director}` : ""].filter(Boolean).join(" · ") || "Details coming soon")}</p>
+              </div>
+              <div class="army-archive-choice">
+                <strong>${escapeHtml(entry.chosenBy || "Chosen by TBD")}</strong>
+                ${entry.datePicked ? `<span>${escapeHtml(entry.datePicked)}</span>` : ""}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+        ${shouldCollapseLineup ? `<button class="army-archive-toggle" id="armyArchiveToggle" type="button" aria-expanded="false" aria-controls="armyArchiveList">View full lineup</button>` : ""}
+        ${armyArchiveStatsHtml(entries)}
+      ` : `<p class="army-archive-empty">No archive entries have been added yet.</p>`}
+    </div>
+  `;
 }
 
 function activeBullseyeWeekLabel() {
@@ -3449,8 +3685,10 @@ function renderContestBody() {
   renderTopFiveWeeklyResultsAdmin(entries, results);
   renderTopFivePosterGallery(entries);
   renderMoviePosterLibrary(entries);
-  renderArmyMoviePosterListControls();
-  renderArmyTickerPosterControls();
+  renderArmyMovieArchiveControls();
+  renderArmyClubMemberControls();
+  renderArmyClubMembersPage();
+  renderArmyMovieArchivePage();
   renderGradePage(entries, results);
   renderContestantLists(entries, results, scored);
   renderAdminResultsGrid(entries, results);
@@ -3912,6 +4150,30 @@ els.contestantSelect?.addEventListener("change", () => {
   render();
 });
 
+document.addEventListener("click", (event) => {
+  const clubMemberLink = event.target.closest("#armyClubMemberLink");
+  if (!clubMemberLink) return;
+
+  const membersSection = document.querySelector("#armyClubMembers");
+  if (!membersSection) return;
+
+  event.preventDefault();
+  membersSection.classList.toggle("is-open");
+  membersSection.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.addEventListener("click", (event) => {
+  const armyArchiveToggle = event.target.closest("#armyArchiveToggle");
+  if (!armyArchiveToggle) return;
+
+  const list = document.querySelector("#armyArchiveList");
+  if (!list) return;
+
+  const isOpening = list.classList.toggle("is-collapsed") === false;
+  armyArchiveToggle.setAttribute("aria-expanded", String(isOpening));
+  armyArchiveToggle.textContent = isOpening ? "Show latest three" : "View full lineup";
+});
+
 els.compareContestantA?.addEventListener("change", () => {
   state.compareContestantA = els.compareContestantA.value;
   saveState();
@@ -4017,39 +4279,77 @@ els.clearLeaderboardImage?.addEventListener("click", () => {
   showSaveWarning(els.leaderboardImageStatus);
 });
 
-els.saveArmyMoviePosterList?.addEventListener("click", () => {
-  const rows = Array.from(els.armyMoviePosterList?.querySelectorAll(".army-movie-poster-row") || []);
-  const movies = [];
-  for (const row of rows) {
-    const title = row.querySelector("[data-army-movie-title]")?.value.trim() || "";
-    const url = row.querySelector("[data-army-movie-url]")?.value.trim() || "";
-    if (!title && !url) continue;
-    if (!title || !isHttpImageUrl(url)) {
-      if (els.armyMoviePosterListStatus) els.armyMoviePosterListStatus.textContent = "Every Army movie row needs both a title and a complete http or https poster URL.";
-      return;
-    }
-    movies.push({ title, url });
+
+els.armyClubMemberList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-army-club-member]");
+  if (!button) return;
+  const row = button.closest(".army-club-member-row");
+  row?.remove();
+  if (!els.armyClubMemberList.querySelector(".army-club-member-row")) {
+    els.armyClubMemberList.innerHTML = armyClubMemberRowHtml({}, 0);
   }
-  const allowedKeys = new Set(movies.map((movie) => normalizeMovie(movie.title)));
-  const selections = (Array.isArray(activeAdminContestState().armyTickerPosterSelections) ? activeAdminContestState().armyTickerPosterSelections : []).filter((key) => allowedKeys.has(key));
-  setActiveAdminContestValues({ armyMoviePosters: movies, armyTickerPosterSelections: selections });
-  showSaveWarning(els.armyMoviePosterListStatus);
+  renumberArmyClubMemberRows();
 });
 
-els.clearArmyMoviePosterList?.addEventListener("click", () => {
-  setActiveAdminContestValues({ armyMoviePosters: [], armyTickerPosterSelections: [] });
-  showSaveWarning(els.armyMoviePosterListStatus);
+els.addArmyClubMember?.addEventListener("click", () => {
+  const count = els.armyClubMemberList?.querySelectorAll(".army-club-member-row").length || 0;
+  els.armyClubMemberList?.insertAdjacentHTML("beforeend", armyClubMemberRowHtml({}, count));
 });
 
-els.saveArmyTickerPosters?.addEventListener("click", () => {
-  const selections = Array.from(els.armyTickerPosterSelectors?.querySelectorAll("select") || []).map((select) => select.value);
-  setActiveAdminContestValues({ armyTickerPosterSelections: selections });
-  showSaveWarning(els.armyTickerPosterStatus);
+els.saveArmyClubMembers?.addEventListener("click", () => {
+  const members = collectArmyClubMemberRows();
+  setActiveAdminContestValues({ armyClubMembers: members });
+  saveState();
+  render();
+  showSaveWarning(els.armyClubMemberStatus);
 });
 
-els.clearArmyTickerPosters?.addEventListener("click", () => {
-  setActiveAdminContestValues({ armyTickerPosterSelections: [] });
-  showSaveWarning(els.armyTickerPosterStatus);
+els.clearArmyClubMembers?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyClubMembers: [] });
+  saveState();
+  render();
+  showSaveWarning(els.armyClubMemberStatus);
+});
+
+els.armyMovieArchiveList?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-remove-army-archive-row]");
+  if (!button) return;
+  const row = button.closest(".army-archive-row");
+  row?.remove();
+  if (!els.armyMovieArchiveList.querySelector(".army-archive-row")) {
+    els.armyMovieArchiveList.innerHTML = armyMovieArchiveRowHtml({}, 0);
+  }
+  renumberArmyMovieArchiveRows();
+});
+
+els.addArmyMovieArchiveEntry?.addEventListener("click", () => {
+  const count = els.armyMovieArchiveList?.querySelectorAll(".army-archive-row").length || 0;
+  els.armyMovieArchiveList?.insertAdjacentHTML("beforeend", armyMovieArchiveRowHtml({}, count));
+});
+
+els.saveArmyMovieArchive?.addEventListener("click", () => {
+  const entries = collectArmyMovieArchiveRows();
+  const invalidPoster = entries.find((entry) => entry.posterUrl && !isHttpImageUrl(entry.posterUrl));
+  if (invalidPoster) {
+    if (els.armyMovieArchiveStatus) els.armyMovieArchiveStatus.textContent = `Enter a complete http or https poster URL for ${invalidPoster.movie || "that archive entry"}.`;
+    return;
+  }
+  const invalidImdb = entries.find((entry) => entry.imdbUrl && !isHttpImageUrl(entry.imdbUrl));
+  if (invalidImdb) {
+    if (els.armyMovieArchiveStatus) els.armyMovieArchiveStatus.textContent = `Enter a complete http or https IMDb URL for ${invalidImdb.movie || "that archive entry"}.`;
+    return;
+  }
+  setActiveAdminContestValues({ armyMovieArchive: entries });
+  saveState();
+  render();
+  showSaveWarning(els.armyMovieArchiveStatus);
+});
+
+els.clearArmyMovieArchive?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyMovieArchive: [] });
+  saveState();
+  render();
+  showSaveWarning(els.armyMovieArchiveStatus);
 });
 
 els.moviePosterLibrary?.addEventListener("click", (event) => {

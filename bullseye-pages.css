@@ -305,7 +305,15 @@
 
 .bullseye-subpage .army-image-page {
   width: min(1500px, calc(100vw - 28px));
-  margin: 24px auto 40px;
+  margin: 18px auto 40px;
+}
+
+.bullseye-subpage .army-page-footer {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  text-align: center;
 }
 
 .bullseye-subpage .army-main-image {
@@ -349,5 +357,467 @@
 @media (max-width: 700px) {
   .bullseye-subpage .army-ticket-image {
     margin-top: 14px;
+  }
+}
+
+
+.bullseye-subpage .army-movie-archive {
+  width: min(100%, 1320px);
+  margin: 30px auto 0;
+}
+
+.bullseye-subpage .army-archive-inner {
+  border: 1px solid rgba(245, 208, 120, .28);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(16, 12, 10, .94), rgba(33, 23, 17, .9));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .35);
+  padding: 24px;
+}
+
+.bullseye-subpage .army-archive-title-row {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  text-align: center;
+  gap: 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid rgba(245, 208, 120, .2);
+  padding-bottom: 14px;
+}
+
+.bullseye-subpage .army-archive-title-row h1 {
+  margin: 0;
+  color: #f8e2ad;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: clamp(1.65rem, 3.6vw, 3rem);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-archive-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bullseye-subpage .army-archive-list.is-collapsed .army-archive-card:nth-child(n + 4) {
+  display: none;
+}
+
+.bullseye-subpage .army-archive-toggle {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(241, 193, 93, .36);
+  border-radius: 999px;
+  color: #f8e2ad;
+  background: rgba(241, 193, 93, .09);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-archive-toggle:hover,
+.bullseye-subpage .army-archive-toggle:focus-visible {
+  border-color: rgba(241, 193, 93, .72);
+  background: rgba(241, 193, 93, .16);
+}
+
+.bullseye-subpage .army-archive-card {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px 12px 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.bullseye-subpage .army-archive-poster-thumb {
+  width: 64px;
+  text-decoration: none;
+  aspect-ratio: 2 / 3;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(241, 193, 93, .28);
+  border-radius: 7px;
+  background: rgba(0, 0, 0, .24);
+  color: rgba(255, 248, 232, .46);
+  font-size: .62rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-archive-poster-thumb.is-link {
+  cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.bullseye-subpage .army-archive-poster-thumb.is-link:hover,
+.bullseye-subpage .army-archive-poster-thumb.is-link:focus-visible {
+  border-color: rgba(241, 193, 93, .86);
+  box-shadow: 0 0 0 3px rgba(241, 193, 93, .16);
+  transform: translateY(-1px);
+}
+
+.bullseye-subpage .army-archive-poster-thumb img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.bullseye-subpage .army-archive-film-info {
+  min-width: 0;
+}
+
+.bullseye-subpage .army-film-number {
+  display: inline-block;
+  margin: 0 0 7px;
+  color: #f1c15d;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: .72rem;
+  letter-spacing: .16em;
+}
+
+.bullseye-subpage .army-archive-card h2 {
+  margin: 0 0 4px;
+  color: #fff8e8;
+  font-size: 1rem;
+  letter-spacing: .02em;
+}
+
+.bullseye-subpage .army-archive-card p {
+  margin: 0;
+  color: rgba(255, 248, 232, .68);
+  font-size: .9rem;
+}
+
+.bullseye-subpage .army-archive-choice {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.bullseye-subpage .army-archive-choice strong {
+  color: #f1c15d;
+  font-size: .9rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.bullseye-subpage .army-archive-choice span {
+  color: rgba(255, 248, 232, .68);
+  font-size: .82rem;
+  letter-spacing: .04em;
+}
+
+.bullseye-subpage .army-archive-empty {
+  margin: 0;
+  color: rgba(255, 248, 232, .72);
+}
+
+.army-archive-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.army-archive-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.05fr) .38fr .75fr minmax(180px, 1fr) minmax(180px, 1fr) .72fr .86fr .85fr 1fr;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(17, 24, 39, .12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .66);
+}
+
+.army-archive-row-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.army-archive-row-heading .button {
+  padding: 7px 10px;
+  font-size: .76rem;
+}
+
+@media (max-width: 800px) {
+  .army-archive-row,
+  .bullseye-subpage .army-archive-title-row {
+    grid-template-columns: 1fr;
+  }
+
+  .bullseye-subpage .army-archive-card {
+    grid-template-columns: 58px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .bullseye-subpage .army-archive-poster-thumb {
+    width: 52px;
+  }
+
+  .bullseye-subpage .army-archive-choice {
+    grid-column: 2;
+    justify-items: start;
+    text-align: left;
+  }
+}
+
+
+.bullseye-subpage .army-archive-stats {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(245, 208, 120, .2);
+}
+
+.bullseye-subpage .army-archive-stats h2 {
+  margin: 0 0 14px;
+  color: #f8e2ad;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: clamp(1.15rem, 2.4vw, 1.8rem);
+  letter-spacing: .12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-archive-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(150px, .55fr) 1fr;
+  gap: 12px;
+}
+
+.bullseye-subpage .army-archive-stat-grid article {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .045);
+}
+
+.bullseye-subpage .army-archive-stat-grid h3 {
+  margin: 0 0 10px;
+  color: rgba(255, 248, 232, .66);
+  font-size: .76rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-archive-stat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bullseye-subpage .army-archive-stat-pills span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid rgba(241, 193, 93, .28);
+  border-radius: 999px;
+  color: #fff8e8;
+  background: rgba(241, 193, 93, .08);
+  font-size: .84rem;
+}
+
+.bullseye-subpage .army-archive-stat-pills span.is-zero {
+  border-color: rgba(255, 255, 255, .08);
+  color: rgba(255, 248, 232, .38);
+  background: rgba(255, 255, 255, .025);
+}
+
+.bullseye-subpage .army-archive-stat-pills span.is-zero strong {
+  color: rgba(255, 248, 232, .38);
+}
+
+.bullseye-subpage .army-archive-stat-pills strong,
+.bullseye-subpage .army-archive-stat-big {
+  color: #f1c15d;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+}
+
+.bullseye-subpage .army-archive-stat-pills em {
+  color: rgba(255, 248, 232, .62);
+  font-style: normal;
+}
+
+.bullseye-subpage .army-archive-stat-big {
+  display: grid;
+  min-height: 62px;
+  place-items: center;
+  font-size: clamp(2rem, 5vw, 3.3rem);
+  line-height: 1;
+}
+
+@media (max-width: 800px) {
+  .bullseye-subpage .army-archive-stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.bullseye-subpage .army-club-member-link-wrap {
+  width: min(100%, 1320px);
+  margin: 16px auto 0;
+  text-align: center;
+}
+
+.bullseye-subpage .army-club-member-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border: 1px solid rgba(241, 193, 93, .42);
+  border-radius: 999px;
+  color: #f8e2ad;
+  background: rgba(241, 193, 93, .1);
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  letter-spacing: .12em;
+  text-decoration: none;
+}
+
+.bullseye-subpage .army-club-member-link:hover,
+.bullseye-subpage .army-club-member-link:focus-visible {
+  border-color: rgba(241, 193, 93, .78);
+  background: rgba(241, 193, 93, .18);
+}
+
+.bullseye-subpage .army-club-members {
+  display: none;
+  width: min(100%, 1320px);
+  margin: 18px auto 0;
+}
+
+.bullseye-subpage .army-club-members.is-open {
+  display: block;
+}
+
+.bullseye-subpage .army-club-members-inner {
+  padding: 22px;
+  border: 1px solid rgba(245, 208, 120, .26);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(16, 12, 10, .94), rgba(33, 23, 17, .9));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+
+.bullseye-subpage .army-club-members-inner h1 {
+  margin: 0 0 14px;
+  color: #f8e2ad;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: clamp(1.65rem, 3.6vw, 3rem);
+  letter-spacing: .12em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-club-member-list {
+  display: grid;
+  gap: 10px;
+}
+
+.bullseye-subpage .army-club-member-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 15px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .05);
+}
+
+.bullseye-subpage .army-club-member-card strong {
+  display: block;
+  color: #fff8e8;
+}
+
+.bullseye-subpage .army-club-member-card a,
+.bullseye-subpage .army-club-member-card span {
+  color: rgba(255, 248, 232, .7);
+  font-size: .9rem;
+}
+
+.bullseye-subpage .army-club-member-card.has-picked {
+  border-color: rgba(85, 190, 125, .32);
+}
+
+.bullseye-subpage .army-club-member-card.needs-pick {
+  border-color: rgba(241, 193, 93, .18);
+}
+
+.bullseye-subpage .army-club-pick-status {
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  text-align: right;
+}
+
+.bullseye-subpage .army-club-pick-status span {
+  display: inline-flex;
+  padding: 6px 9px;
+  border-radius: 999px;
+  color: #f8e2ad;
+  background: rgba(241, 193, 93, .1);
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-club-member-card.has-picked .army-club-pick-status span {
+  color: #dcffe6;
+  background: rgba(85, 190, 125, .16);
+}
+
+.bullseye-subpage .army-club-pick-status small {
+  color: rgba(255, 248, 232, .68);
+  font-size: .82rem;
+}
+
+.army-club-member-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.army-club-member-row {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(17, 24, 39, .12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .66);
+}
+
+.army-club-member-row-heading {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.army-club-member-row-heading .button {
+  padding: 7px 10px;
+  font-size: .76rem;
+}
+
+@media (max-width: 800px) {
+  .army-club-member-row,
+  .bullseye-subpage .army-club-member-card {
+    grid-template-columns: 1fr;
+  }
+
+  .bullseye-subpage .army-club-pick-status {
+    justify-items: start;
+    text-align: left;
   }
 }

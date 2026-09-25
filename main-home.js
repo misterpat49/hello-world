@@ -29,19 +29,13 @@
     if (!cascade) return;
     const state = selectedContestState(rootState);
     const isArmyTicker = cascade.classList.contains("army-poster-row");
-    const armyPosters = (Array.isArray(state?.armyMoviePosters) ? state.armyMoviePosters : [])
-      .map((movie) => ({
-        key: String(movie?.title || "").trim().toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim(),
-        title: String(movie?.title || "").trim(),
-        url: String(movie?.url || "").trim(),
+    const armyPosters = (Array.isArray(state?.armyMovieArchive) ? state.armyMovieArchive : [])
+      .map((entry, index) => ({
+        key: String(entry?.movie || `army-movie-${index + 1}`).trim().toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, " ").trim(),
+        title: String(entry?.movie || `Army movie ${index + 1}`).trim(),
+        url: String(entry?.posterUrl || "").trim(),
       }))
       .filter((movie) => movie.title && validPosterUrl(movie.url));
-    const selectedArmyKeys = isArmyTicker && Array.isArray(state?.armyTickerPosterSelections)
-      ? state.armyTickerPosterSelections.filter(Boolean)
-      : [];
-    const selectedArmyPosters = selectedArmyKeys
-      .map((key) => armyPosters.find((poster) => poster.key === key))
-      .filter(Boolean);
 
     const releaseDates = state?.releaseDates || {};
     const contestPosters = Object.entries(state?.moviePosterImages || {})
@@ -53,10 +47,12 @@
         if (b.releaseDate) return 1;
         return a.key.localeCompare(b.key);
       });
-    const posters = isArmyTicker
-      ? (selectedArmyPosters.length ? selectedArmyPosters : (armyPosters.length ? armyPosters : contestPosters))
-      : contestPosters;
-    if (!posters.length) return;
+    const posters = isArmyTicker ? armyPosters : contestPosters;
+    if (!posters.length) {
+      cascade.innerHTML = "";
+      cascade.classList.remove("is-ready");
+      return;
+    }
     const posterMarkup = posters.map(({ url }) => `<img src="${url.replace(/"/g, "&quot;")}" alt="">`).join("");
     cascade.innerHTML = `<div class="test-poster-track"><div class="test-poster-set">${posterMarkup}</div><div class="test-poster-set" aria-hidden="true">${posterMarkup}</div></div>`;
     cascade.classList.add("is-ready");
