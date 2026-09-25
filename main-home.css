@@ -2962,3 +2962,61 @@
     margin-bottom: 18px;
   }
 }
+
+
+/* Mobile header: centered season switcher above brand and menu. */
+@media (max-width: 700px) {
+  .main-design-canvas.production-home .site-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "season season"
+      "brand menu";
+    align-items: center;
+    gap: 8px 12px;
+    min-height: 0;
+    padding: 9px 14px 10px;
+  }
+
+  .main-design-canvas.production-home .brand {
+    grid-area: brand;
+    min-width: 0;
+    max-width: calc(100vw - 88px);
+  }
+
+  .main-design-canvas.production-home .test-canvas-brand-name {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+
+  .main-design-canvas.production-home .header-contest-switcher {
+    grid-area: season;
+    justify-self: center;
+    width: min(300px, calc(100vw - 44px));
+    max-width: calc(100vw - 44px);
+    margin: 0 auto;
+    transform: none;
+    transform-origin: center center;
+  }
+
+  .main-design-canvas.production-home .header-contest-switcher a {
+    display: flex;
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .main-design-canvas.production-home .test-menu-button {
+    grid-area: menu;
+    justify-self: end;
+    margin-left: 0;
+  }
+
+  .main-design-canvas.production-home .site-header .test-toolbar-menu {
+    right: 12px;
+    left: auto;
+  }
+}
