@@ -723,6 +723,72 @@
   background: #ffe2a0;
 }
 
+.bullseye-subpage .army-shuffle-panel {
+  grid-column: 1 / -1;
+}
+
+.bullseye-subpage .army-shuffle-panel-inner {
+  display: grid;
+  gap: 12px;
+  margin-top: 2px;
+  padding: 14px;
+  border: 1px solid rgba(255, 248, 232, .14);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .18);
+}
+
+.bullseye-subpage .army-shuffle-panel h4 {
+  margin: 0;
+  color: #f8e2ad;
+  font-size: .82rem;
+  font-weight: 900;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-shuffle-member-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+
+.bullseye-subpage .army-shuffle-member-list label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  color: rgba(255, 248, 232, .78);
+  background: rgba(255, 255, 255, .05);
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-shuffle-member-list input {
+  width: 17px;
+  height: 17px;
+  accent-color: #f1c15d;
+}
+
+.bullseye-subpage .army-shuffle-pick-button {
+  justify-self: start;
+  padding: 9px 14px;
+  border: 1px solid rgba(85, 190, 125, .42);
+  border-radius: 999px;
+  color: #dcffe6;
+  background: rgba(85, 190, 125, .14);
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-shuffle-pick-button:hover,
+.bullseye-subpage .army-shuffle-pick-button:focus-visible {
+  border-color: rgba(85, 190, 125, .78);
+  background: rgba(85, 190, 125, .22);
+}
+
 .bullseye-subpage .army-shuffle-result {
   grid-column: 1 / -1;
   display: block;

@@ -171,6 +171,31 @@
           <div class="movie-poster-library" id="moviePosterLibrary"></div>
           <p class="admin-note" id="moviePosterLibraryStatus">Save player lists to build the movie poster library.</p>
         </article>
+        <article class="admin-card army-main-image-admin-card">
+          <div class="card-heading">
+            <h3>Army of the 12 Movies main image</h3>
+            <span>Army page hero</span>
+          </div>
+          <p class="admin-note">Paste direct image URLs to replace the large Army page image and the ticket image above the RSVP button. Clear either one to use its default image.</p>
+          <label for="armyMainImageInput">Main image URL</label>
+          <input id="armyMainImageInput" type="url" placeholder="https://example.com/army-main-image.jpg">
+          <label for="armyMainImageUpload">Or upload a main image from your computer</label>
+          <input id="armyMainImageUpload" type="file" accept="image/*,.gif,.gig">
+          <div class="form-actions">
+            <button class="button button-primary" id="saveArmyMainImage" type="button">Save Army main image</button>
+            <button class="button button-secondary-dark" id="clearArmyMainImage" type="button">Clear Army main image</button>
+          </div>
+          <p class="admin-note" id="armyMainImageStatus">Using the default Army main image.</p>
+          <label for="armyTicketImageInput">Ticket image URL</label>
+          <input id="armyTicketImageInput" type="url" placeholder="https://example.com/army-ticket-image.png">
+          <label for="armyTicketImageUpload">Or upload a ticket image from your computer</label>
+          <input id="armyTicketImageUpload" type="file" accept="image/*,.gif,.gig">
+          <div class="form-actions">
+            <button class="button button-primary" id="saveArmyTicketImage" type="button">Save Army ticket image</button>
+            <button class="button button-secondary-dark" id="clearArmyTicketImage" type="button">Clear Army ticket image</button>
+          </div>
+          <p class="admin-note" id="armyTicketImageStatus">Using the default Army ticket image.</p>
+        </article>
         <article class="admin-card army-archive-admin-card">
           <div class="card-heading">
             <h3>Army of the 12 Movies archive</h3>
@@ -353,6 +378,6 @@ Jordan Lee:
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js?v=20260926-army-imdb-note1"></script>
+    <script src="script.js?v=20260927-army-image-uploads1"></script>
   </body>
 </html>

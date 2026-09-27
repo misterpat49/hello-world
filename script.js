@@ -120,6 +120,16 @@ const els = {
   topFivePosterStatus: document.querySelector("#topFivePosterStatus"),
   moviePosterLibrary: document.querySelector("#moviePosterLibrary"),
   moviePosterLibraryStatus: document.querySelector("#moviePosterLibraryStatus"),
+  armyMainImageInput: document.querySelector("#armyMainImageInput"),
+  saveArmyMainImage: document.querySelector("#saveArmyMainImage"),
+  clearArmyMainImage: document.querySelector("#clearArmyMainImage"),
+  armyMainImageStatus: document.querySelector("#armyMainImageStatus"),
+  armyMainImageUpload: document.querySelector("#armyMainImageUpload"),
+  armyTicketImageInput: document.querySelector("#armyTicketImageInput"),
+  armyTicketImageUpload: document.querySelector("#armyTicketImageUpload"),
+  saveArmyTicketImage: document.querySelector("#saveArmyTicketImage"),
+  clearArmyTicketImage: document.querySelector("#clearArmyTicketImage"),
+  armyTicketImageStatus: document.querySelector("#armyTicketImageStatus"),
   armyMovieArchiveList: document.querySelector("#armyMovieArchiveList"),
   addArmyMovieArchiveEntry: document.querySelector("#addArmyMovieArchiveEntry"),
   saveArmyMovieArchive: document.querySelector("#saveArmyMovieArchive"),
@@ -252,7 +262,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMovieArchive: [], armyClubMembers: [], armyRsvps: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMainImageUrl: "", armyTicketImageUrl: "", armyMovieArchive: [], armyClubMembers: [], armyRsvps: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -266,7 +276,7 @@ const contestProfiles = {
   "summer-2026": { id: "summer-2026", season: "Summer", year: "2026", edition: 27 },
   "winter-2026": { id: "winter-2026", season: "Winter", year: "2026", edition: 27 },
 };
-const sharedArmyStateKeys = ["armyMovieArchive", "armyClubMembers", "armyRsvps"];
+const sharedArmyStateKeys = ["armyMainImageUrl", "armyTicketImageUrl", "armyMovieArchive", "armyClubMembers", "armyRsvps"];
 
 function selectedPublicContestId() {
   const params = new URLSearchParams(window.location.search);
@@ -317,6 +327,8 @@ function blankContestState(profile) {
     moviePosterImages: {},
     armyMoviePosters: [],
     armyTickerPosterSelections: [],
+    armyMainImageUrl: "",
+    armyTicketImageUrl: "",
     armyMovieArchive: [],
     armyClubMembers: [],
     armyRsvps: {},
@@ -451,6 +463,14 @@ function loadState() {
       savedState.patrickSecretImageUrl = "";
       lastSaveWarning = "The oversized secret JPG was cleared from browser storage. Your other contest data is still here.";
     }
+    if (savedState.armyMainImageUrl?.startsWith("data:image/") && savedState.armyMainImageUrl.length > MAX_STORED_IMAGE_LENGTH) {
+      savedState.armyMainImageUrl = "";
+      lastSaveWarning = "The oversized Army main image was cleared from browser storage. Your other contest data is still here.";
+    }
+    if (savedState.armyTicketImageUrl?.startsWith("data:image/") && savedState.armyTicketImageUrl.length > MAX_STORED_IMAGE_LENGTH) {
+      savedState.armyTicketImageUrl = "";
+      lastSaveWarning = "The oversized Army ticket image was cleared from browser storage. Your other contest data is still here.";
+    }
     if (lastSaveWarning) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(savedState));
@@ -526,10 +546,12 @@ function saveState() {
     if (shouldSyncSupabase()) saveStateToSupabase();
     return true;
   } catch (error) {
-    if (state.leaderboardImageUrl?.startsWith("data:image/") || state.standingsGifUrl?.startsWith("data:image/") || state.patrickSecretImageUrl?.startsWith("data:image/")) {
+    if (state.leaderboardImageUrl?.startsWith("data:image/") || state.standingsGifUrl?.startsWith("data:image/") || state.patrickSecretImageUrl?.startsWith("data:image/") || state.armyMainImageUrl?.startsWith("data:image/") || state.armyTicketImageUrl?.startsWith("data:image/")) {
       state.leaderboardImageUrl = "";
       state.standingsGifUrl = "";
       state.patrickSecretImageUrl = "";
+      state.armyMainImageUrl = "";
+      state.armyTicketImageUrl = "";
       lastSaveWarning = "The uploaded image or GIF was too large for browser storage, so it was removed. Your other data was saved.";
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -2531,6 +2553,41 @@ function isHttpImageUrl(value) {
   return /^https?:\/\//i.test(String(value || "").trim());
 }
 
+function renderArmyMainImageControls() {
+  const savedMainUrl = String(state.armyMainImageUrl || "").trim();
+  const savedTicketUrl = String(state.armyTicketImageUrl || "").trim();
+
+  if (els.armyMainImageInput) {
+    els.armyMainImageInput.value = savedMainUrl.startsWith("data:image/") ? "" : savedMainUrl;
+  }
+  if (els.armyMainImageUpload) {
+    els.armyMainImageUpload.value = "";
+  }
+  if (els.armyMainImageStatus) {
+    els.armyMainImageStatus.textContent = savedMainUrl ? (savedMainUrl.startsWith("data:image/") ? "Uploaded Army main image saved." : "Custom Army main image URL saved.") : "Using the default Army main image.";
+  }
+
+  if (els.armyTicketImageInput) {
+    els.armyTicketImageInput.value = savedTicketUrl.startsWith("data:image/") ? "" : savedTicketUrl;
+  }
+  if (els.armyTicketImageUpload) {
+    els.armyTicketImageUpload.value = "";
+  }
+  if (els.armyTicketImageStatus) {
+    els.armyTicketImageStatus.textContent = savedTicketUrl ? (savedTicketUrl.startsWith("data:image/") ? "Uploaded Army ticket image saved." : "Custom Army ticket image URL saved.") : "Using the default Army ticket image.";
+  }
+}
+
+function renderArmyMainImagePage() {
+  const mainImage = document.querySelector(".army-main-image");
+  const ticketImage = document.querySelector(".army-ticket-image");
+  const savedMainUrl = String(state.armyMainImageUrl || "").trim();
+  const savedTicketUrl = String(state.armyTicketImageUrl || "").trim();
+
+  if (mainImage) mainImage.src = isHttpImageUrl(savedMainUrl) || savedMainUrl.startsWith("data:image/") ? savedMainUrl : "./assets/12movies.png";
+  if (ticketImage) ticketImage.src = isHttpImageUrl(savedTicketUrl) || savedTicketUrl.startsWith("data:image/") ? savedTicketUrl : "./assets/army-admit-one-ticket.png";
+}
+
 const armyMovieGenres = ["Drama", "Comedy", "Musical", "Documentary", "Animated", "Sci Fi", "Fantasy", "Horror", "Action", "Mystery / Thriller"];
 const armyMovieLanguages = ["English", "Foreign"];
 
@@ -2874,7 +2931,8 @@ function armyArchiveStatsHtml(entries) {
           <h3>Shuffle Up Next</h3>
           <p>Randomly choose a club member who has not picked a movie yet.</p>
         </div>
-        <button class="army-shuffle-button" id="armyShuffleNext" type="button">Shuffle</button>
+        <button class="army-shuffle-button" id="armyShuffleNext" type="button" aria-expanded="false" aria-controls="armyShufflePanel">Shuffle</button>
+        <div class="army-shuffle-panel" id="armyShufflePanel" hidden></div>
         <strong class="army-shuffle-result" id="armyShuffleResult" aria-live="polite">Ready when you are.</strong>
       </section>
     </section>
@@ -3940,8 +3998,10 @@ function renderContestBody() {
   renderTopFiveWeeklyResultsAdmin(entries, results);
   renderTopFivePosterGallery(entries);
   renderMoviePosterLibrary(entries);
+  renderArmyMainImageControls();
   renderArmyMovieArchiveControls();
   renderArmyClubMemberControls();
+  renderArmyMainImagePage();
   renderArmyRsvpPage();
   renderArmyClubMembersPage();
   renderArmyMovieArchivePage();
@@ -4426,7 +4486,8 @@ document.addEventListener("click", (event) => {
   if (!membersSection) return;
 
   event.preventDefault();
-  membersSection.classList.toggle("is-open");
+  const isOpen = membersSection.classList.toggle("is-open");
+  clubMemberLink.textContent = isOpen ? "HIDE ALL CLUB MEMBERS" : "VIEW ALL CLUB MEMBERS";
   membersSection.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 
@@ -4484,20 +4545,60 @@ document.addEventListener("click", (event) => {
   if (!shuffleButton) return;
 
   const result = document.querySelector("#armyShuffleResult");
+  const panel = document.querySelector("#armyShufflePanel");
   const waitingMembers = armyClubMembersWhoNeedPicks();
-  if (!result) return;
+  if (!result || !panel) return;
 
   if (!getArmyClubMembers().length) {
+    panel.hidden = true;
+    shuffleButton.setAttribute("aria-expanded", "false");
     result.textContent = "Add club members first.";
     return;
   }
 
   if (!waitingMembers.length) {
+    panel.hidden = true;
+    shuffleButton.setAttribute("aria-expanded", "false");
     result.textContent = "Everyone has chosen a movie.";
     return;
   }
 
-  const chosen = waitingMembers[Math.floor(Math.random() * waitingMembers.length)];
+  const isOpening = panel.hidden;
+  panel.hidden = !isOpening;
+  shuffleButton.setAttribute("aria-expanded", String(isOpening));
+  shuffleButton.textContent = isOpening ? "Hide shuffle" : "Shuffle";
+
+  if (!isOpening) return;
+
+  panel.innerHTML =     '<div class="army-shuffle-panel-inner">' +
+    '<h4>Choose who is in the shuffle</h4>' +
+    '<div class="army-shuffle-member-list">' +
+    waitingMembers.map((member) => {
+      const key = armyRsvpKey(member);
+      return '<label><input type="checkbox" data-army-shuffle-member value="' + escapeHtml(key) + '" checked><span>' + escapeHtml(member.name || "Unnamed member") + '</span></label>';
+    }).join("") +
+    '</div>' +
+    '<button class="army-shuffle-pick-button" id="armyShufflePickSelected" type="button">Shuffle selected</button>' +
+    '</div>';
+});
+
+document.addEventListener("click", (event) => {
+  const pickButton = event.target.closest("#armyShufflePickSelected");
+  if (!pickButton) return;
+
+  const result = document.querySelector("#armyShuffleResult");
+  const panel = document.querySelector("#armyShufflePanel");
+  if (!result || !panel) return;
+
+  const selectedKeys = new Set(Array.from(panel.querySelectorAll("[data-army-shuffle-member]:checked")).map((input) => input.value));
+  const selectedMembers = armyClubMembersWhoNeedPicks().filter((member) => selectedKeys.has(armyRsvpKey(member)));
+
+  if (!selectedMembers.length) {
+    result.textContent = "Select at least one member to shuffle.";
+    return;
+  }
+
+  const chosen = selectedMembers[Math.floor(Math.random() * selectedMembers.length)];
   result.textContent = chosen.name || "Unnamed member";
 });
 
@@ -4606,6 +4707,94 @@ els.clearLeaderboardImage?.addEventListener("click", () => {
   showSaveWarning(els.leaderboardImageStatus);
 });
 
+
+els.saveArmyMainImage?.addEventListener("click", () => {
+  const uploadedImage = els.armyMainImageUpload?.files?.[0];
+
+  if (uploadedImage) {
+    if (!isSupportedImageFile(uploadedImage)) {
+      if (els.armyMainImageStatus) els.armyMainImageStatus.textContent = "Choose an image or GIF file to upload.";
+      return;
+    }
+
+    imageFileToDataUrl(uploadedImage)
+      .then((dataUrl) => resizeImageDataUrl(dataUrl, 1800))
+      .then((dataUrl) => {
+        setActiveAdminContestValues({ armyMainImageUrl: dataUrl });
+        saveState();
+        render();
+        showSaveWarning(els.armyMainImageStatus);
+      })
+      .catch(() => {
+        if (els.armyMainImageStatus) els.armyMainImageStatus.textContent = "That image could not be uploaded.";
+      });
+    return;
+  }
+
+  const imageUrl = els.armyMainImageInput?.value.trim() || "";
+  if (imageUrl && !isHttpImageUrl(imageUrl)) {
+    if (els.armyMainImageStatus) els.armyMainImageStatus.textContent = "Enter a complete http or https image URL.";
+    return;
+  }
+
+  setActiveAdminContestValues({ armyMainImageUrl: imageUrl });
+  saveState();
+  render();
+  showSaveWarning(els.armyMainImageStatus);
+});
+
+els.clearArmyMainImage?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyMainImageUrl: "" });
+  if (els.armyMainImageInput) els.armyMainImageInput.value = "";
+  if (els.armyMainImageUpload) els.armyMainImageUpload.value = "";
+  saveState();
+  render();
+  showSaveWarning(els.armyMainImageStatus);
+});
+
+els.saveArmyTicketImage?.addEventListener("click", () => {
+  const uploadedImage = els.armyTicketImageUpload?.files?.[0];
+
+  if (uploadedImage) {
+    if (!isSupportedImageFile(uploadedImage)) {
+      if (els.armyTicketImageStatus) els.armyTicketImageStatus.textContent = "Choose an image or GIF file to upload.";
+      return;
+    }
+
+    imageFileToDataUrl(uploadedImage)
+      .then((dataUrl) => resizeImageDataUrl(dataUrl, 1800))
+      .then((dataUrl) => {
+        setActiveAdminContestValues({ armyTicketImageUrl: dataUrl });
+        saveState();
+        render();
+        showSaveWarning(els.armyTicketImageStatus);
+      })
+      .catch(() => {
+        if (els.armyTicketImageStatus) els.armyTicketImageStatus.textContent = "That image could not be uploaded.";
+      });
+    return;
+  }
+
+  const imageUrl = els.armyTicketImageInput?.value.trim() || "";
+  if (imageUrl && !isHttpImageUrl(imageUrl)) {
+    if (els.armyTicketImageStatus) els.armyTicketImageStatus.textContent = "Enter a complete http or https image URL.";
+    return;
+  }
+
+  setActiveAdminContestValues({ armyTicketImageUrl: imageUrl });
+  saveState();
+  render();
+  showSaveWarning(els.armyTicketImageStatus);
+});
+
+els.clearArmyTicketImage?.addEventListener("click", () => {
+  setActiveAdminContestValues({ armyTicketImageUrl: "" });
+  if (els.armyTicketImageInput) els.armyTicketImageInput.value = "";
+  if (els.armyTicketImageUpload) els.armyTicketImageUpload.value = "";
+  saveState();
+  render();
+  showSaveWarning(els.armyTicketImageStatus);
+});
 
 els.armyClubMemberList?.addEventListener("click", (event) => {
   const button = event.target.closest("[data-remove-army-club-member]");
