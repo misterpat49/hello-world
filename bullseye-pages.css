@@ -320,9 +320,22 @@
   display: block;
   width: 100%;
   height: auto;
-  border: 1px solid #514126;
-  border-radius: 6px;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, .44);
+  border: 5px solid #f6a21a;
+  border-radius: 8px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, .44), 0 0 22px rgba(246, 162, 26, .36);
+  animation: armyMainImageBorderBlink 1.15s steps(2, end) infinite;
+}
+
+@keyframes armyMainImageBorderBlink {
+  0%, 100% {
+    border-color: #f6a21a;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .44), 0 0 18px rgba(246, 162, 26, .34);
+  }
+
+  50% {
+    border-color: #ffd45a;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .44), 0 0 30px rgba(255, 212, 90, .68);
+  }
 }
 
 @media (max-width: 700px) {
@@ -376,10 +389,11 @@
 
 .bullseye-subpage .army-archive-title-row {
   display: flex;
-  align-items: end;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 18px;
+  gap: 4px;
   margin-bottom: 18px;
   border-bottom: 1px solid rgba(245, 208, 120, .2);
   padding-bottom: 14px;
@@ -391,6 +405,15 @@
   font-family: "Limelight", "Graduate", "Inter", serif;
   font-size: clamp(1.65rem, 3.6vw, 3rem);
   letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-archive-title-note {
+  margin: 0;
+  color: rgba(255, 248, 232, .42);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
   text-transform: uppercase;
 }
 
@@ -551,8 +574,7 @@
 }
 
 @media (max-width: 800px) {
-  .army-archive-row,
-  .bullseye-subpage .army-archive-title-row {
+  .army-archive-row {
     grid-template-columns: 1fr;
   }
 
@@ -723,6 +745,11 @@
 
 
 .bullseye-subpage .army-club-member-link-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
   width: min(100%, 1320px);
   margin: 16px auto 0;
   text-align: center;
@@ -746,6 +773,127 @@
 .bullseye-subpage .army-club-member-link:focus-visible {
   border-color: rgba(241, 193, 93, .78);
   background: rgba(241, 193, 93, .18);
+}
+
+.bullseye-subpage .army-rsvp-button-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.bullseye-subpage .army-rsvp-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid rgba(85, 190, 125, .28);
+  border-radius: 999px;
+  color: #dcffe6;
+  background: rgba(85, 190, 125, .1);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-rsvp {
+  display: none;
+  width: min(100%, 1320px);
+  margin: 18px auto 0;
+}
+
+.bullseye-subpage .army-rsvp.is-open {
+  display: block;
+}
+
+.bullseye-subpage .army-rsvp-inner {
+  padding: 22px;
+  border: 1px solid rgba(245, 208, 120, .26);
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(16, 12, 10, .94), rgba(33, 23, 17, .9));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+
+.bullseye-subpage .army-rsvp-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.bullseye-subpage .army-rsvp-heading h1 {
+  margin: 0;
+  color: #f8e2ad;
+  font-family: "Limelight", "Graduate", "Inter", serif;
+  font-size: clamp(1.65rem, 3.6vw, 3rem);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-rsvp-heading span {
+  padding: 6px 10px;
+  border: 1px solid rgba(85, 190, 125, .32);
+  border-radius: 999px;
+  color: #dcffe6;
+  background: rgba(85, 190, 125, .12);
+  font-size: .78rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-rsvp-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.bullseye-subpage .army-rsvp-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 10px;
+  color: rgba(255, 248, 232, .76);
+  background: rgba(255, 255, 255, .05);
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-rsvp-card input {
+  width: 18px;
+  height: 18px;
+  accent-color: #f1c15d;
+}
+
+.bullseye-subpage .army-rsvp-card.is-attending {
+  border-color: rgba(85, 190, 125, .42);
+  color: #fff8e8;
+  background: rgba(85, 190, 125, .12);
+}
+
+.bullseye-subpage .army-rsvp-clear {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(241, 193, 93, .36);
+  border-radius: 999px;
+  color: #f8e2ad;
+  background: rgba(241, 193, 93, .09);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-rsvp-clear:hover,
+.bullseye-subpage .army-rsvp-clear:focus-visible {
+  border-color: rgba(241, 193, 93, .72);
+  background: rgba(241, 193, 93, .16);
 }
 
 .bullseye-subpage .army-club-members {
@@ -776,9 +924,65 @@
   text-transform: uppercase;
 }
 
+.bullseye-subpage .army-club-email-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -2px 0 16px;
+  text-align: center;
+}
+
+.bullseye-subpage .army-club-email-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 14px;
+  border: 1px solid rgba(85, 190, 125, .38);
+  border-radius: 999px;
+  color: #dcffe6;
+  background: rgba(85, 190, 125, .12);
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.bullseye-subpage .army-club-email-button:hover,
+.bullseye-subpage .army-club-email-button:focus-visible {
+  border-color: rgba(85, 190, 125, .74);
+  background: rgba(85, 190, 125, .2);
+}
+
+
 .bullseye-subpage .army-club-member-list {
   display: grid;
   gap: 10px;
+}
+
+.bullseye-subpage .army-club-member-list.is-collapsed .army-club-member-card:nth-child(n + 7) {
+  display: none;
+}
+
+.bullseye-subpage .army-club-member-toggle {
+  display: block;
+  margin: 16px auto 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(241, 193, 93, .36);
+  border-radius: 999px;
+  color: #f8e2ad;
+  background: rgba(241, 193, 93, .09);
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.bullseye-subpage .army-club-member-toggle:hover,
+.bullseye-subpage .army-club-member-toggle:focus-visible {
+  border-color: rgba(241, 193, 93, .72);
+  background: rgba(241, 193, 93, .16);
 }
 
 .bullseye-subpage .army-club-member-card {

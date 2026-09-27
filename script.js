@@ -252,7 +252,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMovieArchive: [], armyClubMembers: [], topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMovieArchive: [], armyClubMembers: [], armyRsvps: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -266,7 +266,7 @@ const contestProfiles = {
   "summer-2026": { id: "summer-2026", season: "Summer", year: "2026", edition: 27 },
   "winter-2026": { id: "winter-2026", season: "Winter", year: "2026", edition: 27 },
 };
-const sharedArmyStateKeys = ["armyMovieArchive", "armyClubMembers"];
+const sharedArmyStateKeys = ["armyMovieArchive", "armyClubMembers", "armyRsvps"];
 
 function selectedPublicContestId() {
   const params = new URLSearchParams(window.location.search);
@@ -319,6 +319,7 @@ function blankContestState(profile) {
     armyTickerPosterSelections: [],
     armyMovieArchive: [],
     armyClubMembers: [],
+    armyRsvps: {},
     topFiveAccessCodes: {},
     topFiveWeeklyResults: {},
     topFiveRevealedWeeks: {},
@@ -2722,6 +2723,55 @@ function armyClubMembersWhoNeedPicks() {
   return getArmyClubMembers().filter((member) => !pickMap.has(normalizeArmyClubName(member.name)));
 }
 
+function latestArmyFilmSubject() {
+  const entries = getArmyMovieArchive();
+  if (!entries.length) return "Army of the 12 Movies";
+
+  const latestIndex = entries.length - 1;
+  const latest = entries[latestIndex];
+  const title = latest.movie || "Untitled movie";
+  return "FILM #" + (latestIndex + 1) + " - " + title;
+}
+
+function armyRsvpKey(member) {
+  return normalizeArmyClubName(member?.name || member?.email || "");
+}
+
+function renderArmyRsvpPage() {
+  const rsvpSection = document.querySelector("#armyRsvp");
+  const rsvpStatus = document.querySelector("#armyRsvpStatus");
+  const members = getArmyClubMembers();
+  const rsvps = state.armyRsvps || {};
+  const isAttending = (value) => value === true || value === "attending";
+  const attendingCount = members.filter((member) => isAttending(rsvps[armyRsvpKey(member)])).length;
+  const attendingText = attendingCount + " attending";
+
+  if (rsvpStatus) rsvpStatus.textContent = attendingText;
+  if (!rsvpSection) return;
+
+  let html = "";
+  html += '<div class="army-rsvp-inner">';
+  html += '<div class="army-rsvp-heading"><h1>RSVP</h1><span>' + attendingText + '</span></div>';
+
+  if (members.length) {
+    html += '<div class="army-rsvp-list">';
+    members.forEach((member) => {
+      const key = armyRsvpKey(member);
+      const checked = isAttending(rsvps[key]) ? " checked" : "";
+      const cardClass = isAttending(rsvps[key]) ? "army-rsvp-card is-attending" : "army-rsvp-card";
+      html += '<label class="' + cardClass + '">';
+      html += '<input type="checkbox" data-army-rsvp-key="' + escapeHtml(key) + '"' + checked + '>';
+      html += '<span>' + escapeHtml(member.name || "Unnamed member") + '</span>';
+      html += '</label>';
+    });
+    html += '</div><button class="army-rsvp-clear" id="armyRsvpClear" type="button">Clear all selections</button>';
+  } else {
+    html += '<p>No club members have been added yet.</p>';
+  }
+
+  html += '</div>';
+  rsvpSection.innerHTML = html;
+}
 
 function renderArmyClubMembersPage() {
   const membersSection = document.querySelector("#armyClubMembers");
@@ -2729,11 +2779,16 @@ function renderArmyClubMembersPage() {
 
   const members = getArmyClubMembers();
   const pickMap = armyClubMemberPickMap();
+  const shouldCollapseMembers = members.length > 6;
+  const emailAddresses = members.map((member) => member.email).filter(Boolean);
+  const emailSubject = latestArmyFilmSubject();
+  const emailHref = emailAddresses.length ? "mailto:?bcc=" + encodeURIComponent(emailAddresses.join(",")) + "&subject=" + encodeURIComponent(emailSubject) : "";
   membersSection.innerHTML = `
     <div class="army-club-members-inner">
       <h1>Club Members</h1>
+      ${emailAddresses.length ? `<div class="army-club-email-wrap"><a class="army-club-email-button" href="${emailHref}">Email everyone</a></div>` : ""}
       ${members.length ? `
-        <div class="army-club-member-list">
+        <div class="army-club-member-list ${shouldCollapseMembers ? "is-collapsed" : ""}" id="armyClubMemberListPublic">
           ${members.map((member) => {
             const pickedMovies = pickMap.get(normalizeArmyClubName(member.name)) || [];
             return `
@@ -2750,6 +2805,7 @@ function renderArmyClubMembersPage() {
             `;
           }).join("")}
         </div>
+        ${shouldCollapseMembers ? `<button class="army-club-member-toggle" id="armyClubMemberToggle" type="button" aria-expanded="false" aria-controls="armyClubMemberListPublic">View all club members</button>` : ""}
       ` : `<p>No club members have been added yet.</p>`}
     </div>
   `;
@@ -2835,6 +2891,7 @@ function renderArmyMovieArchivePage() {
     <div class="army-archive-inner">
       <div class="army-archive-title-row">
         <h1>FILM LINEUP</h1>
+        <p class="army-archive-title-note">Click on poster to see IMDb page</p>
       </div>
       ${entries.length ? `
         <div class="army-archive-list ${shouldCollapseLineup ? "is-collapsed" : ""}" id="armyArchiveList">
@@ -3885,6 +3942,7 @@ function renderContestBody() {
   renderMoviePosterLibrary(entries);
   renderArmyMovieArchiveControls();
   renderArmyClubMemberControls();
+  renderArmyRsvpPage();
   renderArmyClubMembersPage();
   renderArmyMovieArchivePage();
   renderGradePage(entries, results);
@@ -4349,6 +4407,18 @@ els.contestantSelect?.addEventListener("change", () => {
 });
 
 document.addEventListener("click", (event) => {
+  const rsvpLink = event.target.closest("#armyRsvpLink");
+  if (!rsvpLink) return;
+
+  const rsvpSection = document.querySelector("#armyRsvp");
+  if (!rsvpSection) return;
+
+  event.preventDefault();
+  rsvpSection.classList.toggle("is-open");
+  rsvpSection.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.addEventListener("click", (event) => {
   const clubMemberLink = event.target.closest("#armyClubMemberLink");
   if (!clubMemberLink) return;
 
@@ -4358,6 +4428,31 @@ document.addEventListener("click", (event) => {
   event.preventDefault();
   membersSection.classList.toggle("is-open");
   membersSection.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+document.addEventListener("change", (event) => {
+  const checkbox = event.target.closest("[data-army-rsvp-key]");
+  if (!checkbox) return;
+
+  const key = checkbox.dataset.armyRsvpKey || "";
+  if (!key) return;
+
+  state.armyRsvps = { ...(state.armyRsvps || {}), [key]: checkbox.checked };
+  if (!checkbox.checked) delete state.armyRsvps[key];
+  saveState();
+  renderArmyRsvpPage();
+});
+
+document.addEventListener("click", (event) => {
+  const clearButton = event.target.closest("#armyRsvpClear");
+  if (!clearButton) return;
+
+  const confirmed = window.confirm("Are you sure you want to clear all RSVP selections?");
+  if (!confirmed) return;
+
+  state.armyRsvps = {};
+  saveState();
+  renderArmyRsvpPage();
 });
 
 document.addEventListener("click", (event) => {
@@ -4370,6 +4465,18 @@ document.addEventListener("click", (event) => {
   const isOpening = list.classList.toggle("is-collapsed") === false;
   armyArchiveToggle.setAttribute("aria-expanded", String(isOpening));
   armyArchiveToggle.textContent = isOpening ? "Show latest three" : "View full lineup";
+});
+
+document.addEventListener("click", (event) => {
+  const clubToggle = event.target.closest("#armyClubMemberToggle");
+  if (!clubToggle) return;
+
+  const list = document.querySelector("#armyClubMemberListPublic");
+  if (!list) return;
+
+  const isOpening = list.classList.toggle("is-collapsed") === false;
+  clubToggle.setAttribute("aria-expanded", String(isOpening));
+  clubToggle.textContent = isOpening ? "Show fewer members" : "View all club members";
 });
 
 document.addEventListener("click", (event) => {
