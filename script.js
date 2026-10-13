@@ -264,7 +264,7 @@ const els = {
   contestSwitcher: document.querySelector("#contestSwitcher"),
 };
 
-const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMainImageUrl: "", armyTicketImageUrl: "", armyMovieArchive: [], armyClubMembers: [], armyRsvps: {}, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
+const defaultState = { entriesText: "", resultsText: "", releaseDates: {}, contestYear: "2026", contestSeason: "Summer", currentContestWeek: "", leaderboardImageUrl: "", comingSoonText: "", weeklyUpdateText: "", standingsGifUrl: "", paidPlayers: {}, patrickSecretImageUrl: "", adminReleaseDateSort: "", movieTableSort: "", selectedContestant: "", compareContestantA: "", compareContestantB: "", pathToWinContestant: "", selectedGradePlayer: "", movieGrades: {}, selectedTopFivePlayer: "", topFivePredictions: {}, topFiveLogoUrl: "", topFivePosterImages: [], topFivePosterSelections: [], moviePosterImages: {}, armyMoviePosters: [], armyTickerPosterSelections: [], armyMainImageUrl: "", armyTicketImageUrl: "", armyMovieArchive: [], armyClubMembers: [], armyRsvps: {}, armyRsvpsUpdatedAt: 0, topFiveAccessCodes: {}, topFiveWeeklyResults: {}, topFiveRevealedWeeks: {}, selectedTopFiveResultsWeek: "", leaderboardRankMovement: {}, leaderboardWeekBaseline: {}, leaderboardLastRankSnapshot: {}, leaderboardMovementWeek: "", contests: {} };
 let lastSaveWarning = "";
 let state = loadState();
 let topFiveAuthorizedPlayer = "";
@@ -278,7 +278,7 @@ const contestProfiles = {
   "summer-2026": { id: "summer-2026", season: "Summer", year: "2026", edition: 27 },
   "winter-2026": { id: "winter-2026", season: "Winter", year: "2026", edition: 27 },
 };
-const sharedArmyStateKeys = ["armyMainImageUrl", "armyTicketImageUrl", "armyMovieArchive", "armyClubMembers", "armyRsvps"];
+const sharedArmyStateKeys = ["armyMainImageUrl", "armyTicketImageUrl", "armyMovieArchive", "armyClubMembers", "armyRsvps", "armyRsvpsUpdatedAt"];
 
 function selectedPublicContestId() {
   const params = new URLSearchParams(window.location.search);
@@ -334,6 +334,7 @@ function blankContestState(profile) {
     armyMovieArchive: [],
     armyClubMembers: [],
     armyRsvps: {},
+    armyRsvpsUpdatedAt: 0,
     topFiveAccessCodes: {},
     topFiveWeeklyResults: {},
     topFiveRevealedWeeks: {},
@@ -503,6 +504,22 @@ async function saveStateToSupabase(snapshot = state) {
   }
 }
 
+function mergeRemoteState(remoteState) {
+  const remote = { ...defaultState, ...remoteState, compareContestantA: "", compareContestantB: "" };
+  const localRsvpTime = Number(state.armyRsvpsUpdatedAt || 0);
+  const remoteRsvpTime = Number(remote.armyRsvpsUpdatedAt || 0);
+  const localHasRsvps = Object.keys(state.armyRsvps || {}).length > 0;
+  const remoteHasRsvps = Object.keys(remote.armyRsvps || {}).length > 0;
+
+  if (localRsvpTime > remoteRsvpTime || (!remoteRsvpTime && !remoteHasRsvps && localHasRsvps)) {
+    remote.armyRsvps = state.armyRsvps || {};
+    remote.armyRsvpsUpdatedAt = state.armyRsvpsUpdatedAt || Date.now();
+    if (shouldSyncSupabase()) saveStateToSupabase(remote);
+  }
+
+  return remote;
+}
+
 async function syncFromSupabase() {
   if (!supabaseClient) return;
 
@@ -514,7 +531,7 @@ async function syncFromSupabase() {
       .single();
     if (error || !data?.state || Date.now() < ignoreRemoteStateUntil) return;
 
-    state = { ...defaultState, ...data.state, compareContestantA: "", compareContestantB: "" };
+    state = mergeRemoteState(data.state);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     render();
   } catch (error) {
@@ -533,7 +550,7 @@ function subscribeToSupabaseState() {
       (payload) => {
         if (!payload.new?.state || Date.now() < ignoreRemoteStateUntil) return;
 
-        state = { ...defaultState, ...payload.new.state, compareContestantA: "", compareContestantB: "" };
+        state = mergeRemoteState(payload.new.state);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
       }
@@ -571,7 +588,7 @@ function saveState() {
 }
 
 function shouldSyncSupabase() {
-  return (isAdminPage() && isAdminUnlocked()) || Boolean(els.newEntryForm) || Boolean(els.gradeForm) || Boolean(els.topFiveForm);
+  return (isAdminPage() && isAdminUnlocked()) || Boolean(els.newEntryForm) || Boolean(els.gradeForm) || Boolean(els.topFiveForm) || Boolean(document.querySelector("#armyRsvp"));
 }
 
 function showSaveWarning(fallbackElement = els.backupStatus) {
@@ -4506,8 +4523,9 @@ document.addEventListener("change", (event) => {
   const key = checkbox.dataset.armyRsvpKey || "";
   if (!key) return;
 
-  state.armyRsvps = { ...(state.armyRsvps || {}), [key]: checkbox.checked };
-  if (!checkbox.checked) delete state.armyRsvps[key];
+  const nextRsvps = { ...(state.armyRsvps || {}), [key]: checkbox.checked };
+  if (!checkbox.checked) delete nextRsvps[key];
+  setActiveAdminContestValues({ armyRsvps: nextRsvps, armyRsvpsUpdatedAt: Date.now() });
   saveState();
   renderArmyRsvpPage();
 });
@@ -4828,7 +4846,7 @@ els.clearArmyRsvps?.addEventListener("click", () => {
   const confirmed = window.confirm("Clear all Army RSVP selections?");
   if (!confirmed) return;
 
-  setActiveAdminContestValues({ armyRsvps: {} });
+  setActiveAdminContestValues({ armyRsvps: {}, armyRsvpsUpdatedAt: Date.now() });
   saveState();
   render();
   showSaveWarning(els.armyRsvpAdminStatus);
