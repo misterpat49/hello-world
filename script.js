@@ -140,6 +140,8 @@ const els = {
   saveArmyClubMembers: document.querySelector("#saveArmyClubMembers"),
   clearArmyClubMembers: document.querySelector("#clearArmyClubMembers"),
   armyClubMemberStatus: document.querySelector("#armyClubMemberStatus"),
+  clearArmyRsvps: document.querySelector("#clearArmyRsvps"),
+  armyRsvpAdminStatus: document.querySelector("#armyRsvpAdminStatus"),
   topFivePasswordKey: document.querySelector("#topFivePasswordKey"),
   topFiveOfficialWeek: document.querySelector("#topFiveOfficialWeek"),
   topFiveOfficialPicks: document.querySelector("#topFiveOfficialPicks"),
@@ -2739,9 +2741,15 @@ function renumberArmyClubMemberRows() {
 }
 
 function renderArmyClubMemberControls(extraBlankRows = 1) {
-  if (!els.armyClubMemberList) return;
-
   const savedMembers = getArmyClubMembers();
+  const rsvpCount = Object.values(state.armyRsvps || {}).filter((value) => value === true || value === "attending").length;
+  if (els.armyRsvpAdminStatus) {
+    els.armyRsvpAdminStatus.textContent = rsvpCount
+      ? `${rsvpCount} RSVP${rsvpCount === 1 ? "" : "s"} marked attending.`
+      : "No RSVP selections saved.";
+  }
+
+  if (!els.armyClubMemberList) return;
   const rows = [...savedMembers, ...Array.from({ length: Math.max(1, extraBlankRows) }, () => ({ name: "", email: "" }))];
   if (els.armyClubMemberStatus) {
     els.armyClubMemberStatus.textContent = savedMembers.length
@@ -2821,7 +2829,7 @@ function renderArmyRsvpPage() {
       html += '<span>' + escapeHtml(member.name || "Unnamed member") + '</span>';
       html += '</label>';
     });
-    html += '</div><button class="army-rsvp-clear" id="armyRsvpClear" type="button">Clear all selections</button>';
+    html += '</div>';
   } else {
     html += '<p>No club members have been added yet.</p>';
   }
@@ -4504,17 +4512,6 @@ document.addEventListener("change", (event) => {
   renderArmyRsvpPage();
 });
 
-document.addEventListener("click", (event) => {
-  const clearButton = event.target.closest("#armyRsvpClear");
-  if (!clearButton) return;
-
-  const confirmed = window.confirm("Are you sure you want to clear all RSVP selections?");
-  if (!confirmed) return;
-
-  state.armyRsvps = {};
-  saveState();
-  renderArmyRsvpPage();
-});
 
 document.addEventListener("click", (event) => {
   const armyArchiveToggle = event.target.closest("#armyArchiveToggle");
@@ -4825,6 +4822,16 @@ els.clearArmyClubMembers?.addEventListener("click", () => {
   saveState();
   render();
   showSaveWarning(els.armyClubMemberStatus);
+});
+
+els.clearArmyRsvps?.addEventListener("click", () => {
+  const confirmed = window.confirm("Clear all Army RSVP selections?");
+  if (!confirmed) return;
+
+  setActiveAdminContestValues({ armyRsvps: {} });
+  saveState();
+  render();
+  showSaveWarning(els.armyRsvpAdminStatus);
 });
 
 els.armyMovieArchiveList?.addEventListener("click", (event) => {
