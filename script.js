@@ -414,6 +414,18 @@ function activeAdminContestState() {
   return contestStateFor(selectedAdminContestId());
 }
 
+function setActivePublicContestValues(values) {
+  const id = selectedPublicContestId();
+  if (id === "summer-2026") {
+    Object.assign(state, values);
+    return;
+  }
+  state.contests = {
+    ...(state.contests || {}),
+    [id]: { ...blankContestState(contestProfile(id)), ...(state.contests?.[id] || {}), ...values },
+  };
+}
+
 function mutateActiveAdminContest(mutator) {
   const id = selectedAdminContestId();
   if (id === "summer-2026") {
@@ -895,26 +907,29 @@ function parseLocalDate(value) {
   return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
-function daysBetween(start, end) {
-  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  return Math.floor((endDay - startDay) / 86400000);
+function releaseWeekKey(releaseDateValue) {
+  const date = parseLocalDate(releaseDateValue);
+  if (!date) return "";
+  // Group Monday through Sunday together, including Wednesday/Friday openings.
+  const mondayOffset = (date.getDay() + 6) % 7;
+  return new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() - mondayOffset))
+    .toISOString().slice(0, 10);
 }
 
-function contestWeekLabel(releaseDateValue, today = new Date()) {
-  const releaseDate = parseLocalDate(releaseDateValue);
-  if (!releaseDate) return "No date";
+function contestWeekLabel(releaseDateValue, contest = contestStateFor(selectedRenderContestId())) {
+  const releaseWeek = releaseWeekKey(releaseDateValue);
+  if (!releaseWeek) return "No date";
 
-  const contestStart = new Date(contestYear(), 4, 1);
-  const daysSinceContestStart = daysBetween(contestStart, releaseDate);
-  if (daysSinceContestStart < 0) return "Before contest";
-
-  return `Week ${Math.floor(daysSinceContestStart / 7) + 1}`;
+  const dates = getContestMovies(parseEntries(contest.entriesText))
+    .map((movie) => contest.releaseDates?.[movie.key])
+    .map(releaseWeekKey)
+    .filter(Boolean);
+  const orderedWeeks = [...new Set([...dates, releaseWeek])].sort();
+  return `Week ${orderedWeeks.indexOf(releaseWeek) + 1}`;
 }
 
-function movieContestWeekLabel(movieTitle, releaseDateValue) {
-  if (normalizeMovie(movieTitle) === "minions and monsters") return "Week 10";
-  return contestWeekLabel(releaseDateValue);
+function movieContestWeekLabel(movieTitle, releaseDateValue, contest = contestStateFor(selectedRenderContestId())) {
+  return contestWeekLabel(releaseDateValue, contest);
 }
 
 function nextContestWeekLabel(value) {
@@ -1939,11 +1954,10 @@ function contestIsComplete(entries, results) {
 }
 
 function winnerPlaces(scored, rawScored) {
-  const goldenCeo = formatRawGrossLeaders(rawScored);
   return [
-    { label: "First Place - $2000", names: scored[0]?.name, value: scored[0]?.score, suffix: "points" },
-    { label: "Second Place - $500", names: scored[1]?.name, value: scored[1]?.score, suffix: "points" },
-    { label: "The Golden CEO - $200", note: "(no multipliers here, simply who picked the best collection of 15 films for their studio)", names: goldenCeo.names, value: goldenCeo.value, suffix: "points", href: "golden-ceo.html" },
+    { label: "First Place - $600", names: scored[0]?.name, value: scored[0]?.score, suffix: "points" },
+    { label: "Second Place - $150", names: scored[1]?.name, value: scored[1]?.score, suffix: "points" },
+    { label: "Third Place - $100", names: scored[2]?.name, value: scored[2]?.score, suffix: "points" },
   ];
 }
 
@@ -3975,7 +3989,7 @@ function renderComingSoon(entries) {
 
 function jumpToContestant(name) {
   contestantSelectionMade = true;
-  state.selectedContestant = name;
+  setActivePublicContestValues({ selectedContestant: name });
   saveState();
   render();
 
@@ -4486,7 +4500,7 @@ els.resetGrades?.addEventListener("click", () => {
 
 els.contestantSelect?.addEventListener("change", () => {
   contestantSelectionMade = true;
-  state.selectedContestant = els.contestantSelect.value;
+  setActivePublicContestValues({ selectedContestant: els.contestantSelect.value });
   saveState();
   render();
 });
@@ -4618,32 +4632,31 @@ document.addEventListener("click", (event) => {
 });
 
 els.compareContestantA?.addEventListener("change", () => {
-  state.compareContestantA = els.compareContestantA.value;
+  setActivePublicContestValues({ compareContestantA: els.compareContestantA.value });
   saveState();
   render();
 });
 
 els.compareContestantB?.addEventListener("change", () => {
-  state.compareContestantB = els.compareContestantB.value;
+  setActivePublicContestValues({ compareContestantB: els.compareContestantB.value });
   saveState();
   render();
 });
 
 els.resetCompare?.addEventListener("click", () => {
-  state.compareContestantA = "";
-  state.compareContestantB = "";
+  setActivePublicContestValues({ compareContestantA: "", compareContestantB: "" });
   saveState();
   render();
 });
 
 els.resetPathToWin?.addEventListener("click", () => {
-  state.pathToWinContestant = "";
+  setActivePublicContestValues({ pathToWinContestant: "" });
   saveState();
   render();
 });
 
 els.pathToWinSelect?.addEventListener("change", () => {
-  state.pathToWinContestant = els.pathToWinSelect.value;
+  setActivePublicContestValues({ pathToWinContestant: els.pathToWinSelect.value });
   saveState();
   render();
 });
@@ -5073,11 +5086,17 @@ els.savePaidStatus?.addEventListener("click", () => {
 els.resultsGrid?.addEventListener("input", (event) => {
   if (!event.target.matches(".result-release-date input")) return;
 
-  const row = event.target.closest(".result-grid-row");
-  const contestWeek = row?.querySelector(".result-contest-week");
-  if (contestWeek) {
-    contestWeek.textContent = movieContestWeekLabel(row?.dataset.movieTitle || "", event.target.value);
-  }
+  const rows = Array.from(els.resultsGrid.querySelectorAll(".result-grid-row[data-movie-title]"));
+  const releaseDates = Object.fromEntries(rows.map((row) => [
+    row.dataset.movieKey,
+    row.querySelector(".result-release-date input")?.value || "",
+  ]));
+  const contest = { ...activeAdminContestState(), releaseDates };
+  rows.forEach((row) => {
+    row.querySelector(".result-contest-week").textContent = movieContestWeekLabel(
+      row.dataset.movieTitle, releaseDates[row.dataset.movieKey], contest
+    );
+  });
 });
 
 els.resultsGrid?.addEventListener("click", (event) => {
