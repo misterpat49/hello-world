@@ -1956,7 +1956,7 @@ function contestIsComplete(entries, results) {
 function winnerPlaces(scored, rawScored) {
   return [
     { label: "First Place - $600", names: scored[0]?.name, value: scored[0]?.score, suffix: "points" },
-    { label: "Second Place - $150", names: scored[1]?.name, value: scored[1]?.score, suffix: "points" },
+    { label: "Second Place - $200", names: scored[1]?.name, value: scored[1]?.score, suffix: "points" },
     { label: "Third Place - $100", names: scored[2]?.name, value: scored[2]?.score, suffix: "points" },
   ];
 }
