@@ -9,7 +9,6 @@ let completionPosterTimer = null;
 const MAX_PICKS = 15;
 const MAX_WEEKENDS = 4;
 const MAX_STORED_IMAGE_LENGTH = 900000;
-const ADMIN_PASSWORD = "boc26";
 const ADMIN_SESSION_KEY = "summer-box-office-admin-unlocked";
 
 const demoEntries = `Maya Chen:
@@ -271,6 +270,39 @@ let topFiveAuthorizedPlayer = "";
 let topFiveViewedWeek = "";
 let ignoreRemoteStateUntil = 0;
 let contestantSelectionMade = false;
+// Keep in-progress grosses separate from shared state until Save grosses is clicked.
+const adminResultsDrafts = new Map();
+let pendingSupabaseSaves = 0;
+let stateRevision = 0;
+let contestRenderDepth = 0;
+let supabaseSaveQueue = Promise.resolve();
+let lastSharedSaveFailed = false;
+const boxOfficeStateKeys = ["resultsText", "releaseDates", "currentContestWeek", "leaderboardWeekBaseline", "leaderboardLastRankSnapshot", "leaderboardMovementWeek", "leaderboardRankMovement", "boxOfficeUpdatedAt"];
+
+function markBoxOfficeUpdated(contest) {
+  contest.boxOfficeUpdatedAt = Math.max(Date.now(), Number(contest.boxOfficeUpdatedAt || 0) + 1);
+}
+
+// A stale tab may publish an older copy of the singleton. Keep the newer
+// box-office revision independently for Summer and Winter, even after reload.
+function mergeBoxOfficeRevisions(incoming, saved) {
+  const merged = { ...incoming, contests: { ...(incoming.contests || {}) } };
+  const preserveNewer = (target, previous) => {
+    if (Number(previous?.boxOfficeUpdatedAt || 0) <= Number(target?.boxOfficeUpdatedAt || 0)) return target;
+    const result = { ...target };
+    boxOfficeStateKeys.forEach((key) => {
+      if (Object.prototype.hasOwnProperty.call(previous, key)) result[key] = previous[key];
+    });
+    return result;
+  };
+  Object.assign(merged, preserveNewer(merged, saved));
+  Object.entries(saved.contests || {}).forEach(([id, contest]) => {
+    const existing = merged.contests[id] || {};
+    const next = preserveNewer(existing, contest);
+    if (next !== existing) merged.contests[id] = { ...contest, ...next };
+  });
+  return merged;
+}
 
 const ADMIN_CONTEST_SELECTION_KEY = "box-office-bullseye-admin-contest";
 const PUBLIC_CONTEST_SELECTION_KEY = "box-office-bullseye-public-contest";
@@ -308,6 +340,7 @@ function blankContestState(profile) {
   return {
     entriesText: "",
     resultsText: "",
+    boxOfficeUpdatedAt: 0,
     releaseDates: {},
     contestYear: profile.year,
     contestSeason: profile.season,
@@ -502,22 +535,42 @@ function loadState() {
 async function saveStateToSupabase(snapshot = state) {
   if (!supabaseClient) return false;
 
-  try {
-    const { error } = await supabaseClient.from("contest_state").upsert({
-      id: "singleton",
-      state: snapshot,
-      updated_at: new Date().toISOString(),
-    });
-    if (error) throw error;
-    return true;
-  } catch (error) {
-    console.warn("Supabase save failed", error);
-    return false;
-  }
+  // Freeze each save and serialize writes so an older request cannot finish last.
+  const savedSnapshot = JSON.parse(JSON.stringify(snapshot));
+  pendingSupabaseSaves += 1;
+  const save = supabaseSaveQueue.then(async () => {
+    try {
+      // Read current revisions before writing: an unrelated save from an older
+      // page must not roll the box-office fields back on the shared site.
+      const { data, error: readError } = await supabaseClient.from("contest_state")
+        .select("state").eq("id", "singleton").maybeSingle();
+      if (readError) throw readError;
+      const nextSnapshot = mergeBoxOfficeRevisions(savedSnapshot, data?.state || {});
+      const { error } = await supabaseClient.from("contest_state").upsert({
+        id: "singleton",
+        state: nextSnapshot,
+        updated_at: new Date().toISOString(),
+      });
+      if (error) throw error;
+      lastSharedSaveFailed = false;
+      return true;
+    } catch (error) {
+      lastSharedSaveFailed = true;
+      console.warn("Supabase save failed", error);
+      if (els.resultStatus && isAdminPage()) {
+        els.resultStatus.textContent = "Saved in this browser only. Shared-site update failed; check your connection and click Save grosses again.";
+      }
+      return false;
+    } finally {
+      pendingSupabaseSaves -= 1;
+    }
+  });
+  supabaseSaveQueue = save;
+  return save;
 }
 
 function mergeRemoteState(remoteState) {
-  const remote = { ...defaultState, ...remoteState, compareContestantA: "", compareContestantB: "" };
+  const remote = { ...defaultState, ...mergeBoxOfficeRevisions(remoteState, state), compareContestantA: "", compareContestantB: "" };
   const localRsvpTime = Number(state.armyRsvpsUpdatedAt || 0);
   const remoteRsvpTime = Number(remote.armyRsvpsUpdatedAt || 0);
   const localHasRsvps = Object.keys(state.armyRsvps || {}).length > 0;
@@ -534,6 +587,7 @@ function mergeRemoteState(remoteState) {
 
 async function syncFromSupabase() {
   if (!supabaseClient) return;
+  const revisionAtStart = stateRevision;
 
   try {
     const { data, error } = await supabaseClient
@@ -541,9 +595,10 @@ async function syncFromSupabase() {
       .select("state")
       .eq("id", "singleton")
       .single();
-    if (error || !data?.state || Date.now() < ignoreRemoteStateUntil) return;
+    if (error || !data?.state || pendingSupabaseSaves || revisionAtStart !== stateRevision || Date.now() < ignoreRemoteStateUntil) return;
 
     state = mergeRemoteState(data.state);
+    stateRevision += 1;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     render();
   } catch (error) {
@@ -560,9 +615,10 @@ function subscribeToSupabaseState() {
       "postgres_changes",
       { event: "*", schema: "public", table: "contest_state", filter: "id=eq.singleton" },
       (payload) => {
-        if (!payload.new?.state || Date.now() < ignoreRemoteStateUntil) return;
+        if (!payload.new?.state || pendingSupabaseSaves || Date.now() < ignoreRemoteStateUntil) return;
 
         state = mergeRemoteState(payload.new.state);
+        stateRevision += 1;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         render();
       }
@@ -571,6 +627,10 @@ function subscribeToSupabaseState() {
 }
 
 function saveState() {
+  // render() temporarily swaps in a scoped copy for display. Cleanup inside
+  // rendering must never persist that copy as the shared root state.
+  if (contestRenderDepth > 0) return true;
+  stateRevision += 1;
   lastSaveWarning = "";
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -635,20 +695,33 @@ function setAdminLockState() {
   }
 }
 
-function unlockAdmin() {
+async function unlockAdmin() {
   if (!els.adminPassword) return;
-
-  if (els.adminPassword.value === ADMIN_PASSWORD) {
-    sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
-    els.adminPassword.value = "";
-    setAdminLockState();
-    saveState();
-    render();
-    return;
-  }
-
-  if (els.adminPasswordStatus) {
-    els.adminPasswordStatus.textContent = "Incorrect password.";
+  const password = els.adminPassword.value;
+  if (els.unlockAdmin) els.unlockAdmin.disabled = true;
+  try {
+    const response = await fetch("/api/admin-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (response.ok) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, "true");
+      els.adminPassword.value = "";
+      setAdminLockState();
+      // Signing in must never write an older local contest snapshot remotely.
+      render();
+    } else if (els.adminPasswordStatus) {
+      els.adminPasswordStatus.textContent = response.status === 401
+        ? "Incorrect password."
+        : response.status === 429
+          ? "Too many attempts. Please wait a minute and try again."
+          : "Sign-in is temporarily unavailable. Please try again.";
+    }
+  } catch {
+    if (els.adminPasswordStatus) els.adminPasswordStatus.textContent = "Could not reach the server. Check your connection and try again.";
+  } finally {
+    if (els.unlockAdmin) els.unlockAdmin.disabled = false;
   }
 }
 
@@ -3384,7 +3457,9 @@ function renderPaidStatusPage(entries) {
 function renderAdminResultsGrid(entries, results) {
   if (!els.resultsGrid) return;
 
-  const releaseDates = getReleaseDates();
+  const draft = adminResultsDrafts.get(selectedAdminContestId());
+  if (draft) results = parseResults(draft.resultsText);
+  const releaseDates = draft ? draft.releaseDates : getReleaseDates();
   const sortDirection = state.adminReleaseDateSort;
   const contestMovies = getContestMovies(entries).sort((a, b) => {
     const aDate = releaseDates[a.key] || "";
@@ -3447,8 +3522,8 @@ function renderAdminResultsGrid(entries, results) {
   `;
 }
 
-function serializeAdminResultsGrid() {
-  if (!els.resultsGrid) return els.resultsInput?.value.trim() || "";
+function readAdminResultsGrid() {
+  if (!els.resultsGrid) return { resultsText: els.resultsInput?.value.trim() || "", releaseDates: activeAdminContestState().releaseDates };
 
   const releaseDates = {};
   const resultLines = [];
@@ -3480,8 +3555,13 @@ function serializeAdminResultsGrid() {
       }
     });
 
-  state.releaseDates = releaseDates;
-  return resultLines.join("\n");
+  return { resultsText: resultLines.join("\n"), releaseDates };
+}
+
+function serializeAdminResultsGrid() {
+  const values = readAdminResultsGrid();
+  state.releaseDates = values.releaseDates;
+  return values.resultsText;
 }
 
 function preserveAdminReleaseDates() {
@@ -3849,6 +3929,14 @@ function renderStats(entries, results, scored) {
   if (els.statLeader) els.statLeader.textContent = formatCurrentLeaders(scored);
   renderMovementHighlights();
   if (els.entryStatus) els.entryStatus.textContent = entries.length ? `${entries.length} player list${entries.length === 1 ? "" : "s"} saved` : "No lists saved";
+  if (els.resultStatus && adminResultsDrafts.has(selectedAdminContestId())) {
+    els.resultStatus.textContent = "Unsaved changes — click Save grosses.";
+    return;
+  }
+  if (els.resultStatus && lastSharedSaveFailed) {
+    els.resultStatus.textContent = "Saved in this browser only. Shared-site update failed; check your connection and click Save grosses again.";
+    return;
+  }
   if (els.resultStatus) els.resultStatus.textContent = movies.length ? `${movies.length} movie total${movies.length === 1 ? "" : "s"} saved` : "No grosses saved";
 }
 
@@ -4003,9 +4091,11 @@ function render() {
   if (!isAdminPage() || els.adminContestSelect) {
     const originalState = state;
     state = contestStateFor(selectedRenderContestId());
+    contestRenderDepth += 1;
     try {
       renderContestBody();
     } finally {
+      contestRenderDepth -= 1;
       state = originalState;
     }
     return;
@@ -4122,8 +4212,9 @@ els.saveResults?.addEventListener("click", () => {
         ? weekMovement
         : latestSaveMovement;
     contest.resultsText = nextResultsText;
+    markBoxOfficeUpdated(contest);
   });
-  saveState();
+  if (saveState()) adminResultsDrafts.delete(selectedId);
   render();
   showSaveWarning(els.resultStatus);
 });
@@ -4137,6 +4228,7 @@ els.clearEntries?.addEventListener("click", () => {
 });
 
 els.clearResults?.addEventListener("click", () => {
+  adminResultsDrafts.delete(selectedAdminContestId());
   const previousRootReleaseDates = state.releaseDates;
   preserveAdminReleaseDates();
   const preservedReleaseDates = state.releaseDates;
@@ -4144,6 +4236,7 @@ els.clearResults?.addEventListener("click", () => {
   mutateActiveAdminContest((contest) => {
     contest.releaseDates = preservedReleaseDates;
     contest.resultsText = "";
+    markBoxOfficeUpdated(contest);
   });
   saveState();
   render();
@@ -4154,6 +4247,7 @@ els.loadDemo?.addEventListener("click", () => {
     contest.entriesText = demoEntries;
     contest.resultsText = demoResults;
     contest.releaseDates = demoReleaseDates;
+    markBoxOfficeUpdated(contest);
   });
   saveState();
   render();
@@ -4668,6 +4762,7 @@ els.currentContestWeek?.addEventListener("change", () => {
     const results = parseResults(contest.resultsText);
 
     contest.currentContestWeek = els.currentContestWeek.value;
+    markBoxOfficeUpdated(contest);
     contest.leaderboardMovementWeek = contest.currentContestWeek || "Auto";
     const snapshot = rankSnapshot(entries, results);
     contest.leaderboardWeekBaseline = snapshot;
@@ -5084,6 +5179,10 @@ els.savePaidStatus?.addEventListener("click", () => {
 });
 
 els.resultsGrid?.addEventListener("input", (event) => {
+  if (event.target.matches(".result-week input, .result-release-date input")) {
+    adminResultsDrafts.set(selectedAdminContestId(), readAdminResultsGrid());
+    if (els.resultStatus) els.resultStatus.textContent = "Unsaved changes — click Save grosses.";
+  }
   if (!event.target.matches(".result-release-date input")) return;
 
   const rows = Array.from(els.resultsGrid.querySelectorAll(".result-grid-row[data-movie-title]"));
@@ -5113,8 +5212,10 @@ els.resultsGrid?.addEventListener("click", (event) => {
     if (selectedId !== "summer-2026") state.releaseDates = previousRootReleaseDates;
     mutateActiveAdminContest((contest) => {
       contest.resultsText = nextResultsText;
+      markBoxOfficeUpdated(contest);
       contest.releaseDates = nextReleaseDates;
     });
+    adminResultsDrafts.delete(selectedId);
     saveState();
     render();
     return;
@@ -5130,9 +5231,11 @@ els.resultsGrid?.addEventListener("click", (event) => {
   if (selectedId !== "summer-2026") state.releaseDates = previousRootReleaseDates;
   mutateActiveAdminContest((contest) => {
     contest.resultsText = nextResultsText;
+    markBoxOfficeUpdated(contest);
     contest.releaseDates = nextReleaseDates;
     contest.adminReleaseDateSort = contest.adminReleaseDateSort === "asc" ? "desc" : "asc";
   });
+  adminResultsDrafts.delete(selectedId);
   saveState();
   render();
 });
@@ -5150,6 +5253,18 @@ document.querySelector(".movie-table")?.addEventListener("click", (event) => {
   }
   saveState();
   render();
+});
+
+// A public tab in this browser must refresh when the Control Room saves.
+window.addEventListener("storage", (event) => {
+  if (event.key !== STORAGE_KEY || !event.newValue) return;
+  try {
+    state = mergeRemoteState(JSON.parse(event.newValue));
+    stateRevision += 1;
+    render();
+  } catch (error) {
+    console.warn("Contest storage update failed", error);
+  }
 });
 
 render();
